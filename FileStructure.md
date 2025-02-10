@@ -4,7 +4,6 @@ For those who don't know:
 DXDesigner operated on a design blocks concept, meaning your schematic pages grouped into blocks, who are then instanced in the design itselfe.
 Each block can consist of multiple pages, and can be instanced multiple times in a design. This makes it easy to reuse repeating schematic pages multiple times in a design.
 
-=
 # .prj file
 DXDesigner Projects have the file ending .prj, but no actual schematic data is stored inside that file.
 The .prj file contains some metadata, and is divided into sections containing different configuration keys
@@ -18,7 +17,7 @@ Please consult the Kaitai file 'icdb.ksy' for a detailed description of the bina
 Using icdbDecode it is possible to extract the data and file structure of a given database.dat file, alongside additional metadata.
 
 # database contents
-=
+
 # sids
 Session IDs?
 This file contains a list of session IDs, and their GUID in the following form:
@@ -42,7 +41,7 @@ Please consult the Kaitai file 'icdb_consdef.ksy' for a detailed description of 
 Session folders?
 For each session (from the sids file) there is a folder named 's' followed by the session index (s1, s2, s3, ...) in the root dir.
 The session folders normally contain some of the following elements:
-=
+
 
 # cdbblks folder
 (i)CDB Blocks folder?
@@ -66,7 +65,7 @@ TBD
 (i)CDB config folder?
 TBD
 
-=
+
 
 # *.blk folders
 This folder normaly contains the following files:
