@@ -26,13 +26,13 @@ ID | Version Code inside rectangular parentheses | GUID | either 0 or 1 ? | reas
 example entry:
 1 [3000] abcd-ef01-2345-6789-abcd-ef01-2345-6789-abcd-ef01-2345-6789 0 DxD
 
-#sesog
+# sesog
 Session Log?
 This file contains a list of windows & DXDesigner version info.
 Please consult the Kaitai file 'icdb_seslog.ksy' for a detailed description of the binary data structure.
 The number of entries DOES NOT match the number of sids.
 
-#consdef
+# consdef
 Constraints Definition?
 This file contains a list of parameter.
 Please consult the Kaitai file 'icdb_consdef.ksy' for a detailed description of the binary data structure.
