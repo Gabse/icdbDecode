@@ -42,9 +42,9 @@ uint32_t assemblePath(char** destination, char* leftstring, uint32_t leftstringl
 	// replace slash/backslash
 	for (uint32_t i = 0; i < completePathLength; i++)
 	{
-		if ((destination[i] == DIR_SEPERATOR_WINDOWS) || (destination[i] == DIR_SEPERATOR_UNIX))
+		if ((*destination)[i] == DIR_SEPERATOR_WINDOWS || (*destination)[i] == DIR_SEPERATOR_UNIX)
 		{
-			destination[i] = DIR_SEPERATOR; // Replace Slash / Backslash
+			(*destination)[i] = DIR_SEPERATOR; // Replace Slash / Backslash
 		}
 	}
 	return completePathLength;
@@ -67,7 +67,7 @@ uint32_t createPath(char** destination, char* leftstring, uint32_t leftstringlen
 	// replace slash/backslash
 	for (uint32_t i = 0; i < completePathLength; i++)
 	{
-		if ((destination[i] == DIR_SEPERATOR_WINDOWS) || (destination[i] == DIR_SEPERATOR_UNIX))
+		if ((*destination)[i] == DIR_SEPERATOR_WINDOWS || (*destination)[i] == DIR_SEPERATOR_UNIX)
 		{
 			(*destination)[i] = '\0'; // Zero termintate string for mkdir command
 			#ifdef WIN32 // Building for Windows
