@@ -87,6 +87,7 @@ net_bus_struct* NetBus = NULL;
 ******************************************************************
 */
 void KiCadProcessStyle(FILE*, uint32_t, uint8_t);
+void KiCadProcessText(FILE*, uint8_t );
 void Processing(void);
 /*
 ******************************************************************
@@ -105,14 +106,13 @@ void Processing(void);
 * - return value: 	errorcode
 ******************************************************************
 */
-/* Create KiCad file */
 int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth)
 {
 	char* destination = NULL;
 	uint32_t completePathLength = addStrings(&destination, file, filelenth, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
 	Processing();
 	// Open file
-	FILE* KiCadFile = myfopen("w", path, pathlenth, destination, completePathLength, '\\');
+	FILE* KiCadFile = myfopen("w", path, pathlenth, destination, completePathLength, DIR_SEPERATOR);
 	if (KiCadFile != 0)
 	{
 		myPrint("\n--------------- Writing KiCad file ---------------\n");
@@ -302,513 +302,10 @@ int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filele
 		}
 
 		// Text
-		if (TextString != 0 && TextPos != 0 && TextOrigin != 0 && TextSize != 0 && TextOrient != 0 && TextFont != 0 && TextColor != 0 && NumTextData > 0 && Text2TextData != 0)
-		{
-			myPrint("\nText:\n");
-			uint32_t i = 0;
-			for (uint32_t i = 0; i < NumText; i++)
-			{
-				uint32_t index = Text2TextData[i] - 1;
-				if (TextSize[index] != 0 || TextPos[index].X != 0 || TextPos[index].Y != 0 || TextOrigin[index] != 0 || TextOrient[index] != 0 || TextColor[index].Red != 0 || TextColor[index].Green != 0 || TextColor[index].Blue != 0 || TextColor[index].Key != 0)
-				{
-					fprintf(KiCadFile, "\t(text %c", 0x22);
-
-					// Text String
-					uint8_t Overbar = 0;
-					for (uint32_t j = 0; j < TextString[i].Lenth; j++)
-					{
-						if (TextString[i].Text[j] == '\n') // Check for line feed
-						{
-							fprintf(KiCadFile, "%cn", 0x5C); // Newline
-
-						}
-						else if (TextString[i].Text[j] == '~') // Check for overbar
-						{
-							if (Overbar)
-							{
-								Overbar = 0;
-								fprintf(KiCadFile, "}"); // Close Overbar
-							}
-							else
-							{
-								Overbar = 1;
-								fprintf(KiCadFile, "~{"); // Open Overbar
-
-							}
-						}
-						else
-						{
-							fprintf(KiCadFile, "%c", TextString[i].Text[j]);
-						}
-					}
-					if (Overbar)
-					{
-						fprintf(KiCadFile, "}"); // Close Overbar
-					}
-					myPrint("Text %d\n", i + 1);
-					myPrint("\t[%s]\n", TextString[i].Text);
-
-					fprintf(KiCadFile, "%c\n", 0x22);
-
-					// Position
-					num_struct X = numProcess(TextPos[index].X, CoordinateScaleX, CoordinateOffsetX);
-					num_struct Y = numProcess(TextPos[index].Y, CoordinateScaleY, CoordinateOffsetY);
-					myPrint("\tX: %d.%05d, Y: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-					fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d %d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac, TextOrient[index] * 90);
-
-
-					fprintf(KiCadFile, "\t\t(effects\n");
-					fprintf(KiCadFile, "\t\t\t(font \n");
-
-					// Font
-					if (TextFont[index].Lenth > 2) // custom font
-					{
-						uint32_t index2 = (uint32_t)strchr(TextFont[index].Text, '|') - (uint32_t)TextFont[index].Text + 1; // get index of Font name
-						uint32_t FontNameLen = (uint32_t)strchr(TextFont[index].Text + index2, '|') - (uint32_t)TextFont[index].Text - index2;
-						char* FontString = calloc(FontNameLen + 1, sizeof(char));
-						if (FontString != 0) // Custom Font
-						{
-							memcpy(FontString, TextFont[index].Text + index2, FontNameLen);
-							FontString[FontNameLen] = '\0'; // Zero terminate
-
-							fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, &FontString[0], 0x22);
-							myPrint("\tFont: %s\n", &FontString[0]);
-
-
-
-							if (TextFont[index].Text[FontNameLen + 7] == '1') // Strikeout
-							{
-
-							}
-							if (TextFont[index].Text[FontNameLen + 9] == '1') // Underlined
-							{
-
-							}
-							if (TextFont[index].Text[FontNameLen + 11] == '1') // Bold
-							{
-								fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-								myPrint("\tBold\n");
-							}
-
-							free(FontString);
-						}
-
-
-					}
-					else if (strcmp(TextFont[index].Text, "2") == 0) // Roman Italic
-					{
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-						myPrint("\tItalic\n");
-					}
-					else if (strcmp(TextFont[index].Text, "3") == 0) // Roman Bold
-					{
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-					}
-					else if (strcmp(TextFont[index].Text, "4") == 0) // Roman Bold Italic
-					{
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-						myPrint("\tBold & Italic\n");
-					}
-					else if (strcmp(TextFont[index].Text, "5") == 0) // SansSerif
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-						myPrint("\tFont: SansSerif\n");
-					}
-					else if (strcmp(TextFont[index].Text, "6") == 0) // Script
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-						myPrint("\tFont: ScriptS\n");
-					}
-					else if (strcmp(TextFont[index].Text, "7") == 0) // SansSerif Bold
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-						myPrint("\tFont: SansSerif\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-					}
-					else if (strcmp(TextFont[index].Text, "8") == 0) // Script Bold
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-						myPrint("\tFont: ScriptS\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-					}
-					else if (strcmp(TextFont[index].Text, "9") == 0) // Gothic
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "GothicE", 0x22);
-						myPrint("\tFont: GothicE\n");
-					}
-					else if (strcmp(TextFont[index].Text, "10") == 0) // Old English
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "Old English Text MT", 0x22);
-						myPrint("\tFont: Old English Text MT\n");
-					}
-					else if (strcmp(TextFont[index].Text, "11") == 0) // Kanji
-					{
-						myPrint("\tFont: Kanji => Not supported in KiCad!\n");
-					}
-					else if (strcmp(TextFont[index].Text, "12") == 0) // Plot
-					{
-						myPrint("\tFont: Plot => Not supported in KiCad!\n");
-					}
-					else
-					{
-						myPrint("\tFont: Default\n");
-					}
-
-					// Text Size
-					num_struct Size = numProcess(TextSize[index] * FontScale, 1, 0);
-
-					fprintf(KiCadFile, "\t\t\t\t(size %d.%05d %d.%05d)\n", Size.Integ, Size.Frac, Size.Integ, Size.Frac);
-
-					// Text Color
-					if (TextColor[index].Key != 0xff)
-					{
-						//(color 21 255 12 1)
-						fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
-						myPrint("\tColor: R:%d G:%d B:%d\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
-					}
-					else
-					{
-						myPrint("\tColor: Default");
-						fprintf(KiCadFile, "\t\t\t\t(color 0 0 0 0)\n");
-
-					}
-
-					fprintf(KiCadFile, "\t\t\t)\n");
-
-					myPrint("\tSize: %d.%05d\n", Size.Integ, Size.Frac);
-
-					// Text Orientation
-					fprintf(KiCadFile, "\t\t\t(justify");
-
-					/*
-					Orientation codes:
-					None = 0 (Lower left)
-					UpperLeft = 1
-					MiddleLeft = 2
-					LowerLeft = 3
-					UpperCenter = 4
-					MiddleCenter = 5
-					LowerCenter = 6
-					UpperRight = 7
-					MiddleRight = 8
-					LowerRight = 9
-					*/
-					uint32_t tempOrigin = TextOrigin[index];
-					if (tempOrigin == 0)
-					{
-						tempOrigin = DefaultTextOrigin;
-					}
-					else if (tempOrigin > 9)
-					{
-						myPrint("\tWarning, unknown orientation Code! %d\n", tempOrigin);
-						tempOrigin = DefaultTextOrigin;
-					}
-
-					myPrint("\tOrientation: ");
-					if (!(tempOrigin % 3))
-					{
-						fprintf(KiCadFile, " bottom");
-						myPrint("Upper");
-					}
-					else if (!((tempOrigin + 2) % 3))
-					{
-						fprintf(KiCadFile, " top");
-						myPrint("Lower");
-					}
-					else
-					{
-						myPrint("Center");
-					}
-
-					if (tempOrigin <= 3)
-					{
-						fprintf(KiCadFile, " left");
-						myPrint("Left\n");
-					}
-					else if (tempOrigin >= 7)
-					{
-						fprintf(KiCadFile, " right");
-						myPrint("Right\n");
-					}
-					else
-					{
-						myPrint("Center\n");
-					}
-
-					fprintf(KiCadFile, ")\n");
-					fprintf(KiCadFile, "\t\t)\n");
-
-					fprintf(KiCadFile, "\t)\n");
-
-					// Rotation
-					myPrint("\tRotation: %d Degree\n", TextOrient[index] * 90);
-
-				}
-			}
-		}
+		KiCadProcessText(KiCadFile, 0);
 
 		// NetLabel
-		if (NetLabel != 0 && TextPos != 0 && TextOrigin != 0 && TextSize != 0 && TextOrient != 0 && TextFont != 0 && TextColor != 0 && NumNetLabel > 0 && Label2TextData != 0)
-		{
-			myPrint("\nLables:\n");
-			uint32_t i = 0;
-			for (uint32_t i = 0; i < NumNetLabel; i++)
-			{
-				uint32_t index = Label2TextData[i].ID - 1;
-				if (TextSize[index] != 0 || TextPos[index].X != 0 || TextPos[index].Y != 0 || TextOrigin[index] != 0 || TextOrient[index] != 0 || TextColor[index].Red != 0 || TextColor[index].Green != 0 || TextColor[index].Blue != 0 || TextColor[index].Key != 0)
-				{
-					fprintf(KiCadFile, "\t(label %c", 0x22);
-
-					// Text String
-					uint8_t Overbar = 0;
-					for (uint32_t j = 0; j < NetLabel[i].Lenth; j++)
-					{
-						if (NetLabel[i].Text[j] == '\n') // Check for line feed
-						{
-							fprintf(KiCadFile, "%cn", 0x5C); // Newline
-
-						}
-						else if (NetLabel[i].Text[j] == '~') // Check for overbar
-						{
-							if (Overbar)
-							{
-								Overbar = 0;
-								fprintf(KiCadFile, "}"); // Close Overbar
-							}
-							else
-							{
-								Overbar = 1;
-								fprintf(KiCadFile, "~{"); // Open Overbar
-
-							}
-						}
-						else
-						{
-							fprintf(KiCadFile, "%c", NetLabel[i].Text[j]);
-						}
-					}
-					if (Overbar)
-					{
-						fprintf(KiCadFile, "}"); // Close Overbar
-					}
-					myPrint("Lable %d\n", i + 1);
-					myPrint("\t[%s]\n", NetLabel[i].Text);
-
-					fprintf(KiCadFile, "%c\n", 0x22);
-
-					// Position
-					num_struct X = numProcess(TextPos[index].X, CoordinateScaleX, CoordinateOffsetX);
-					num_struct Y = numProcess(TextPos[index].Y, CoordinateScaleY, CoordinateOffsetY);
-					myPrint("\tX: %d.%05d, Y: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-					fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d %d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac, TextOrient[index] * 90);
-
-
-					fprintf(KiCadFile, "\t\t(effects\n");
-					fprintf(KiCadFile, "\t\t\t(font \n");
-
-					// Font
-					if (TextFont[index].Lenth > 2) // custom font
-					{
-						uint32_t index2 = (uint32_t)strchr(TextFont[index].Text, '|') - (uint32_t)TextFont[index].Text + 1; // get index of Font name
-						uint32_t FontNameLen = (uint32_t)strchr(TextFont[index].Text + index2, '|') - (uint32_t)TextFont[index].Text - index2;
-						char* FontString = calloc(FontNameLen + 1, sizeof(char));
-						if (FontString != 0) // Custom Font
-						{
-							memcpy(FontString, TextFont[index].Text + index2, FontNameLen);
-							FontString[FontNameLen] = '\0'; // Zero terminate
-
-							fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, &FontString[0], 0x22);
-							myPrint("\tFont: %s\n", &FontString[0]);
-
-
-
-							if (TextFont[index].Text[FontNameLen + 7] == '1') // Strikeout
-							{
-
-							}
-							if (TextFont[index].Text[FontNameLen + 9] == '1') // Underlined
-							{
-
-							}
-							if (TextFont[index].Text[FontNameLen + 11] == '1') // Bold
-							{
-								fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-								myPrint("\tBold\n");
-							}
-
-							free(FontString);
-						}
-
-
-					}
-					else if (strcmp(TextFont[index].Text, "2") == 0) // Roman Italic
-					{
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-						myPrint("\tItalic\n");
-					}
-					else if (strcmp(TextFont[index].Text, "3") == 0) // Roman Bold
-					{
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-					}
-					else if (strcmp(TextFont[index].Text, "4") == 0) // Roman Bold Italic
-					{
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-						myPrint("\tBold & Italic\n");
-					}
-					else if (strcmp(TextFont[index].Text, "5") == 0) // SansSerif
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-						myPrint("\tFont: SansSerif\n");
-					}
-					else if (strcmp(TextFont[index].Text, "6") == 0) // Script
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-						myPrint("\tFont: ScriptS\n");
-					}
-					else if (strcmp(TextFont[index].Text, "7") == 0) // SansSerif Bold
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-						myPrint("\tFont: SansSerif\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-					}
-					else if (strcmp(TextFont[index].Text, "8") == 0) // Script Bold
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-						myPrint("\tFont: ScriptS\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-					}
-					else if (strcmp(TextFont[index].Text, "9") == 0) // Gothic
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "GothicE", 0x22);
-						myPrint("\tFont: GothicE\n");
-					}
-					else if (strcmp(TextFont[index].Text, "10") == 0) // Old English
-					{
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "Old English Text MT", 0x22);
-						myPrint("\tFont: Old English Text MT\n");
-					}
-					else if (strcmp(TextFont[index].Text, "11") == 0) // Kanji
-					{
-						myPrint("\tFont: Kanji => Not supported in KiCad!\n");
-					}
-					else if (strcmp(TextFont[index].Text, "12") == 0) // Plot
-					{
-						myPrint("\tFont: Plot => Not supported in KiCad!\n");
-					}
-					else
-					{
-						myPrint("\tFont: Default\n");
-					}
-
-					// Text Size
-#if HalfFontSize		
-					num_struct Size = numProcess(TextSize[index] >> 1, 1, 0);
-#else
-					num_struct Size = numProcess(TextSize[index], 1, 0);
-#endif
-					fprintf(KiCadFile, "\t\t\t\t(size %d.%05d %d.%05d)\n", Size.Integ, Size.Frac, Size.Integ, Size.Frac);
-
-					// Text Color
-					if (TextColor[index].Key != 0xff)
-					{
-						//(color 21 255 12 1)
-						fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
-						myPrint("\tColor: R:%d G:%d B:%d\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
-					}
-					else
-					{
-						myPrint("\tColor: Default");
-						fprintf(KiCadFile, "\t\t\t\t(color 0 0 0 0)\n");
-
-					}
-
-					fprintf(KiCadFile, "\t\t\t)\n");
-
-					myPrint("\tSize: %d.%05d\n", Size.Integ, Size.Frac);
-
-					// Text Orientation
-					fprintf(KiCadFile, "\t\t\t(justify");
-
-					/*
-					Orientation codes:
-					None = 0 (Lower left)
-					UpperLeft = 1
-					MiddleLeft = 2
-					LowerLeft = 3
-					UpperCenter = 4
-					MiddleCenter = 5
-					LowerCenter = 6
-					UpperRight = 7
-					MiddleRight = 8
-					LowerRight = 9
-					*/
-					uint32_t tempOrigin = TextOrigin[index];
-					if (tempOrigin == 0)
-					{
-						tempOrigin = DefaultTextOrigin;
-					}
-					else if (tempOrigin > 9)
-					{
-						myPrint("\tWarning, unknown orientation Code! %d\n", tempOrigin);
-						tempOrigin = DefaultTextOrigin;
-					}
-
-					myPrint("\tOrientation: ");
-					if (!(tempOrigin % 3))
-					{
-						fprintf(KiCadFile, " bottom");
-						myPrint("Upper");
-					}
-					else if (!((tempOrigin + 2) % 3))
-					{
-						fprintf(KiCadFile, " top");
-						myPrint("Lower");
-					}
-					else
-					{
-						myPrint("Center");
-					}
-
-					if (tempOrigin <= 3)
-					{
-						fprintf(KiCadFile, " left");
-						myPrint("Left\n");
-					}
-					else if (tempOrigin >= 7)
-					{
-						fprintf(KiCadFile, " right");
-						myPrint("Right\n");
-					}
-					else
-					{
-						myPrint("Center\n");
-					}
-
-					fprintf(KiCadFile, ")\n");
-					fprintf(KiCadFile, "\t\t)\n");
-
-					fprintf(KiCadFile, "\t)\n");
-
-					// Rotation
-					myPrint("\tRotation: %d Degree\n", TextOrient[index] * 90);
-
-				}
-			}
-		}
+		KiCadProcessText(KiCadFile, 1);
 
 		// Leader
 		fprintf(KiCadFile, "\t(sheet_instances\n");
@@ -827,7 +324,6 @@ int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filele
 	}
 }
 
-
 /*
 ******************************************************************
 * Local Functions
@@ -839,7 +335,7 @@ int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filele
 *
 * - description: 	Stores styles in KiCad
 *
-* - parameter: 		-
+* - parameter: 		Pointer to KiCad file; Index of Style; 1 for filled shape (Rect, Dircle, ..), 0 for not filled shape (Lines, ...)
 *
 * - return value: 	-
 ******************************************************************
@@ -892,15 +388,15 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 	}
 
 	// Color
-	if (Color[index].Key != 0xff)
-	{
-		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Color[index].Red, Color[index].Green, Color[index].Blue);
-		myPrint("\tColor: R:%d G:%d B:%d\n", Color[index].Red, Color[index].Green, Color[index].Blue);
-	}
-	else
-	{
+	if (Color[index].Key == 0xff)
+	{ // Default Color
 		myPrint("\tColor: Default\n");
 		fprintf(KiCadFile, "\t\t\t(color 0 0 0 0)\n");
+	}
+	else
+	{ // Custom Color
+		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Color[index].Red, Color[index].Green, Color[index].Blue);
+		myPrint("\tColor: R:%d G:%d B:%d\n", Color[index].Red, Color[index].Green, Color[index].Blue);
 	}
 	fprintf(KiCadFile, "\t\t)\n");
 
@@ -987,17 +483,17 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 
 		if (opacity != -1)
 		{
-			if (ColorExt[index].Key != 0xff)
-			{
-				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue, ((float)opacity / 100.0));
-				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: R:%d G:%d B:%d\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue);
-			}
-			else
-			{
+			if (ColorExt[index].Key == 0xff)
+			{ // Default Color
 				myPrint("\tFill: %d%c\n", opacity, 0x25);
 				myPrint("\tColor: Default\n");
 				fprintf(KiCadFile, "\t\t\t(color 0 0 0 %.2f)\n", ((float)opacity / 100.0));
+			}
+			else
+			{ // Custom Color
+				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue, ((float)opacity / 100.0));
+				myPrint("\tFill: %d%c\n", opacity, 0x25);
+				myPrint("\tColor: R:%d G:%d B:%d\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue);
 			}
 		}
 		fprintf(KiCadFile, "\t\t)\n");
@@ -1046,17 +542,17 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 		else
 		{
 			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			if (ColorExt[index].Key != 0xff)
-			{
-				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue, ((float)opacity / 100.0));
-				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: R:%d G:%d B:%d\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue);
-			}
-			else
-			{
+			if (ColorExt[index].Key == 0xff)
+			{ // Default Color
 				myPrint("\tFill: %d%c\n", opacity, 0x25);
 				myPrint("\tColor: Default\n");
 				fprintf(KiCadFile, "\t\t\t(color 0 0 0 %.2f)\n", ((float)opacity / 100.0));
+			}
+			else
+			{ // Custom Color
+				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue, ((float)opacity / 100.0));
+				myPrint("\tFill: %d%c\n", opacity, 0x25);
+				myPrint("\tColor: R:%d G:%d B:%d\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue);
 			}
 		}
 		fprintf(KiCadFile, "\t\t)\n");
@@ -1065,6 +561,322 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 	fprintf(KiCadFile, "\t)\n");
 }
 
+/*
+******************************************************************
+* - function name:	KiCadProcessText()
+*
+* - description: 	Stores texts in KiCad
+*
+* - parameter: 		Pointer to KiCad file; 1 for texts, 0 for labels
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadProcessText(FILE* KiCadFile, uint8_t type)
+{
+	text_struct* InputString;
+	uint32_t NumData;
+	uint32_t index;
+	uint8_t Overbar;
+
+	if (type == 0) // Text
+	{
+		InputString = TextString;
+		NumData = NumTextData;
+	}
+	else // Label
+	{
+		InputString = NetLabel;
+		NumData = NumNetLabel;
+	}
+
+	if (InputString != 0 &&
+		TextPos != 0 &&
+		TextOrigin != 0 &&
+		TextSize != 0 &&
+		TextOrient != 0 &&
+		TextFont != 0 &&
+		TextColor != 0 &&
+		NumData > 0 &&
+		((Label2TextData != 0 && type != 0) || (Text2TextData != 0 && type == 0)))
+	{
+		if (type == 0) // Text
+		{
+			myPrint("\nText:\n");
+		}
+		else // Label
+		{
+			myPrint("\nLabel:\n");
+		}
+		uint32_t i = 0;
+		for (uint32_t i = 0; i < NumText; i++)
+		{
+			if (type == 0)
+			{
+				index = Text2TextData[i] - 1;
+			}
+			else
+			{
+				index = Label2TextData[i].ID - 1;
+			}
+			if (TextSize[index] != 0 ||
+				TextPos[index].X != 0 ||
+				TextPos[index].Y != 0 ||
+				TextOrigin[index] != 0 ||
+				TextOrient[index] != 0 ||
+				TextColor[index].Red != 0 ||
+				TextColor[index].Green != 0 ||
+				TextColor[index].Blue != 0 ||
+				TextColor[index].Key != 0)
+			{
+				if (type == 0) // Text
+				{
+					fprintf(KiCadFile, "\t(text %c", 0x22);
+				}
+				else // Label
+				{
+					fprintf(KiCadFile, "\t(label %c", 0x22);
+				}
+				// Text String
+				Overbar = 0;
+				for (uint32_t j = 0; j < InputString[i].Lenth; j++)
+				{
+					if (InputString[i].Text[j] == '\n') // Check for line feed
+					{
+						fprintf(KiCadFile, "%cn", 0x5C); // Newline
+
+					}
+					else if (InputString[i].Text[j] == '~') // Check for overbar
+					{
+						if (Overbar)
+						{
+							Overbar = 0;
+							fprintf(KiCadFile, "}"); // Close Overbar
+						}
+						else
+						{
+							Overbar = 1;
+							fprintf(KiCadFile, "~{"); // Open Overbar
+						}
+					}
+					else
+					{
+						fprintf(KiCadFile, "%c", InputString[i].Text[j]);
+					}
+				}
+				if (Overbar)
+				{
+					fprintf(KiCadFile, "}"); // Close Overbar
+				}
+				if (type == 0) // Text
+				{
+					myPrint("Text %d\n", i + 1);
+				}
+				else // Label
+				{
+					myPrint("Label %d\n", i + 1);
+				}
+				myPrint("\t[%s]\n", InputString[i].Text);
+
+				fprintf(KiCadFile, "%c\n", 0x22);
+
+				// Position
+				num_struct X = numProcess(TextPos[index].X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct Y = numProcess(TextPos[index].Y, CoordinateScaleY, CoordinateOffsetY);
+				myPrint("\tX: %d.%05d, Y: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
+				fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d %d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac, TextOrient[index] * 90);
+
+				fprintf(KiCadFile, "\t\t(effects\n");
+				fprintf(KiCadFile, "\t\t\t(font \n");
+
+				// Font
+				if (TextFont[index].Lenth > 2) // custom font
+				{
+					uint32_t index2 = (uint32_t)strchr(TextFont[index].Text, '|') - (uint32_t)TextFont[index].Text + 1; // get index of Font name
+					uint32_t FontNameLen = (uint32_t)strchr(TextFont[index].Text + index2, '|') - (uint32_t)TextFont[index].Text - index2;
+					char* FontString = calloc(FontNameLen + 1, sizeof(char));
+					if (FontString != 0) // Custom Font
+					{
+						memcpy(FontString, TextFont[index].Text + index2, FontNameLen);
+						FontString[FontNameLen] = '\0'; // Zero terminate
+
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, &FontString[0], 0x22);
+						myPrint("\tFont: %s\n", &FontString[0]);
+
+						if (TextFont[index].Text[FontNameLen + 7] == '1') // Strikeout
+						{
+
+						}
+						if (TextFont[index].Text[FontNameLen + 9] == '1') // Underlined
+						{
+
+						}
+						if (TextFont[index].Text[FontNameLen + 11] == '1') // Bold
+						{
+							fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+							myPrint("\tBold\n");
+						}
+						free(FontString);
+					}
+				}
+				else if (strcmp(TextFont[index].Text, "2") == 0) // Roman Italic
+				{
+					myPrint("\tFont: Default\n");
+					fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+					myPrint("\tItalic\n");
+				}
+				else if (strcmp(TextFont[index].Text, "3") == 0) // Roman Bold
+				{
+					myPrint("\tFont: Default\n");
+					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+					myPrint("\tBold\n");
+				}
+				else if (strcmp(TextFont[index].Text, "4") == 0) // Roman Bold Italic
+				{
+					myPrint("\tFont: Default\n");
+					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+					fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+					myPrint("\tBold & Italic\n");
+				}
+				else if (strcmp(TextFont[index].Text, "5") == 0) // SansSerif
+				{
+					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
+					myPrint("\tFont: SansSerif\n");
+				}
+				else if (strcmp(TextFont[index].Text, "6") == 0) // Script
+				{
+					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
+					myPrint("\tFont: ScriptS\n");
+				}
+				else if (strcmp(TextFont[index].Text, "7") == 0) // SansSerif Bold
+				{
+					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
+					myPrint("\tFont: SansSerif\n");
+					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+					myPrint("\tBold\n");
+				}
+				else if (strcmp(TextFont[index].Text, "8") == 0) // Script Bold
+				{
+					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
+					myPrint("\tFont: ScriptS\n");
+					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+					myPrint("\tBold\n");
+				}
+				else if (strcmp(TextFont[index].Text, "9") == 0) // Gothic
+				{
+					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "GothicE", 0x22);
+					myPrint("\tFont: GothicE\n");
+				}
+				else if (strcmp(TextFont[index].Text, "10") == 0) // Old English
+				{
+					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "Old English Text MT", 0x22);
+					myPrint("\tFont: Old English Text MT\n");
+				}
+				else if (strcmp(TextFont[index].Text, "11") == 0) // Kanji
+				{
+					myPrint("\tFont: Kanji => Not supported in KiCad!\n");
+				}
+				else if (strcmp(TextFont[index].Text, "12") == 0) // Plot
+				{
+					myPrint("\tFont: Plot => Not supported in KiCad!\n");
+				}
+				else
+				{
+					myPrint("\tFont: Default\n");
+				}
+
+				// Text Size
+				num_struct Size = numProcess(TextSize[index] * FontScale, 1, 0);
+
+				fprintf(KiCadFile, "\t\t\t\t(size %d.%05d %d.%05d)\n", Size.Integ, Size.Frac, Size.Integ, Size.Frac);
+
+				// Text Color
+				if (TextColor[index].Key != 0xff)
+				{
+					//(color 21 255 12 1)
+					fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
+					myPrint("\tColor: R:%d G:%d B:%d\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
+				}
+				else
+				{
+					myPrint("\tColor: Default");
+					fprintf(KiCadFile, "\t\t\t\t(color 0 0 0 0)\n");
+				}
+
+				fprintf(KiCadFile, "\t\t\t)\n");
+
+				myPrint("\tSize: %d.%05d\n", Size.Integ, Size.Frac);
+
+				// Text Orientation
+				fprintf(KiCadFile, "\t\t\t(justify");
+
+				/*
+				Orientation codes:
+				None = 0 (Lower left)
+				UpperLeft = 1
+				MiddleLeft = 2
+				LowerLeft = 3
+				UpperCenter = 4
+				MiddleCenter = 5
+				LowerCenter = 6
+				UpperRight = 7
+				MiddleRight = 8
+				LowerRight = 9
+				*/
+				uint32_t tempOrigin = TextOrigin[index];
+				if (tempOrigin == 0)
+				{
+					tempOrigin = DefaultTextOrigin;
+				}
+				else if (tempOrigin > 9)
+				{
+					myPrint("\tWarning, unknown orientation Code! %d\n", tempOrigin);
+					tempOrigin = DefaultTextOrigin;
+				}
+
+				myPrint("\tOrientation: ");
+				if (!(tempOrigin % 3))
+				{
+					fprintf(KiCadFile, " bottom");
+					myPrint("Upper");
+				}
+				else if (!((tempOrigin + 2) % 3))
+				{
+					fprintf(KiCadFile, " top");
+					myPrint("Lower");
+				}
+				else
+				{
+					myPrint("Center");
+				}
+
+				if (tempOrigin <= 3)
+				{
+					fprintf(KiCadFile, " left");
+					myPrint("Left\n");
+				}
+				else if (tempOrigin >= 7)
+				{
+					fprintf(KiCadFile, " right");
+					myPrint("Right\n");
+				}
+				else
+				{
+					myPrint("Center\n");
+				}
+
+				fprintf(KiCadFile, ")\n");
+				fprintf(KiCadFile, "\t\t)\n");
+
+				fprintf(KiCadFile, "\t)\n");
+
+				// Rotation
+				myPrint("\tRotation: %d Degree\n", TextOrient[index] * 90);
+
+			}
+		}
+	}
+}
 
 /*
 ******************************************************************

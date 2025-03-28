@@ -32,6 +32,12 @@
 #define DIR_SEPERATOR_WINDOWS '\\'
 #define DIR_SEPERATOR_UNIX '/'
 
+#ifdef WIN32 // Building for Windows
+	#define  DIR_SEPERATOR DIR_SEPERATOR_WINDOWS
+#else // Building for Unix
+	#define  DIR_SEPERATOR DIR_SEPERATOR_UNIX
+#endif
+
 /*
 ******************************************************************
 * Global Structures

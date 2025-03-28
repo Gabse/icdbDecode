@@ -66,7 +66,7 @@ int ParseIcdb(char* path, uint32_t pathlength)
 	uint32_t error = 0;
 
 	// do only s1 for now
-	PathLen = assemblePath(&Path, path, pathlength, "s1", sizeof("s1"), '\\');
+	PathLen = assemblePath(&Path, path, pathlength, "s1", sizeof("s1"), DIR_SEPERATOR);
 	error = parseSessionFolder(Path, PathLen);
 	free(Path);
 
@@ -100,11 +100,11 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 	uint32_t SubPathLen = 0;
 
 	// Parse catlgatl
-	PathLen = assemblePath(&Path, path, pathlength, "cdbcatlg", sizeof("cdbcatlg"), '\\');
+	PathLen = assemblePath(&Path, path, pathlength, "cdbcatlg", sizeof("cdbcatlg"), DIR_SEPERATOR);
 	error = parseCatlgatl(Path, PathLen);
 	free(Path);
 	// Change to cdbblks
-	PathLen = assemblePath(&Path, path, pathlength, "cdbblks", sizeof("cdbblks"), '\\');
+	PathLen = assemblePath(&Path, path, pathlength, "cdbblks", sizeof("cdbblks"), DIR_SEPERATOR);
 	if (NumBlkUID == NumMdlNam && NumBlkUID >= 0 && BlkUID != NULL && MdlNam != NULL)
 	{
 		for (uint32_t i = 0; i < NumBlkUID; i++)
@@ -115,7 +115,7 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 
 			// Assemble filepath for block folder
 			myPrint("Sheet [%s] is stored in [%s]\n", MdlNam[i].Text, FullUIDpath);
-			SubPathLen = assemblePath(&SubPath, Path, PathLen, FullUIDpath, FullUIDpathLength, '\\');
+			SubPathLen = assemblePath(&SubPath, Path, PathLen, FullUIDpath, FullUIDpathLength, DIR_SEPERATOR);
 
 			// Parse cdbblks
 			error += parseCdbblks(SubPath, SubPathLen);

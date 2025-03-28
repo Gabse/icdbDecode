@@ -23,6 +23,7 @@
 #include <stdlib.h>		// Required for calloc to work properly
 #include <string.h>		// Required for memcpy
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include "common.h"		// Required for DIR_SEPERATOR
 
 /*
 ******************************************************************
@@ -41,13 +42,9 @@ uint32_t assemblePath(char** destination, char* leftstring, uint32_t leftstringl
 	// replace slash/backslash
 	for (uint32_t i = 0; i < completePathLength; i++)
 	{
-		if ((destination[i] == '\\') || (destination[i] == '/'))
+		if ((destination[i] == DIR_SEPERATOR_WINDOWS) || (destination[i] == DIR_SEPERATOR_UNIX))
 		{
-			#ifdef WIN32 // Building for Windows
-				destination[i] = DIR_SEPERATOR_WINDOWS; // Replace Slash / Backslash
-			#else // Building for Unix
-				destination[i] = DIR_SEPERATOR_UNIX; // Replace Slash / Backslash
-			#endif
+			destination[i] = DIR_SEPERATOR; // Replace Slash / Backslash
 		}
 	}
 	return completePathLength;
@@ -70,16 +67,15 @@ uint32_t createPath(char** destination, char* leftstring, uint32_t leftstringlen
 	// replace slash/backslash
 	for (uint32_t i = 0; i < completePathLength; i++)
 	{
-		if (((*destination)[i] == '\\') || ((*destination)[i] == '/'))
+		if ((destination[i] == DIR_SEPERATOR_WINDOWS) || (destination[i] == DIR_SEPERATOR_UNIX))
 		{
 			(*destination)[i] = '\0'; // Zero termintate string for mkdir command
 			#ifdef WIN32 // Building for Windows
 				mkdir(*destination);
-				(*destination)[i] = DIR_SEPERATOR_WINDOWS; // Replace Slash / Backslash
 			#else // Building for Unix
 				mkdir(*destination, 0777);
-				(*destination)[i] = DIR_SEPERATOR_UNIX; // Replace Slash / Backslash
 			#endif
+			(*destination)[i] = DIR_SEPERATOR; // Replace Slash / Backslash
 		}
 	}	
 	return completePathLength;

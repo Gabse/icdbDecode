@@ -66,7 +66,7 @@ FILE* myfopen(char* option, char* leftstring, uint32_t leftstringlength, char* r
 	FILE* returnpath = NULL;
 	char* Path = NULL;
 
-	if(strcmp(option, "r") == 0) //Read operation
+	if(strcmp(option, "r") == 0 || strcmp(option, "rb") == 0) //Read operation
 	{
 		assemblePath(&Path, leftstring, leftstringlength, rightstring, rightstringlength, seperator);
 	}
@@ -102,7 +102,7 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 	uint32_t type = 0;
 	
 	// Open file
-	sourceFile = myfopen("rb", path, pathlenth, file, filelenth, '\\');
+	sourceFile = myfopen("rb", path, pathlenth, file, filelenth, DIR_SEPERATOR);
 	if (sourceFile != 0)
 	{
 		// Determine total file size
@@ -137,7 +137,7 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 	}
 	else
 	{
-		myPrint("Failed to open [%s]!\n", path);
+		myPrint("Failed to open [%s%c%s]!\n", path, DIR_SEPERATOR, file);
 		return 1;
 	}
 }
