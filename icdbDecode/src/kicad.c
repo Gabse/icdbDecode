@@ -608,7 +608,6 @@ void KiCadProcessText(FILE* KiCadFile, uint8_t type)
 		{
 			myPrint("\nLabel:\n");
 		}
-		uint32_t i = 0;
 		for (uint32_t i = 0; i < NumText; i++)
 		{
 			if (type == 0)

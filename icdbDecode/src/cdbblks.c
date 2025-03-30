@@ -114,8 +114,8 @@ group_struct* Net2NetDxD = NULL;
 * Local Function Protptypes
 ******************************************************************
 */
-void ProcessKeyDxdatl(FILE*, uint32_t, char*);
-void ProcessKeyBlkatl(FILE*, uint32_t, char*);
+void ProcessKeyDxdatl(FILE*, char*);
+void ProcessKeyBlkatl(FILE*, char*);
 void InitDxdatl(void);
 void InitBlkatl(void);
 segment_struct* ParseSegment(FILE*, int32_t*, char*);
@@ -157,12 +157,12 @@ int parseCdbblks(char* path, uint32_t pathlenth)
 *
 * - description: 	Check for dxdatl keys
 *
-* - parameter: 		file pointer; total filesize, Key to check
+* - parameter: 		file pointer; Key to check
 *
 * - return value: 	-
 ******************************************************************
 */
-void ProcessKeyDxdatl(FILE* sourceFile, uint32_t filesize, char* Name)
+void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 {
 	if (strcmp(Name, "Arc2Style") == 0)
 	{
@@ -603,12 +603,12 @@ void ProcessKeyDxdatl(FILE* sourceFile, uint32_t filesize, char* Name)
 *
 * - description: 	Check for blkatl keys
 *
-* - parameter: 		file pointer; total filesize, Key to check
+* - parameter: 		file pointer; Key to check
 *
 * - return value: 	-
 ******************************************************************
 */
-void ProcessKeyBlkatl(FILE* sourceFile, uint32_t filesize, char* Name)
+void ProcessKeyBlkatl(FILE* sourceFile, char* Name)
 {
 	if (strcmp(Name, "BNetFlg") == 0)
 		{
@@ -949,6 +949,7 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 	segment_struct* Struct = NULL;
 	int32_t Repetitions;
 	uint32_t Type = 0;
+	uint32_t SizeAccumulator = 0;
 
 	fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
@@ -958,12 +959,12 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 		return 0;
 	}
 	fread(&PayloadLenRaw, sizeof(uint32_t), 1, sourceFile);
-	fseek(sourceFile, 16+4, SEEK_CUR);
+	fseek(sourceFile, 16 + 4, SEEK_CUR);
 	// Store initial address
 	BlockStartAddress = ftell(sourceFile);
 
 	// Count Entry (I haven't found a way to derive the number of entrys from PayloadLenRaw)
-	do
+	while (PayloadLenRaw > SizeAccumulator && IsInsideFile(sourceFile))
 	{
 		fseek(sourceFile, EntryLen * sizeof(uint32_t), SEEK_CUR);
 		fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
@@ -980,8 +981,9 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 		else
 		{
 			PayloadLen++;
+			SizeAccumulator += 8 + (EntryLen * sizeof(uint32_t));
 		}
-	} while (1);// (ftell(sourceFile) < filesize);
+	}
 
 	fseek(sourceFile, BlockStartAddress, SEEK_SET);
 
@@ -1054,9 +1056,6 @@ void InitSegment(int32_t len, segment_struct* structure)
 		free(structure); // Free Array of segmens
 	}
 }
-
-
-
 
 /*
 ******************************************************************

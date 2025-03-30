@@ -62,13 +62,14 @@ typedef struct text_struct
 */
 extern FILE* myfopen(char*, char*, uint32_t, char*, uint32_t, char);
 extern void myPrint(const char*, ...);
-int parseFile(char*, uint32_t, char*, uint32_t, void(*CheckKey)(FILE*, uint32_t, char*));
-extern void SkipBlock(FILE*, uint32_t, uint32_t);
+extern int parseFile(char*, uint32_t, char*, uint32_t, void(*CheckKey)(FILE*, char*));
+extern void SkipBlock(FILE*, uint32_t);
 extern void* Parse(FILE*, int32_t*, uint32_t, uint32_t, char*);
 extern text_struct* ParseString(FILE*, int32_t*, char*);
 extern num_struct numProcess(int32_t, int32_t, int32_t);
-void PrintKey(FILE*, int32_t, char*);
-void InitString(int32_t, text_struct**);
-void InitRegular(int32_t, void**);
+extern void PrintKey(FILE*, char*);
+extern void InitString(int32_t, text_struct**);
+extern void InitRegular(int32_t, void**);
+extern uint8_t IsInsideFile(FILE*);
 
 #endif //_COMMON_H

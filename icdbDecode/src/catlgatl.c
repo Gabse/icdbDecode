@@ -49,7 +49,7 @@ text_struct* MdlNam = NULL;
 * Local Functions
 ******************************************************************
 */
-void ProcessKeyCatlgatl(FILE*, uint32_t, char*);
+void ProcessKeyCatlgatl(FILE*, char*);
 void InitCatlgatl(void);
 
 
@@ -81,12 +81,12 @@ int parseCatlgatl(char* path, uint32_t pathlenth)
 *
 * - description: 	Check for catlgatl keys
 *
-* - parameter: 		file pointer; total filesize, Key to check
+* - parameter: 		file pointer; Key to check
 *
 * - return value: 	-
 ******************************************************************
 */
-void ProcessKeyCatlgatl(FILE* sourceFile, uint32_t filesize, char* Name)
+void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 {
 	if (strcmp(Name, "BlkTime") == 0)
 	{
