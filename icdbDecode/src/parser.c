@@ -147,24 +147,26 @@ void makePathFromUID(char* output, uid_struct* input)
 	uint8_t temp = 0;
 	for (uint8_t i = 0; i < 8; i++)
 	{
+		// Right part
 		temp = (input->UID[i] & 0x0F);
 		if (temp < 0x0A)
 		{
-			temp += 0x30;
+			temp += '0'; // To ASCII
 		}
 		else
 		{
-			temp += 0x51;
+			temp += 'a' - 0x0A; // To ASCII
 		}
 		output[i << 1] = temp;
+		// Left part
 		temp = ((input->UID[i] & 0xF0) >> 4);
 		if (temp < 0x0A)
 		{
-			temp += 0x30;
+			temp += '0'; // To ASCII
 		}
 		else
 		{
-			temp += 0x51;
+			temp += 'a' - 0x0A; // To ASCII
 		}
 		output[(i << 1) + 1] = temp;
 	}
