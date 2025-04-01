@@ -243,6 +243,9 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	else if (strcmp(Name, "Bus2Grps") == 0)
 	{
 	}
+	else if (strcmp(Name, "BusExcluded") == 0)
+	{
+	}
 	else if (strcmp(Name, "BusGUID") == 0)
 	{
 	}
@@ -472,6 +475,9 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	else if (strcmp(Name, "NetDxDUID") == 0)
 	{
 	}
+	else if (strcmp(Name, "NetExcluded") == 0)
+	{
+	}
 	else if (strcmp(Name, "NetGUID") == 0)
 	{
 	}
@@ -593,7 +599,9 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	}
 	else
 	{
-		myPrint("Unknown Key [%s]\n", Name);
+#if !debug
+		myPrint("Unknown Key in Dxdatl [%s]\n", Name);
+#endif
 	}
 }
 
@@ -642,6 +650,10 @@ void ProcessKeyBlkatl(FILE* sourceFile, char* Name)
 		{
 
 		}
+	else if (strcmp(Name, "BSym2CMatrixes") == 0)
+		{
+
+		}
 	else if (strcmp(Name, "BSym2Prps") == 0)
 		{
 
@@ -655,6 +667,10 @@ void ProcessKeyBlkatl(FILE* sourceFile, char* Name)
 
 		}
 	else if (strcmp(Name, "BSymArrayed") == 0)
+		{
+
+		}
+	else if (strcmp(Name, "BSymFlg") == 0)
 		{
 
 		}
@@ -824,7 +840,9 @@ void ProcessKeyBlkatl(FILE* sourceFile, char* Name)
 	}
 	else
 	{
-		myPrint("Unknown Key [%s]\n", Name);
+#if !debug
+		myPrint("Unknown Key in Blkatl [%s]\n", Name);
+#endif
 	}
 }
 
@@ -1004,11 +1022,8 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 			for (uint32_t i = 0; i < *NumElements;)
 			{
 				fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
-
 				if (EntryLen == 0x4FFFFFFF) // No more entrys
 				{
-					// Seek back to not skip encode
-					fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
 					break;
 				}
 				else if (EntryLen == 0x4FFFFFFE) // Padding
@@ -1026,6 +1041,8 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 					i++;
 				}
 			}
+			// Seek back to not skip encode
+			fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
 		}
 	}
 	return Struct;

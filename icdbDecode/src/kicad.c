@@ -41,7 +41,7 @@
 #define DefaultTextOrigin 3
 #define FontScale 0.5  // Fonts in KiCad are rendered about half the size than in DxD. Exact size TBD
 #define BaseLineThickness 0.1524
-#define NewKiCad FALSE // Create Kicad 9.99 required for filling pattern
+#define NewKiCad 1 // Create Kicad 9.99 required for filling pattern
 #define KiCadFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
 
 
@@ -71,15 +71,12 @@ typedef struct net_bus_struct
 	coordinate_struct* Joints;
 } net_bus_struct;
 
-
 // Non dxd structs
 int32_t NumNetstyles = -1;
 style_struct* NetStyles = NULL;
 
 int32_t NumNetsBus = -1;
 net_bus_struct* NetBus = NULL;
-
-
 
 /*
 ******************************************************************

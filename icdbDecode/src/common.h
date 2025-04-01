@@ -38,6 +38,9 @@
 	#define  DIR_SEPERATOR DIR_SEPERATOR_UNIX
 #endif
 
+#define debug 0		// 1 for keys as list, 2 for keys as C code
+
+
 /*
 ******************************************************************
 * Global Structures

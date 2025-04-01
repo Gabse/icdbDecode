@@ -88,18 +88,18 @@ int parseCatlgatl(char* path, uint32_t pathlenth)
 */
 void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 {
-	if (strcmp(Name, "BlkTime") == 0)
-	{
-	
-	}
+	if(strcmp(Name, "BlkTime") == 0)
+        {
+
+        }
 	else if (strcmp(Name, "BlkUID") == 0)
-	{
-		BlkUID = Parse(sourceFile, &NumBlkUID, sizeof(uid_struct), sizeof(uint32_t), Name);
-	}
+        {
+            BlkUID = Parse(sourceFile, &NumBlkUID, sizeof(uid_struct), sizeof(uint32_t), Name);
+        }
 	else if (strcmp(Name, "CESConfigUID") == 0)
-	{
-	
-	}
+        {
+
+        }
 	else if (strcmp(Name, "Ces2DefConfig") == 0)
 	{
 	
@@ -222,7 +222,7 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	}
 	else if (strcmp(Name, "GroupOwnerUID") == 0)
 	{
-		GroupOwnerUID = Parse(sourceFile, &NumGroupOwnerUID, sizeof(uid_struct), sizeof(uint32_t), Name);
+	    GroupOwnerUID = Parse(sourceFile, &NumGroupOwnerUID, sizeof(uid_struct), sizeof(uint32_t), Name);
 	}
 	else if (strcmp(Name, "GroupTime") == 0)
 	{
@@ -233,6 +233,34 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	
 	}
 	else if (strcmp(Name, "GroupUID") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerName") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerPart2Manufacturer") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerPartDatasheetURL") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerPartDatasheetURL_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerPartNumber") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerPartSupplierParts") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ManufacturerParts") == 0)
 	{
 	
 	}
@@ -258,7 +286,7 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	}
 	else if (strcmp(Name, "MdlNam") == 0)
 	{
-		MdlNam = ParseString(sourceFile, &NumMdlNam, Name);
+	    MdlNam = ParseString(sourceFile, &NumMdlNam, Name);
 	}
 	else if (strcmp(Name, "Mvu2Subs") == 0)
 	{
@@ -273,6 +301,26 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	
 	}
 	else if (strcmp(Name, "MvuVutp") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "PriceBracketMinValue") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "PriceBracketPrice") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "PriceBracketPriceCurrency") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "PriceCurrency") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "PriceCurrencyCounter") == 0)
 	{
 	
 	}
@@ -312,6 +360,166 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	{
 	
 	}
+	else if (strcmp(Name, "SupplierName") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierName_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPart2ManufacturerPart") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPart2ManufacturerParts") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPart2Supplier") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartActualManufacturerName") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartActualManufacturerName_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartActualManufacturerPartNumber") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartActualManufacturerPartNumber_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartCaseSize") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartCaseSize_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartClickToBuyURL") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartClickToBuyURL_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartDatasheetURL") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartDatasheetURL_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartDescription") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartDescription_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartLifecycle") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartLifecycle_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartMOQ") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartMOQ_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartMarketCost") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartMarketCostCurrency") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartMarketCost_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartNumber") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartNumber_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPackagingType") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPackagingType_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPrice") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPriceBreakdown") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPriceBreakdown_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPriceCurrency") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartPrice_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartROHS") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartROHS_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartStockCount") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartStockCount_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartUpdateTime") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierPartUpdateTime_valueNdx") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "SupplierParts") == 0)
+	{
+	
+	}
 	else if (strcmp(Name, "TopMdls") == 0)
 	{
 	
@@ -324,13 +532,35 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	{
 	
 	}
+	else if (strcmp(Name, "ValueChanged") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ValueErrorCode") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ValueErrorText") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ValueErrorTextCounter") == 0)
+	{
+	
+	}
+	else if (strcmp(Name, "ValueErrorTextNdx") == 0)
+	{
+	
+	}
 	else if (strcmp(Name, "Version") == 0)
 	{
 	
 	}
 	else
 	{
-		myPrint("Unknown Key [%s]\n", Name);
+#if !debug
+		myPrint("Unknown Key in Catlgatl [%s]\n", Name);
+#endif
 	}
 }
 

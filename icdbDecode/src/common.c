@@ -43,7 +43,6 @@ TypeCodes:
 * Defines
 ******************************************************************
 */
-#define debug flase		// 1 for keys as list, 2 for keys as C code
 
 /*
 ******************************************************************
@@ -118,7 +117,7 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 					fread(&type, sizeof(uint32_t), 1, sourceFile);	// Read data type
 
 					#if debug
-						PrintKey(sourceFile, filesize, Key); // Debugging code
+						PrintKey(sourceFile, Key); // Debugging code
 					#endif
 
 					CheckKey(sourceFile, Key); // Process Key
