@@ -44,8 +44,6 @@
 #define NewKiCad 1 // Create Kicad 9.99 required for filling pattern
 #define KiCadFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
 
-
-
 /*
 ******************************************************************
 * Structures
@@ -63,7 +61,7 @@ typedef struct net_bus_segment_struct
 typedef struct net_bus_struct
 {
 	uint32_t IsBus;
-	uint32_t Style;
+	style_type Style;
 	uint32_t NumSegments;
 	net_bus_segment_struct* Segments;
 	uint32_t ID;
@@ -308,9 +306,9 @@ int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filele
 		fprintf(KiCadFile, "\t(sheet_instances\n");
 		fprintf(KiCadFile, "\t\t(path %c/%c\n", 0x22, 0x22);
 		fprintf(KiCadFile, "\t\t\t(page %c1%c)\n", 0x22, 0x22);
-		fprintf(KiCadFile, "\t\t) \n");
-		fprintf(KiCadFile, "\t) \n");
-		fprintf(KiCadFile, ") \n");
+		fprintf(KiCadFile, "\t\t)\n");
+		fprintf(KiCadFile, "\t)\n");
+		fprintf(KiCadFile, ")\n");
 		fclose(KiCadFile);
 		return 0;
 	}
@@ -355,30 +353,30 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 	// Linestyle
 	switch (Style[index])
 	{
-	case -1: // Solid (Automatic)
+	case style_AutoSolid: // Solid (Automatic)
 		myPrint("\tLinestyle: Default\n");
 		fprintf(KiCadFile, "\t\t\t(type default)\n");
 		break;
-	case 0: // Solid
+	case style_Solid: // Solid
 		myPrint("\tLinestyle: Solid\n");
 		fprintf(KiCadFile, "\t\t\t(type solid)\n");
 		break;
-	case 1: // Dash
-	case 4: // Big dash
-	case 7: // Medium dash
+	case style_Dash: // Dash
+	case style_Mediumdash: // Medium dash
+	case style_Bigdash: // Big dash
 		myPrint("\tLinestyle: Dash\n");
 		fprintf(KiCadFile, "\t\t\t(type dash)\n");
 		break;
-	case 2: // Center
-	case 6: // Dash-Dot
+	case style_Center: // Center
+	case style_DashDot: // Dash-Dot
 		myPrint("\tLinestyle: Dash-Dot\n");
 		fprintf(KiCadFile, "\t\t\t(type dash_dot)\n");
 		break;
-	case 3: // Phantom
+	case style_Phantom: // Phantom
 		myPrint("\tLinestyle: Dash-Dot-Dot\n");
 		fprintf(KiCadFile, "\t\t\t(type dash_dot_dot)\n");
 		break;
-	case 5: // Dot
+	case style_Dot: // Dot
 		myPrint("\tLinestyle: Dot\n");
 		fprintf(KiCadFile, "\t\t\t(type dot)\n");
 		break;
@@ -405,73 +403,73 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 		fprintf(KiCadFile, "\t\t(fill\n");
 		switch (Fill[index])
 		{
-		case -1: // Hollow (Automatic)
-		case 0: // Hollow
+		case fill_AutoHollow: // Hollow (Automatic)
+		case fill_Hollow: // Hollow
 			fprintf(KiCadFile, "\t\t\t(type none)\n");
 			myPrint("\tFill : None\n");
 			break;
 
-		case 1: // Solid
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
+		case fill_Solid: // Solid
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
 			myPrint("\tFill: Solid\n");
 			opacity = 100;
 			break;
 
-		case 2: // Diagdn1
-		case 5: // Diagdn2
+		case fill_Diagdn1: // Diagdn1
+		case fill_Diagdn2: // Diagdn2
 			fprintf(KiCadFile, "\t\t\t(type reverse_hatch)\n");
 			myPrint("\tFill: Reverse Hatch\n");
 			opacity = 100;
 			break;
 
-		case 3: // Diagup2
-		case 6: // Diagup1
+		case fill_Diagup1: // Diagup1
+		case fill_Diagup2: // Diagup2
 			fprintf(KiCadFile, "\t\t\t(type hatch)\n");
 			myPrint("\tFill: Hatch\n");
 			opacity = 100;
 			break;
-
-		case 11: // X2
-		case 12: // X1
+			
+		case fill_X1: // X1
+		case fill_X2: // X2
 			fprintf(KiCadFile, "\t\t\t(type cross_hatch)\n");
 			myPrint("\tFill: Cross Hatch\n");
 			opacity = 100;
 			break;
 
-		case 7: // Horiz
-		case 8: // Vert
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
+		case fill_Horiz: // Horiz
+		case fill_Vert: // Vert
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
 			myPrint("\tFill: Solid\n");
 			opacity = 8;
 			break;
 
-		case 9: // Grid2
-		case 10: // Grid1
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
+		case fill_Grid1: // Grid1
+		case fill_Grid2: // Grid2
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
 			myPrint("\tFill: Solid\n");
 			opacity = 16;
 			break;
 
-		case 4: // Grey08
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 8;
-			break;
-
-		case 15: // Grey04
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
+		case fill_Grey04: // Grey04
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
 			myPrint("\tFill: Solid\n");
 			opacity = 4;
 			break;
 
-		case 13: // Grey50
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
+		case fill_Grey08: // Grey08
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 8;
+			break;
+
+		case fill_Grey50: // Grey50
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
 			myPrint("\tFill: Solid\n");
 			opacity = 50;
 			break;
 
-		case 14: // Grey92
-			fprintf(KiCadFile, "\t\t\t(type outline)\n");
+		case fill_Grey92: // Grey92
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
 			myPrint("\tFill: Solid\n");
 			opacity = 92;
 			break;
@@ -499,35 +497,35 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 		fprintf(KiCadFile, "\t\t(fill\n");
 		switch (Fill[index])
 		{
-		case -1: // Hollow (Automatic)
-		case 0: // Hollow
+		case fill_AutoHollow: // Hollow (Automatic)
+		case fill_Hollow: // Hollow
 			break;
-		case 1: // Solid
+		case fill_Solid: // Solid
 			opacity = 100;
 			break;
-		case 2: // Diagdn1
-		case 3: // Diagup2
-		case 4: // Grey08
-		case 5: // Diagdn2
-		case 6: // Diagup1
-		case 7: // Horiz
-		case 8: // Vert
+		case fill_Diagup1: // Diagup1
+		case fill_Diagup2: // Diagup2
+		case fill_Diagdn1: // Diagdn1
+		case fill_Diagdn2: // Diagdn2
+		case fill_Horiz: // Horiz
+		case fill_Vert: // Vert
+		case fill_Grey08: // Grey08
 			opacity = 8;
 			break;
-		case 9: // Grid2
-		case 10: // Grid1
-		case 11: // X2
-		case 12: // X1
+		case fill_Grid1: // Grid1
+		case fill_Grid2: // Grid2
+		case fill_X1: // X1
+		case fill_X2: // X2
 			opacity = 16;
 			break;
-		case 13: // Grey50
+		case fill_Grey04: // Grey04
+			opacity = 4;
+			break;
+		case fill_Grey50: // Grey50
 			opacity = 50;
 			break;
-		case 14: // Grey92
+		case fill_Grey92: // Grey92
 			opacity = 92;
-			break;
-		case 15: // Grey04
-			opacity = 4;
 			break;
 		}
 
@@ -686,7 +684,17 @@ void KiCadProcessText(FILE* KiCadFile, uint8_t type)
 				fprintf(KiCadFile, "\t\t\t(font \n");
 
 				// Font
-				if (TextFont[index].Lenth > 2) // custom font
+				font_type Font = font_Custom;
+				if (TextFont[index].Lenth == 1) // 1 digit code
+				{
+					Font = TextFont[index].Text[0] - '0';
+				}
+				else if (TextFont[index].Lenth == 2) // 2 digit code
+				{
+					Font = (TextFont[index].Text[0] - '0') * 10;
+					Font += TextFont[index].Text[1] - '0';
+				}
+				else // custom font
 				{
 					uint32_t index2 = (uint32_t)strchr(TextFont[index].Text, '|') - (uint32_t)TextFont[index].Text + 1; // get index of Font name
 					uint32_t FontNameLen = (uint32_t)strchr(TextFont[index].Text + index2, '|') - (uint32_t)TextFont[index].Text - index2;
@@ -715,70 +723,63 @@ void KiCadProcessText(FILE* KiCadFile, uint8_t type)
 						free(FontString);
 					}
 				}
-				else if (strcmp(TextFont[index].Text, "2") == 0) // Roman Italic
+				switch(Font)
 				{
-					myPrint("\tFont: Default\n");
-					fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-					myPrint("\tItalic\n");
-				}
-				else if (strcmp(TextFont[index].Text, "3") == 0) // Roman Bold
-				{
-					myPrint("\tFont: Default\n");
-					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-					myPrint("\tBold\n");
-				}
-				else if (strcmp(TextFont[index].Text, "4") == 0) // Roman Bold Italic
-				{
-					myPrint("\tFont: Default\n");
-					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-					fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-					myPrint("\tBold & Italic\n");
-				}
-				else if (strcmp(TextFont[index].Text, "5") == 0) // SansSerif
-				{
-					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-					myPrint("\tFont: SansSerif\n");
-				}
-				else if (strcmp(TextFont[index].Text, "6") == 0) // Script
-				{
-					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-					myPrint("\tFont: ScriptS\n");
-				}
-				else if (strcmp(TextFont[index].Text, "7") == 0) // SansSerif Bold
-				{
-					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-					myPrint("\tFont: SansSerif\n");
-					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-					myPrint("\tBold\n");
-				}
-				else if (strcmp(TextFont[index].Text, "8") == 0) // Script Bold
-				{
-					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-					myPrint("\tFont: ScriptS\n");
-					fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-					myPrint("\tBold\n");
-				}
-				else if (strcmp(TextFont[index].Text, "9") == 0) // Gothic
-				{
-					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "GothicE", 0x22);
-					myPrint("\tFont: GothicE\n");
-				}
-				else if (strcmp(TextFont[index].Text, "10") == 0) // Old English
-				{
-					fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "Old English Text MT", 0x22);
-					myPrint("\tFont: Old English Text MT\n");
-				}
-				else if (strcmp(TextFont[index].Text, "11") == 0) // Kanji
-				{
-					myPrint("\tFont: Kanji => Not supported in KiCad!\n");
-				}
-				else if (strcmp(TextFont[index].Text, "12") == 0) // Plot
-				{
-					myPrint("\tFont: Plot => Not supported in KiCad!\n");
-				}
-				else
-				{
-					myPrint("\tFont: Default\n");
+					case font_Custom:
+						break;
+					case font_Default:
+						myPrint("\tFont: Default\n");
+						break;
+					case fontRomanItalic:
+						myPrint("\tFont: Default\n");
+						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+						myPrint("\tItalic\n");
+						break;
+					case font_RomanBold:
+						myPrint("\tFont: Default\n");
+						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+						myPrint("\tBold\n");
+						break;
+					case font_RomanBoldItalic:
+						myPrint("\tFont: Default\n");
+						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+						myPrint("\tBold & Italic\n");
+						break;
+					case font_SansSerif:
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
+						myPrint("\tFont: SansSerif\n");
+						break;
+					case font_Script:
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
+						myPrint("\tFont: ScriptS\n");
+						break;
+					case font_SansSerifBold:
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
+						myPrint("\tFont: SansSerif\n");
+						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+						myPrint("\tBold\n");
+						break;
+					case font_ScriptBold:
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
+						myPrint("\tFont: ScriptS\n");
+						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+						myPrint("\tBold\n");
+						break;
+					case font_Gothic:
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "GothicE", 0x22);
+						myPrint("\tFont: GothicE\n");
+						break;
+					case font_OldEnglish:
+						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "Old English Text MT", 0x22);
+						myPrint("\tFont: Old English Text MT\n");
+						break;
+					case font_Kanji:
+						myPrint("\tFont: Kanji => Not supported in KiCad!\n");
+						break;
+					case font_Plot:
+						myPrint("\tFont: Plot => Not supported in KiCad!\n");
+						break;
 				}
 
 				// Text Size
@@ -789,7 +790,6 @@ void KiCadProcessText(FILE* KiCadFile, uint8_t type)
 				// Text Color
 				if (TextColor[index].Key != 0xff)
 				{
-					//(color 21 255 12 1)
 					fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
 					myPrint("\tColor: R:%d G:%d B:%d\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
 				}
@@ -808,7 +808,7 @@ void KiCadProcessText(FILE* KiCadFile, uint8_t type)
 
 				/*
 				Orientation codes:
-				None = 0 (Lower left)
+				Default = 0 (Lower left)
 				UpperLeft = 1
 				MiddleLeft = 2
 				LowerLeft = 3

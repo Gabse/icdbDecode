@@ -48,9 +48,9 @@ uint32_t* SegmentNets = 0;
 int32_t NumStyles = -1;
 color_struct* Color = NULL;
 color_struct* ColorExt = NULL;
-uint32_t* Style = NULL;
-uint32_t* Thickness = NULL;
-uint32_t* Fill = NULL;
+style_type* Style = NULL;
+int32_t* Thickness = NULL;
+fill_type* Fill = NULL;
 
 int32_t NumSegments = -1;
 segment_struct* Segments = NULL;
@@ -83,9 +83,9 @@ style_struct* Arc2Style = NULL;
 int32_t NumTextData = -1;
 text_struct* TextFont = NULL;
 coordinate_struct* TextPos = NULL;
-uint32_t* TextOrigin = NULL;
+textorigin_type* TextOrigin = NULL;
 uint32_t* TextSize = NULL;
-uint32_t* TextOrient = NULL;
+textrotation_type* TextOrient = NULL;
 color_struct* TextColor = NULL;
 uint32_t* TextIDDxD = NULL;
 
@@ -353,7 +353,7 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	}
 	else if (strcmp(Name, "Fill") == 0)
 	{
-		Fill = Parse(sourceFile, &NumStyles, sizeof(uint32_t), sizeof(uint32_t), Name);
+		Fill = Parse(sourceFile, &NumStyles, sizeof(fill_type), sizeof(fill_type), Name);
 	}
 	else if (strcmp(Name, "Fixes") == 0)
 	{
@@ -534,7 +534,7 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	}
 	else if (strcmp(Name, "Style") == 0)
 	{
-		Style = Parse(sourceFile, &NumStyles, sizeof(uint32_t), sizeof(uint32_t), Name);
+		Style = Parse(sourceFile, &NumStyles, sizeof(style_type), sizeof(style_type), Name);
 	}
 	else if (strcmp(Name, "Text2TextData") == 0)
 	{
@@ -563,11 +563,11 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	}
 	else if (strcmp(Name, "TextOrient") == 0)
 	{
-		TextOrient = Parse(sourceFile, &NumTextData, sizeof(uint32_t), sizeof(uint32_t), Name);
+		TextOrient = Parse(sourceFile, &NumTextData, sizeof(textrotation_type), sizeof(textrotation_type), Name);
 	}
 	else if (strcmp(Name, "TextOrigin") == 0)
 	{
-		TextOrigin = Parse(sourceFile, &NumTextData, sizeof(uint32_t), sizeof(uint32_t), Name);
+		TextOrigin = Parse(sourceFile, &NumTextData, sizeof(textorigin_type), sizeof(textorigin_type), Name);
 	}
 	else if (strcmp(Name, "TextPos") == 0)
 	{
@@ -1061,11 +1061,11 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 */
 void InitSegment(int32_t len, segment_struct* structure)
 {
-	if (len > 0 && structure != 0)
+	if (len > 0 && structure != NULL)
 	{
 		for (uint32_t i = 0; i < len; i++)
 		{
-			if (structure[i].Len > 0 && structure[i].Data != 0)
+			if (structure[i].Len > 0 && structure[i].Data != NULL)
 			{
 				free(structure[i].Data); // Free data
 			}
@@ -1216,35 +1216,35 @@ void WriteOutput(void)
 			myPrint("\tIndex: %d Value: %d [ ", i + 1, Style[i]);
 			switch (Style[i])
 			{
-			case -1:
+			case style_AutoSolid:
 				myPrint("Solid (Automatic)");
 				break;
-			case 0:
+			case style_Solid:
 				myPrint("Solid");
 				break;
-			case 1:
+			case style_Dash:
 				myPrint("Dash");
 				break;
-			case 2:
+			case style_Center:
 				myPrint("Center");
 				break;
-			case 3:
+			case style_Phantom:
 				myPrint("Phantom");
 				break;
-			case 4:
+			case style_Bigdash:
 				myPrint("Big dash");
 				break;
-			case 5:
+			case style_Dot:
 				myPrint("Dot");
 				break;
-			case 6:
+			case style_DashDot:
 				myPrint("Dash-Dot");
 				break;
-			case 7:
+			case style_Mediumdash:
 				myPrint("Medium dash");
 				break;
 			default:
-				myPrint("Unknown Type!");
+				myPrint("Unknown Type");
 				break;
 			}
 			myPrint(" ]\n");
@@ -1268,7 +1268,7 @@ void WriteOutput(void)
 			}
 			else
 			{
-				myPrint("Unknown Type!");
+				myPrint("Unknown Type");
 			}
 			myPrint(" ]\n");
 		}
@@ -1282,59 +1282,59 @@ void WriteOutput(void)
 			myPrint("\tIndex: %d Value: %d [ ", i + 1, Fill[i]);
 			switch (Fill[i])
 			{
-			case -1:
+			case fill_AutoHollow:
 				myPrint("Hollow (Automatic)");
 				break;
-			case 0:
+			case fill_Hollow:
 				myPrint("Hollow");
 				break;
-			case 1:
+			case fill_Solid:
 				myPrint("Solid");
 				break;
-			case 2:
+			case fill_Diagdn1:
 				myPrint("Diagdn1");
 				break;
-			case 3:
+			case fill_Diagup2:
 				myPrint("Diagup2");
 				break;
-			case 4:
+			case fill_Grey08:
 				myPrint("Grey08");
 				break;
-			case 5:
+			case fill_Diagdn2:
 				myPrint("Diagdn2");
 				break;
-			case 6:
+			case fill_Diagup1:
 				myPrint("Diagup1");
 				break;
-			case 7:
+			case fill_Horiz:
 				myPrint("Horiz");
 				break;
-			case 8:
+			case fill_Vert:
 				myPrint("Vert");
 				break;
-			case 9:
+			case fill_Grid2:
 				myPrint("Grid2");
 				break;
-			case 10:
+			case fill_Grid1:
 				myPrint("Grid1");
 				break;
-			case 11:
+			case fill_X2:
 				myPrint("X2");
 				break;
-			case 12:
+			case fill_X1:
 				myPrint("X1");
 				break;
-			case 13:
+			case fill_Grey50:
 				myPrint("Grey50");
 				break;
-			case 14:
+			case fill_Grey92:
 				myPrint("Grey92");
 				break;
-			case 15:
+			case fill_Grey04:
 				myPrint("Grey04");
 				break;
 			default:
-				myPrint("Unknown Type!");
+				myPrint("Unknown Type");
 				break;
 			}
 			myPrint(" ]\n");

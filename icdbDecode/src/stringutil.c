@@ -97,7 +97,7 @@ void removeFileEnding(char* string, uint32_t* lenth)
 	if (string != 0)
 	{
 		// Remove .dat ending from database path if present
-		for (uint32_t i = 0; i < lenth; i++)
+		for (uint32_t i = 0; i < *lenth; i++)
 		{
 			if (string[i] == '.')
 			{

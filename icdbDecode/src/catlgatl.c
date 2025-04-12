@@ -89,17 +89,17 @@ int parseCatlgatl(char* path, uint32_t pathlenth)
 void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 {
 	if(strcmp(Name, "BlkTime") == 0)
-        {
+    {
 
-        }
+    }
 	else if (strcmp(Name, "BlkUID") == 0)
-        {
-            BlkUID = Parse(sourceFile, &NumBlkUID, sizeof(uid_struct), sizeof(uint32_t), Name);
-        }
+    {
+        BlkUID = Parse(sourceFile, &NumBlkUID, sizeof(uid_struct), sizeof(uint32_t), Name);
+    }
 	else if (strcmp(Name, "CESConfigUID") == 0)
-        {
+    {
 
-        }
+    }
 	else if (strcmp(Name, "Ces2DefConfig") == 0)
 	{
 	

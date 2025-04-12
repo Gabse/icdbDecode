@@ -40,6 +40,12 @@
 
 #define debug 0		// 1 for keys as list, 2 for keys as C code
 
+#ifdef __STDC_VERSION__
+	#if __STDC_VERSION__ >= 202000
+		#define C23
+	#endif
+#endif
+
 
 /*
 ******************************************************************
