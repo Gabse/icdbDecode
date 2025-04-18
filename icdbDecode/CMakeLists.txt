@@ -2,7 +2,7 @@
 project("icdbDecode")
 
 # Add source to this project's executable.
-add_executable(icdbDecode "src/main.c" "src/log.c" "src/common.c" "src/stringutil.c" "src/unpack.c" "src/parser.c" "src/catlgatl.c" "src/cdbblks.c" "src/kicad.c")
+add_executable(icdbDecode "src/main.c" "src/log.c" "src/common.c" "src/stringutil.c" "src/unpack.c" "src/list.c" "src/parser.c" "src/catlgatl.c" "src/cdbblks.c" "src/kicad.c")
 
 # Add zlib
  add_subdirectory(lib/zlib-1.3.1)

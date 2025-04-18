@@ -145,7 +145,7 @@ int exportFiles(FILE*, databaseHeader_Struct*, file_struct**);
 char* makePath(char*, int, char*, int);
 int mylink(char*, int, char*, int, char*, int);
 void printGUID(uint8_t Guid[24]);
-int decompress(char*, int, FILE*);
+int decompress(char*, int, char**);
 
 /*
 ******************************************************************
@@ -658,7 +658,14 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 						nontDecompress == 0)
 					{
 						// Decompress file and write data
-						decompress((Payload + 5), file[i]->data_size - 5, destFile);
+						char* decompressedData;
+						int decompressedSize;
+						decompressedSize = decompress((Payload + 5), file[i]->data_size - 5, &decompressedData);
+						if (decompressedSize >= 1)
+						{
+							fwrite(decompressedData, sizeof(char), decompressedSize, destFile);
+							free(decompressedData);
+						}
 					}
 					else
 					{
@@ -843,17 +850,20 @@ void printGUID(uint8_t Guid[24])
 * - return value: 	error code
 ******************************************************************
 */
-int decompress(char* input, int InputSize, FILE* destFile)
+int decompress(char* input, int InputSize, char** output)
 {
-	char Output [DECOMPRESS_CHUNK_SIZE];
+	char Output[DECOMPRESS_CHUNK_SIZE];
 	z_stream ZStream;
 	ZStream.zalloc = Z_NULL;
 	ZStream.zfree = Z_NULL;
 	ZStream.opaque = Z_NULL;
 	ZStream.avail_in = InputSize;
-	ZStream.next_in = (unsigned char *)input;
+	ZStream.next_in = (unsigned char*)input;
 	int DecompressedSize = 0;
-	
+
+	void* list = list_init();
+	char* data = 0;
+
 	// Init Decompression
 	inflateInit(&ZStream);
 
@@ -861,32 +871,26 @@ int decompress(char* input, int InputSize, FILE* destFile)
 	do
 	{
 		ZStream.avail_out = DECOMPRESS_CHUNK_SIZE;
-		ZStream.next_out = (unsigned char *)&Output[0];
+		ZStream.next_out = (unsigned char*)&Output[0];
 		int Returnvalue = inflate(&ZStream, Z_NO_FLUSH);
 
 		//Error check
 		if (Returnvalue > 1)
 		{
 			myPrint("    Decompression Error:\t[%d]\n", Returnvalue);
-			return Returnvalue;
+			return -1;
 		}
 
-		if (ZStream.avail_out == 0)
-		{
-			// Ouput buffer buffer full
-			fwrite(&Output[0], sizeof(char), DECOMPRESS_CHUNK_SIZE, destFile);
-			DecompressedSize += DECOMPRESS_CHUNK_SIZE;
-		}
-		else
-		{
-			// Output buffer not full -> end of file
-			fwrite(&Output[0], sizeof(char), DECOMPRESS_CHUNK_SIZE - ZStream.avail_out, destFile);
-			DecompressedSize += (DECOMPRESS_CHUNK_SIZE - ZStream.avail_out);
-		}
+		// Append data to list
+		list_append(list, &Output[0], (DECOMPRESS_CHUNK_SIZE - ZStream.avail_out));
+
 		// Reperat untill end of file
 	} while (ZStream.avail_out == 0);
 
+	DecompressedSize = list_to_memblk(list, output);
+	list_cleanup(&list);
 	myPrint("    Decompressed size:\t[%d]\n", DecompressedSize);
 	inflateEnd(&ZStream); // Just in case
-	return 0;
+
+	return DecompressedSize;
 }
