@@ -175,8 +175,15 @@ void list_add(void* head, unsigned int address, void* element, unsigned int size
 		newelement->lenth = currentelement->lenth;
 
 		// New data
-		currentelement->data = calloc(size, sizeof(char));			// Reseve memory for data
-		memcpy(currentelement->data, element, size);				// Copy over data
+		if(size > 0)
+		{
+			currentelement->data = calloc(size, sizeof(char));			// Reseve memory for data
+			memcpy(currentelement->data, element, size);				// Copy over data
+		}
+		else
+		{
+			currentelement->data = NULL;
+		}
 		currentelement->lenth = size;								// Store size of data to new list entry
 
 		// Insert newelement after currentelement in the list
@@ -204,7 +211,10 @@ void list_add(void* head, unsigned int address, void* element, unsigned int size
 void list_remove(void* head, unsigned int address)
 {
 	list_element_struct* currentelement = list_address(head, address);	// Remove this element
-	free(currentelement->data);
+	if(currentelement->data != NULL)
+	{
+		free(currentelement->data);
+	}
 	if (currentelement == head) // Head element can not be removed. copy data form next, and remove next
 	{
 		if (currentelement->next_element != NULL) // Next element existing
@@ -296,7 +306,10 @@ unsigned int list_to_memblk(void* head, void** destination)
 	list = head;									// Return to first list element
 	while (list->next_element != NULL)				// Itterate over whole list
 	{
-		memcpy(dest + totalsize, list->data, list->lenth);	// Append data from list to complete data block
+		if(list->data != NULL)
+		{
+			memcpy(dest + totalsize, list->data, list->lenth);	// Append data from list to complete data block
+		}
 		totalsize += list->lenth;					// Inc size
 		list = list->next_element;					// Jump to next entry
 	}
