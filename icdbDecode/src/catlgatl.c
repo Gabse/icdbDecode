@@ -558,9 +558,7 @@ void ProcessKeyCatlgatl(FILE* sourceFile, char* Name)
 	}
 	else
 	{
-#if !debug
 		myPrint("Unknown Key in Catlgatl [%s]\n", Name);
-#endif
 	}
 }
 

@@ -599,9 +599,7 @@ void ProcessKeyDxdatl(FILE* sourceFile, char* Name)
 	}
 	else
 	{
-#if !debug
 		myPrint("Unknown Key in Dxdatl [%s]\n", Name);
-#endif
 	}
 }
 
@@ -840,9 +838,7 @@ void ProcessKeyBlkatl(FILE* sourceFile, char* Name)
 	}
 	else
 	{
-#if !debug
 		myPrint("Unknown Key in Blkatl [%s]\n", Name);
-#endif
 	}
 }
 
@@ -969,7 +965,7 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 	uint32_t Type = 0;
 	uint32_t SizeAccumulator = 0;
 
-	fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
+	fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
 	if (Type != 2)
 	{
@@ -1042,7 +1038,7 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 				}
 			}
 			// Seek back to not skip encode
-			fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
+			fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 		}
 	}
 	return Struct;

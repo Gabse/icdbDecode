@@ -96,17 +96,44 @@ void removeFileEnding(char* string, uint32_t* lenth)
 {
 	if (string != 0)
 	{
-		// Remove .dat ending from database path if present
+		// Remove ending from database path if present
 		for (uint32_t i = 0; i < *lenth; i++)
 		{
 			if (string[i] == '.')
 			{
-				*lenth = i; // String lenth
+				*lenth = i + 1; // String lenth
 				string[i] = '\0'; // Zero terminate string
 				break;
 			}
 		}
 	}
+}
+
+/*
+******************************************************************
+* - function: removeFilePath()
+*
+* - desc: seperates the filename from the filepath
+*
+* - par: pointer to string, pointer to lenth of string, pointer to destination
+*
+* - ret: lenth of filename
+******************************************************************
+*/
+unsigned int removeFilePath(char* input, unsigned int lenth, char** output)
+{
+	unsigned int nameLen = lenth;
+	*output = input;
+	for (unsigned int i = 0; i < lenth; i++)
+	{
+		if (input[lenth - i] == '\\' || input[lenth - i] == '/')
+		{
+			nameLen = i - 1;
+			*output = &(input[lenth - nameLen]);
+			break;
+		}
+	}
+	return nameLen;
 }
 
 /*

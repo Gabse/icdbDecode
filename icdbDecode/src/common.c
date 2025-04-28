@@ -89,7 +89,7 @@ FILE* myfopen(char* option, char* leftstring, uint32_t leftstringlength, char* r
 *
 * - parameter: 		source path string; string length; file name string; file name length; pointer to CheckKey function
 *
-* - return value: 	-
+* - return value: 	error code
 ******************************************************************
 */
 int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, void(*CheckKey)(FILE*, char*))
@@ -116,10 +116,6 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 					Key[KeyLenth] = '\0'; // Zero terminate key
 					fread(&type, sizeof(uint32_t), 1, sourceFile);	// Read data type
 
-					#if debug
-						PrintKey(sourceFile, Key); // Debugging code
-					#endif
-
 					CheckKey(sourceFile, Key); // Process Key
 					SkipBlock(sourceFile, type); // Skip untill next block
 					free(Key);
@@ -135,7 +131,7 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 	else
 	{
 		myPrint("Failed to open [%s%c%s]!\n", path, DIR_SEPERATOR, file);
-		return 1;
+		return -1;
 	}
 }
 
@@ -195,7 +191,7 @@ void* Parse(FILE* sourceFile, int32_t* NumElements, uint32_t strutSize, uint32_t
 	uint32_t* Struct = NULL;
 	uint32_t Type = 0;
 	uint32_t structSize32 = (strutSize / sizeof(uint32_t));
-	fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
+	fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
 	if (Type == 1)
 	{
@@ -267,13 +263,13 @@ void* Parse(FILE* sourceFile, int32_t* NumElements, uint32_t strutSize, uint32_t
 				else if (Magic == 0x4FFFFFFF) // No more entrys
 				{
 					// Seek back for Skip function to work
-					fseek(sourceFile, (int32_t)sizeof(uint32_t) * -1, SEEK_CUR);
+					fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 					break;
 				}
 				else // Regular entry
 				{
 					// No magic, seek back & read
-					fseek(sourceFile, (int32_t)sizeof(uint32_t) * -1, SEEK_CUR);
+					fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 					fread(Struct + (i * structSize32), strutSize, 1, sourceFile);
 					i++;
 				}
@@ -305,7 +301,7 @@ text_struct* ParseString(FILE* sourceFile, int32_t* NumElements, char* Name)
 	uint32_t Type = 0;
 	uint32_t SizeAccumulator = 0;
 
-	fseek(sourceFile, sizeof(uint32_t) * -1, SEEK_CUR);
+	fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
 	if (Type != 1)
 	{
@@ -399,7 +395,7 @@ text_struct* ParseString(FILE* sourceFile, int32_t* NumElements, char* Name)
 				}
 			}
 			// Seek back to not skip encode
-			fseek(sourceFile, sizeof(uint8_t) * -1, SEEK_CUR);
+			fseek(sourceFile, (int)sizeof(uint8_t) * -1, SEEK_CUR);
 		}
 	}
 	return Struct;
@@ -423,28 +419,6 @@ num_struct numProcess(int32_t input, int32_t Ratio, int32_t Offset)
 	Output.Integ = Temp / 100e3;
 	Output.Frac = abs(Temp - (Output.Integ * 100e3));
 	return Output;
-}
-
-/*
-******************************************************************
-* - function name:	PrintKey()
-*
-* - description: 	Prints out all the Keys whitin a file (usefull for debugging)
-*
-* - parameter: 		pointer to source file; Key to print
-*
-* - return value: 	-
-******************************************************************
-*/
-void PrintKey(FILE* sourceFile, char* Key)
-{
-	// Print Key
-#if debug == 2
-	myPrint("\telse if (strcmp(Name, %c%s%c) == 0)\n\t{\n\n\t}\n",'"' , Key ,'"');
-#else
-	myPrint("%s\n", Key);
-#endif
-
 }
 
 /*
