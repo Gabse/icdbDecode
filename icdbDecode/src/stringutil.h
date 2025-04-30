@@ -39,5 +39,7 @@ extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
 extern void removeFileEnding(char* , uint32_t*);
 extern unsigned int removeFilePath(char*, unsigned int, char**);
 extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
+extern char* stringSmall(char*, unsigned int);
+extern char* stringBig(char*, unsigned int);
 
 #endif //_STRINGUTIL_H

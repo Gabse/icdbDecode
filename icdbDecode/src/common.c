@@ -103,8 +103,13 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 	sourceFile = myfopen("rb", path, pathlenth, file, filelenth, DIR_SEPERATOR);
 	if (sourceFile != 0)
 	{
+		uint32_t FileStart = ftell(sourceFile);
+		fseek(sourceFile, 0, SEEK_END);
+		uint32_t FileEnd = ftell(sourceFile);
+		fseek(sourceFile, FileStart, SEEK_SET);
+
 		// Itterate over whole file
-		while(IsInsideFile(sourceFile))
+		while(ftell(sourceFile) < FileEnd)
 		{
 			fread(&KeyLenth, sizeof(uint32_t), 1, sourceFile); // Get key lenght
 			if (KeyLenth > 0 && KeyLenth < 0xFFFFFFFF)
@@ -148,11 +153,16 @@ int parseFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth, vo
 */
 void SkipBlock(FILE* sourceFile, uint32_t type)
 {
+	uint32_t FileStart = ftell(sourceFile);
+	fseek(sourceFile, 0, SEEK_END);
+	uint32_t FileEnd = ftell(sourceFile);
+	fseek(sourceFile, FileStart, SEEK_SET);
+
 	// Skip untill Magic
 	if (type == 1) // 8 exit code
 	{
 		uint8_t Data = 0;
-		while (Data != 0xFF && IsInsideFile(sourceFile))
+		while (Data != 0xFF && ftell(sourceFile) < FileEnd)
 		{
 			fread(&Data, sizeof(uint8_t), 1, sourceFile);
 		}
@@ -160,11 +170,9 @@ void SkipBlock(FILE* sourceFile, uint32_t type)
 	else // 32 bit exit code
 	{
 		uint32_t Data = 0;
-		uint8_t Temp = 0;
-		while (Data != 0x4FFFFFFF && IsInsideFile(sourceFile))
+		while (Data != 0x4FFFFFFF && ftell(sourceFile) < FileEnd)
 		{
-			fread(&Temp, sizeof(uint8_t), 1, sourceFile); // Read byte from file
-			Data = (Data >> 8) | (Temp << 24); // Make 32bit number from last 8bit numbers
+			fread(&Data, sizeof(uint32_t), 1, sourceFile); // Read byte from file
 		}
 	}
 }
@@ -191,6 +199,12 @@ void* Parse(FILE* sourceFile, int32_t* NumElements, uint32_t strutSize, uint32_t
 	uint32_t* Struct = NULL;
 	uint32_t Type = 0;
 	uint32_t structSize32 = (strutSize / sizeof(uint32_t));
+
+	uint32_t FileStart = ftell(sourceFile);
+	fseek(sourceFile, 0, SEEK_END);
+	uint32_t FileEnd = ftell(sourceFile);
+	fseek(sourceFile, FileStart, SEEK_SET);
+
 	fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
 	if (Type == 1)
@@ -225,7 +239,7 @@ void* Parse(FILE* sourceFile, int32_t* NumElements, uint32_t strutSize, uint32_t
 				if (Magic == 0x4FFFFFFC) // Increasing value
 				{
 					fread(&Repetitions, sizeof(uint32_t), 1, sourceFile);
-					while (Repetitions != 0 && i < *NumElements && IsInsideFile(sourceFile))
+					while (Repetitions != 0 && i < *NumElements && ftell(sourceFile) < FileEnd)
 					{
 						for (uint32_t j = 0; j < structSize32; j++) // Copy whole struct
 						{
@@ -245,7 +259,7 @@ void* Parse(FILE* sourceFile, int32_t* NumElements, uint32_t strutSize, uint32_t
 				else if (Magic == 0x4FFFFFFD) // Repeated value
 				{
 					fread(&Repetitions, sizeof(uint32_t), 1, sourceFile);
-					while (Repetitions != 0 && i < *NumElements && IsInsideFile(sourceFile))
+					while (Repetitions != 0 && i < *NumElements && ftell(sourceFile) < FileEnd)
 					{
 						for (uint32_t j = 0; j < structSize32; j++) // Copy whole struct
 						{
@@ -301,6 +315,11 @@ text_struct* ParseString(FILE* sourceFile, int32_t* NumElements, char* Name)
 	uint32_t Type = 0;
 	uint32_t SizeAccumulator = 0;
 
+	uint32_t FileStart = ftell(sourceFile);
+	fseek(sourceFile, 0, SEEK_END);
+	uint32_t FileEnd = ftell(sourceFile);
+	fseek(sourceFile, FileStart, SEEK_SET);
+
 	fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
 	if (Type != 1)
@@ -315,7 +334,7 @@ text_struct* ParseString(FILE* sourceFile, int32_t* NumElements, char* Name)
 	BlockStartAddress = ftell(sourceFile);
 
 	// Count Entry (I haven't found a way to derive the number of entrys from PayloadLenRaw)
-	while (PayloadLenRaw > SizeAccumulator && IsInsideFile(sourceFile))
+	while (PayloadLenRaw > SizeAccumulator && ftell(sourceFile) < FileEnd)
 	{
 		fread(&EntryLen8, sizeof(uint8_t), 1, sourceFile);
 		// Get file entry
@@ -466,31 +485,4 @@ void InitRegular(int32_t len, void** structure)
 		free(*structure); // Free Array of data
 	}
 	*structure = NULL;
-}
-
-/*
-******************************************************************
-* - function name:	IsInsideFile()
-*
-* - description: 	Checks if a given filepointer is whitin the file
-*
-* - parameter: 		filepointer
-*
-* - return value: 	1 if inside the file, 0 if outside or at the end
-******************************************************************
-*/
-uint8_t IsInsideFile(FILE* file)
-{
-	uint32_t StrartPos = ftell(file);
-	fseek(file, 0, SEEK_END);
-	uint32_t EndPos = ftell(file);
-	fseek(file, StrartPos, SEEK_SET);
-	if (StrartPos < EndPos)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
 }

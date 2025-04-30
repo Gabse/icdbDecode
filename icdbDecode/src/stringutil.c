@@ -149,33 +149,118 @@ unsigned int removeFilePath(char* input, unsigned int lenth, char** output)
 */
 uint32_t addStrings(char** destination, char* leftstring, uint32_t leftstringlength, char* rightstring, uint32_t rightstringlength, char seperator)
 {
-	if(leftstring[leftstringlength - 1] == '\0')
+	// Handle if one of the parameter is zero
+	uint32_t completePathLength;
+	if ((leftstring == NULL || leftstringlength) <= 0 && (rightstring == NULL || rightstringlength <= 0))
 	{
-		leftstringlength -= 1; // Remove zero termination	
+		*destination = NULL;
+		return 0;
 	}
-	if(rightstring[rightstringlength - 1] != '\0')
+	else if (leftstring == NULL || leftstringlength <= 0)
 	{
-		rightstringlength++; // Add space for zero termination if not already pressent
-	}
-	// Buffer for complete path
-	uint32_t completePathLength = rightstringlength + leftstringlength;
-	if(seperator != '\0')
-	{
-		completePathLength++; // add space for seperator
-	}
-	*destination = (char*)calloc(completePathLength, sizeof(char));
-	if (*destination != 0)
-	{
-		// Unite the path
-		memcpy((char*)*destination, leftstring, leftstringlength);
-		if(seperator != '\0')
+		completePathLength = rightstringlength;
+		*destination = (char*)calloc(completePathLength + 1, sizeof(char));
+		if (*destination == 0)
 		{
-			leftstringlength++; // add seperator
-			(*destination)[leftstringlength - 1] = seperator;
+			return 0;
 		}
-		memcpy((char*)*destination + leftstringlength, rightstring, rightstringlength);
-		completePathLength--; // Remove zero termination
+		memcpy((char*)*destination, rightstring, completePathLength);
 		(*destination)[completePathLength] = '\0'; // Zero terminate string
 	}
+	else if (rightstring == NULL || rightstringlength <= 0)
+	{
+		completePathLength = leftstringlength;
+		*destination = (char*)calloc(completePathLength + 1, sizeof(char));
+		if (*destination == 0)
+		{
+			return 0;
+		}
+		memcpy((char*)*destination, leftstring, completePathLength);
+		(*destination)[completePathLength] = '\0'; // Zero terminate string
+	}
+	else
+	{
+		if (leftstring[leftstringlength - 1] == '\0')
+		{
+			leftstringlength -= 1; // Remove zero termination	
+		}
+		if (rightstring[rightstringlength - 1] != '\0')
+		{
+			rightstringlength++; // Add space for zero termination if not already pressent
+		}
+		// Buffer for complete path
+		completePathLength = rightstringlength + leftstringlength;
+		if (seperator != '\0')
+		{
+			completePathLength++; // add space for seperator
+		}
+		*destination = (char*)calloc(completePathLength, sizeof(char));
+		if (*destination != 0)
+		{
+			// Unite the path
+			memcpy((char*)*destination, leftstring, leftstringlength);
+			if (seperator != '\0')
+			{
+				leftstringlength++; // add seperator
+				(*destination)[leftstringlength - 1] = seperator;
+			}
+			memcpy((char*)*destination + leftstringlength, rightstring, rightstringlength);
+			completePathLength--; // Remove zero termination
+			(*destination)[completePathLength] = '\0'; // Zero terminate string
+		}
+	}
 	return completePathLength;
+}
+
+/*
+******************************************************************
+* - function: stringSmall()
+*
+* - desc: make first character lower case
+*
+* - par: string pointer text; lenth of text
+*
+* - ret: char pointer
+******************************************************************
+*/
+char* stringSmall(char* name, unsigned int nameLen)
+{
+	// make first character lower case
+	char* nameSmall = malloc(nameLen);
+	if (nameSmall == NULL)
+	{
+		return NULL;
+	}
+	memcpy(nameSmall, name, nameLen);
+	if (nameSmall[0] >= 'A' && nameSmall[0] <= 'Z')
+	{
+		nameSmall[0] = nameSmall[0] + 'a' - 'A';
+	}
+	return nameSmall;
+}
+
+/*
+******************************************************************
+* - function: stringBig()
+*
+* - desc: make first character upper case
+*
+* - par: string pointer text; lenth of text
+*
+* - ret: char pointer
+******************************************************************
+*/
+char* stringBig(char* name, unsigned int nameLen)
+{
+	char* nameBig = malloc(nameLen);
+	if (nameBig == NULL)
+	{
+		return NULL;
+	}
+	memcpy(nameBig, name, nameLen);
+	if (nameBig[0] >= 'a' && nameBig[0] <= 'z')
+	{
+		nameBig[0] = nameBig[0] + 'A' - 'a';
+	}
+	return nameBig;
 }

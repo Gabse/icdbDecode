@@ -32,9 +32,9 @@
 * Function Prototypes
 ******************************************************************
 */
-int AnalyzerOpen(char*, unsigned int);
+int AnalyzerOpen(char*, char*);
 void AnalyzerWrite(FILE*, char*);
-void AnalyzerClose(char*);
+void AnalyzerClose(char*, char*);
 
 /*
 ******************************************************************
@@ -82,18 +82,27 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	memcpy(name, argv[1], nameLen);
+
+	// Get filename without path
+	char* nameTemp;
 	removeFileEnding(name, &nameLen);
-	if(AnalyzerOpen(name, nameLen))
+	nameLen = removeFilePath(name, nameLen, &nameTemp);
+	char* nameSmall = stringSmall(nameTemp, nameLen);
+	char* nameBig = stringBig(nameTemp, nameLen);
+
+	if(AnalyzerOpen(nameBig, nameSmall))
 	{
 		return -1;
 	}
-	if (parseFile(".", 1, argv[1], strlen(argv[1]), AnalyzerWrite))
+	if (parseFile(NULL, 0, argv[1], strlen(argv[1]), AnalyzerWrite))
 	{
 		return -1;
 	}
 	
-	AnalyzerClose(name);
+	AnalyzerClose(nameBig, nameSmall);
 	free(name);
+	free(nameBig);
+	free(nameSmall);
 	printf("Finnish after %fs\n", (float)(clock() - starttime)/(float) CLOCKS_PER_SEC);
 	return 0;
 }
@@ -115,35 +124,8 @@ int main(int argc, char** argv)
 * - return value: 	0 if file opened sucessfully
 ******************************************************************
 */
-int AnalyzerOpen(char* name, unsigned int len)
+int AnalyzerOpen(char* nameBig, char* nameSmall)
 {
-	// Get filename without path
-	char* nameTemp;
-	unsigned int nameLen = removeFilePath(name, len, &nameTemp);
-
-	char* nameSmall = malloc(nameLen);
-	if (nameSmall == NULL)
-	{
-		return -1;
-	}
-	memcpy(nameSmall, nameTemp, nameLen);
-	// make first character lower case
-	if (nameSmall[0] >= 'A' && nameSmall[0] <= 'Z')
-	{
-		nameSmall[0] = nameSmall[0] + 'a' - 'A';
-	}
-	char* nameBig = malloc(nameLen);
-	if (nameBig == NULL)
-	{
-		return -1;
-	}
-	memcpy(nameBig, nameSmall, nameLen);
-	// make first character upper case
-	if (nameBig[0] >= 'a' && nameBig[0] <= 'z')
-	{
-		nameBig[0] = nameBig[0] + 'A' - 'a';
-	}
-
 	// Open files
 	KeyCsvFile = fopen("Keys.csv", "w");
 	ProcessKeyCFile = fopen("ProcessKey.c", "w");
@@ -161,7 +143,7 @@ int AnalyzerOpen(char* name, unsigned int len)
 	fprintf(ProcessKeyCFile, "******************************************************************\n");
 	fprintf(ProcessKeyCFile, "* - function name:	ProcessKey%s()\n", nameBig);
 	fprintf(ProcessKeyCFile, "*\n");
-	fprintf(ProcessKeyCFile, "* - description: 	Check for %s keys\n", name);
+	fprintf(ProcessKeyCFile, "* - description: 	Check for %s keys\n", nameSmall);
 	fprintf(ProcessKeyCFile, "*\n");
 	fprintf(ProcessKeyCFile, "* - parameter: 		file pointer; Key to check\n");
 	fprintf(ProcessKeyCFile, "*\n");
@@ -176,7 +158,7 @@ int AnalyzerOpen(char* name, unsigned int len)
 	fprintf(InitKeyCFile, "******************************************************************\n");
 	fprintf(InitKeyCFile, "* - function name:	Init%s()\n", nameBig);
 	fprintf(InitKeyCFile, "*\n");
-	fprintf(InitKeyCFile, "* - description: 	Resets all %s data\n", name);
+	fprintf(InitKeyCFile, "* - description: 	Resets all %s data\n", nameSmall);
 	fprintf(InitKeyCFile, "*\n");
 	fprintf(InitKeyCFile, "* - parameter: 		-\n");
 	fprintf(InitKeyCFile, "*\n");
@@ -192,7 +174,6 @@ int AnalyzerOpen(char* name, unsigned int len)
 	fprintf(KeyCFile, "******************************************************************\n");
 	fprintf(KeyCFile, "*/\n");
 	fprintf(KeyCFile, "// %s\n", nameBig);
-	free(nameBig);
 	return 0;
 }
 
@@ -231,11 +212,11 @@ void AnalyzerWrite(FILE* sourceFile, char* Name)
 * - return value: 	-
 ******************************************************************
 */
-void AnalyzerClose(char* Name)
+void AnalyzerClose(char* nameBig, char* nameSmall)
 {
 	// Write file leader
 	fprintf(ProcessKeyCFile, "\n\t{\n");
-	fprintf(ProcessKeyCFile, "\t\tmyPrint(%cUnknown Key in %s [%cs]\\n%c, Name);\n", '"', Name, '%', '"');
+	fprintf(ProcessKeyCFile, "\t\tmyPrint(%cUnknown Key in %s [%cs]\\n%c, Name);\n", '"', nameSmall, '%', '"');
 	fprintf(ProcessKeyCFile, "\t}\n");
 	fprintf(ProcessKeyCFile, "}\n");
 
