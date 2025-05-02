@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
 	// Get filename without path
 	char* nameTemp;
-	removeFileEnding(name, &nameLen);
+	removeFilenameExtension(name, &nameLen);
 	nameLen = removeFilePath(name, nameLen, &nameTemp);
 	char* nameSmall = stringSmall(nameTemp, nameLen);
 	char* nameBig = stringBig(nameTemp, nameLen);
@@ -168,11 +168,6 @@ int AnalyzerOpen(char* nameBig, char* nameSmall)
 	fprintf(InitKeyCFile, "void Init%s(void)\n", nameBig);
 	fprintf(InitKeyCFile, "{\n");
 
-	fprintf(KeyCFile, "/*\n");
-	fprintf(KeyCFile, "******************************************************************\n");
-	fprintf(KeyCFile, "* Global Variables\n");
-	fprintf(KeyCFile, "******************************************************************\n");
-	fprintf(KeyCFile, "*/\n");
 	fprintf(KeyCFile, "// %s\n", nameBig);
 	return 0;
 }
@@ -196,7 +191,7 @@ void AnalyzerWrite(FILE* sourceFile, char* Name)
 
 	// Write data
 	fprintf(KeyCsvFile, "%s,%d\n", Name, Type);
-	fprintf(ProcessKeyCFile, "if (strcmp(Name, %c%s%c) == 0)\n\t{\n\t\t%s = ParseKey();\n\t}\n\telse ", '"', Name, '"', Name);
+	fprintf(ProcessKeyCFile, "if (strcmp(Name, %c%s%c) == 0)\n\t{\n\t\t%s = ParseKey(sourceFile);\n\t}\n\telse ", '"', Name, '"', Name);
 	fprintf(InitKeyCFile, "\tInitKey(&%s);\n", Name);
 	fprintf(KeyCFile, "key_struct* %s = NULL;\n", Name);
 }

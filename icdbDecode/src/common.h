@@ -77,6 +77,5 @@ extern num_struct numProcess(int32_t, int32_t, int32_t);
 extern void PrintKey(FILE*, char*);
 extern void InitString(int32_t, text_struct**);
 extern void InitRegular(int32_t, void**);
-extern uint8_t IsInsideFile(FILE*);
 
 #endif //_COMMON_H

@@ -27,13 +27,13 @@
 
 /*
 ******************************************************************
-* - function: assemblePath()
+* - function name : assemblePath()
 *
-* - desc: Assemble file path
+* - description:  Assemble file path
 *
-* - par: pointer to string pointer of both texts united, string pointer to first part; lenth of first part; string pointer to second part; lenth of second part; sepeartor character
+* - parameter:  pointer to string pointer of both texts united, string pointer to first part; lenth of first part; string pointer to second part; lenth of second part; sepeartor character
 *
-* - ret: complete path lenth
+* -  return value: complete path lenth
 ******************************************************************
 */
 uint32_t assemblePath(char** destination, char* leftstring, uint32_t leftstringlength, char* rightstring, uint32_t rightstringlength, char seperator)
@@ -52,13 +52,13 @@ uint32_t assemblePath(char** destination, char* leftstring, uint32_t leftstringl
 
 /*
 ******************************************************************
-* - function: createPath()
+* - function name : createPath()
 *
-* - desc: Assemble file path & create folder structure
+* - description:  Assemble file path & create folder structure
 *
-* - par: pointer to string pointer of both texts united, string pointer to first part; lenth of first part; string pointer to second part; lenth of second part; sepeartor character
+* - parameter:  pointer to string pointer of both texts united, string pointer to first part; lenth of first part; string pointer to second part; lenth of second part; sepeartor character
 *
-* - ret: complete path lenth
+* -  return value: complete path lenth
 ******************************************************************
 */
 uint32_t createPath(char** destination, char* leftstring, uint32_t leftstringlength, char* rightstring, uint32_t rightstringlength, char seperator)
@@ -83,26 +83,31 @@ uint32_t createPath(char** destination, char* leftstring, uint32_t leftstringlen
 
 /*
 ******************************************************************
-* - function: removeFileEnding()
+* - function name : removeFilenameExtension()
 *
-* - desc: removes the file ending if pressent
+* - description:  removes the file filename extension if pressent
 *
-* - par: pointer to string, pointer to lenth of string
+* - parameter:  pointer to string, pointer to lenth of string
 *
-* - ret: -
+* -  return value: -
 ******************************************************************
 */
-void removeFileEnding(char* string, uint32_t* lenth)
+void removeFilenameExtension(char* string, uint32_t* lenth)
 {
 	if (string != 0)
 	{
-		// Remove ending from database path if present
-		for (uint32_t i = 0; i < *lenth; i++)
+		// Remove filename extension from database path if present
+		for (uint32_t i = *lenth; i > 0; i--)
 		{
 			if (string[i] == '.')
 			{
 				*lenth = i + 1; // String lenth
 				string[i] = '\0'; // Zero terminate string
+				break;
+			}
+			// File has no filename extension
+			else if (string[i] == DIR_SEPERATOR_WINDOWS || (string[i] == DIR_SEPERATOR_UNIX))
+			{
 				break;
 			}
 		}
@@ -111,13 +116,13 @@ void removeFileEnding(char* string, uint32_t* lenth)
 
 /*
 ******************************************************************
-* - function: removeFilePath()
+* - function name : removeFilePath()
 *
-* - desc: seperates the filename from the filepath
+* - description:  seperates the filename from the filepath
 *
-* - par: pointer to string, pointer to lenth of string, pointer to destination
+* - parameter:  pointer to string, pointer to lenth of string, pointer to destination
 *
-* - ret: lenth of filename
+* -  return value: lenth of filename
 ******************************************************************
 */
 unsigned int removeFilePath(char* input, unsigned int lenth, char** output)
@@ -126,7 +131,7 @@ unsigned int removeFilePath(char* input, unsigned int lenth, char** output)
 	*output = input;
 	for (unsigned int i = 0; i < lenth; i++)
 	{
-		if (input[lenth - i] == '\\' || input[lenth - i] == '/')
+		if (input[lenth - i] == DIR_SEPERATOR_WINDOWS || input[lenth - i] == DIR_SEPERATOR_UNIX)
 		{
 			nameLen = i - 1;
 			*output = &(input[lenth - nameLen]);
@@ -138,13 +143,13 @@ unsigned int removeFilePath(char* input, unsigned int lenth, char** output)
 
 /*
 ******************************************************************
-* - function: addStrings()
+* - function name : addStrings()
 *
-* - desc: adds two strings together
+* - description:  adds two strings together
 *
-* - par: pointer to string pointer of both texts united, string pointer of first part; lenth of first part; string pointer of second part; lenth of second part; sepeartor character
+* - parameter:  pointer to string pointer of both texts united, string pointer of first part; lenth of first part; string pointer of second part; lenth of second part; sepeartor character
 *
-* - ret: complete path lenth
+* -  return value: complete path lenth
 ******************************************************************
 */
 uint32_t addStrings(char** destination, char* leftstring, uint32_t leftstringlength, char* rightstring, uint32_t rightstringlength, char seperator)
@@ -214,13 +219,13 @@ uint32_t addStrings(char** destination, char* leftstring, uint32_t leftstringlen
 
 /*
 ******************************************************************
-* - function: stringSmall()
+* - function name : stringSmall()
 *
-* - desc: make first character lower case
+* - description:  make first character lower case
 *
-* - par: string pointer text; lenth of text
+* - parameter:  string pointer text; lenth of text
 *
-* - ret: char pointer
+* -  return value: char pointer
 ******************************************************************
 */
 char* stringSmall(char* name, unsigned int nameLen)
@@ -241,13 +246,13 @@ char* stringSmall(char* name, unsigned int nameLen)
 
 /*
 ******************************************************************
-* - function: stringBig()
+* - function name : stringBig()
 *
-* - desc: make first character upper case
+* - description:  make first character upper case
 *
-* - par: string pointer text; lenth of text
+* - parameter:  string pointer text; lenth of text
 *
-* - ret: char pointer
+* -  return value: char pointer
 ******************************************************************
 */
 char* stringBig(char* name, unsigned int nameLen)
