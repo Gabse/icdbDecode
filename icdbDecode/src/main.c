@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 	}
 	
 	// Remove .dat ending from database
-	removeFileEnding(storepath, &storepathLenth);
+	removeFilenameExtension(storepath, &storepathLenth);
 
 	// Create Log file
 	CreateLogfile(storepath, storepathLenth);

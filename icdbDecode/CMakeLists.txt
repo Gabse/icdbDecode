@@ -1,25 +1,13 @@
-﻿cmake_minimum_required(VERSION 3.24)
+﻿cmake_minimum_required(VERSION 3.31)
 project("icdbDecode")
 
 # Add source to this project's executable.
-add_executable(icdbDecode "src/main.c" "src/log.c" "src/common.c" "src/stringutil.c" "src/unpack.c" "src/list.c" "src/parser.c" "src/catlgatl.c" "src/cdbblks.c" "src/kicad.c")
+add_subdirectory(src)
 
 # Add zlib
- add_subdirectory(lib/zlib-1.3.1)
- target_link_libraries(icdbDecode zlib)
- add_custom_command(
-        TARGET icdbDecode POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_CURRENT_BINARY_DIR}/lib/zlib-1.3.1/zlibd.dll
-                ${CMAKE_CURRENT_BINARY_DIR}/zlibd.dll)
-                
+add_subdirectory(lib/zlib)
+target_link_libraries(icdbDecode zlibstatic)
+
 # Add test file
-add_custom_command(
-        TARGET icdbDecode POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove
-                ${CMAKE_CURRENT_SOURCE_DIR}/icdb.dat)
-add_custom_command(
-        TARGET icdbDecode POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_CURRENT_SOURCE_DIR}/files/icdb.dat
-                ${CMAKE_CURRENT_BINARY_DIR}/icdb.dat)
+file(COPY  ${CMAKE_CURRENT_SOURCE_DIR}/files/icdb.dat
+        DESTINATION  ${CMAKE_CURRENT_BINARY_DIR}/src)

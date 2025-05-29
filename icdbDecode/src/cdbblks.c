@@ -964,6 +964,11 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 	int32_t Repetitions;
 	uint32_t Type = 0;
 	uint32_t SizeAccumulator = 0;
+	
+	uint32_t FileStart = ftell(sourceFile);
+	fseek(sourceFile, 0, SEEK_END);
+	uint32_t FileEnd = ftell(sourceFile);
+	fseek(sourceFile, FileStart, SEEK_SET);
 
 	fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 	fread(&Type, sizeof(uint32_t), 1, sourceFile);
@@ -978,7 +983,7 @@ segment_struct* ParseSegment(FILE* sourceFile, int32_t* NumElements, char* Name)
 	BlockStartAddress = ftell(sourceFile);
 
 	// Count Entry (I haven't found a way to derive the number of entrys from PayloadLenRaw)
-	while (PayloadLenRaw > SizeAccumulator && IsInsideFile(sourceFile))
+	while (PayloadLenRaw > SizeAccumulator && ftell(sourceFile) < FileEnd)
 	{
 		fseek(sourceFile, EntryLen * sizeof(uint32_t), SEEK_CUR);
 		fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
