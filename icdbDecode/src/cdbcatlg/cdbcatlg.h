@@ -13,19 +13,20 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _CDBCATLG_H
+#define _CDBCATLG_H
 
 /*
 ******************************************************************
-* Global Includes
+* Includes
 ******************************************************************
 */
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include "../common.h"	// Required for string_struct
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
 
@@ -34,15 +35,7 @@
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+int parseCdbcatlg(char*, uint32_t);
+void initCdbcatlg(void);
 
-#endif //_STRINGUTIL_H
+#endif //_CDBCATLG_H

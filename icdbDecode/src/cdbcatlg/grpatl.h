@@ -13,36 +13,49 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _GRPATL_H
+#define _GRPATL_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdio.h>		// Required for FILE
+#include "../common.h"	// Required for key_struct
 
 /*
 ******************************************************************
 * Global Defines
 ******************************************************************
 */
+#define PATH_GRPATL "grpatl.v"
+
+/*
+******************************************************************
+* Global Variables
+******************************************************************
+*/
+// Grpatl
+extern key_struct* Grpatl_Fixes;
+extern key_struct* Grpatl_Group2Prps;
+extern key_struct* Grpatl_GroupContentsType;
+extern key_struct* Grpatl_GroupObjects;
+extern key_struct* Grpatl_GroupSubGroups;
+extern key_struct* Grpatl_GrpVersion;
+extern key_struct* Grpatl_PrpAttr;
+extern key_struct* Grpatl_PrpBit;
+extern key_struct* Grpatl_PrpId;
+extern key_struct* Grpatl_PrpNam;
+extern key_struct* Grpatl_PrpOrder;
+extern key_struct* Grpatl_PrpStr;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessKeyGrpatl(FILE*, char*, unsigned int);
+extern void InitGrpatl(void);
 
-#endif //_STRINGUTIL_H
+#endif //_GRPATL_H

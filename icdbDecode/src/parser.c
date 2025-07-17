@@ -20,11 +20,13 @@
 ******************************************************************
 */
 #include "parser.h"
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
-#include <stdlib.h>		// Required for calloc to work properly
-#include "stringutil.h" // Required for assemblePath
-#include "catlgatl.h"	// Required for parseCatlgatl
-#include "kicad.h"		// Required for StoreAsKicadFile
+#include <stdint.h>					// Required for int32_t, uint32_t, ...
+#include <stdlib.h>					// Required for calloc to work properly
+#include "stringutil.h"				// Required for assemblePath
+#include "./cdbcatlg/pages.h"		// Required for pages
+#include "./cdbcatlg/cdbcatlg.h"	// Required for parseCatlgatl
+#include "./cdbblks/cdbblks.h"		// Required for parseCdbblks
+#include "kicad.h"					// Required for StoreAsKicadFile
 
 /*
 ******************************************************************
@@ -66,7 +68,7 @@ int ParseIcdb(char* path, uint32_t pathlength)
 	uint32_t error = 0;
 
 	// do only s1 for now
-	PathLen = assemblePath(&Path, path, pathlength, "s1", sizeof("s1"), DIR_SEPERATOR);
+	PathLen = assemblePath(&Path, path, pathlength, "s1", sizeof("s1"), DIR_SEPARATOR);
 	error = parseSessionFolder(Path, PathLen);
 	free(Path);
 
@@ -100,33 +102,29 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 	uint32_t SubPathLen = 0;
 
 	// Parse catlgatl
-	PathLen = assemblePath(&Path, path, pathlength, "cdbcatlg", sizeof("cdbcatlg"), DIR_SEPERATOR);
-	error = parseCatlgatl(Path, PathLen);
+	PathLen = assemblePath(&Path, path, pathlength, "cdbcatlg", sizeof("cdbcatlg"), DIR_SEPARATOR);
+	error = parseCdbcatlg(Path, PathLen);
 	free(Path);
 	// Change to cdbblks
-	PathLen = assemblePath(&Path, path, pathlength, "cdbblks", sizeof("cdbblks"), DIR_SEPERATOR);
-	if (NumBlkUID == NumMdlNam && NumBlkUID >= 0 && BlkUID != NULL && MdlNam != NULL)
+	PathLen = assemblePath(&Path, path, pathlength, "cdbblks", sizeof("cdbblks"), DIR_SEPARATOR);
+	for (uint32_t i = 0; i < GetNumPages(); i++)
 	{
-		for (uint32_t i = 0; i < NumBlkUID; i++)
-		{
-			// Get filepath for block folder
-			makePathFromUID((char*)&UIDpath, BlkUID + i);
-			uint32_t FullUIDpathLength = addStrings(&FullUIDpath, UIDpath, 16, ".blk", 4, '\0');
-
-			// Assemble filepath for block folder
-			myPrint("Sheet [%s] is stored in [%s]\n", MdlNam[i].Text, FullUIDpath);
-			SubPathLen = assemblePath(&SubPath, Path, PathLen, FullUIDpath, FullUIDpathLength, DIR_SEPERATOR);
-
-			// Parse cdbblks
-			error += parseCdbblks(SubPath, SubPathLen);
-			error += StoreAsKicadFile(Exportpath, sizeof(Exportpath), MdlNam[i].Text, MdlNam[i].Lenth);
-			free(SubPath);
-		}
+		// Get filepath for block folder
+		page_struct page = GetPage(i);
+		makePathFromUID((char*)&UIDpath, &page.UID);
+		uint32_t FullUIDpathLength = addStrings(&FullUIDpath, UIDpath, 16, ".blk", 4, '\0');
+	
+		// Assemble filepath for block folder
+		myPrint("Schematic [%s] is stored in [%s]\n", page.Name.Text, FullUIDpath);
+		SubPathLen = assemblePath(&SubPath, Path, PathLen, FullUIDpath, FullUIDpathLength, DIR_SEPARATOR);
+	
+		// Parse cdbblks
+		error += parseCdbblks(SubPath, SubPathLen);
+		error += StoreAsKicadFile(Exportpath, sizeof(Exportpath), page);
+		free(SubPath);
+		initCdbblks();
 	}
-	else
-	{
-		myPrint("Missmatch!, got NumBlkUID %d and NumMdlNam %d\n", NumBlkUID, NumMdlNam);
-	}
+	initCdbcatlg();
 	free(Path);
 	return error;
 }
@@ -137,7 +135,7 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 *
 * - description: 	Transforms a UID into a string
 *
-* - parameter: 		destintion path, uid to convert
+* - parameter: 		destination path, uid to convert
 *
 * - return value: 	-
 ******************************************************************

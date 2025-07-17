@@ -15,8 +15,8 @@
 ******************************************************************
 */
 extern int nontDecompress;
-extern int linkDoubleFiles;
-extern int noDoubleFiles;
+extern int linkLongLongFiles;
+extern int noLongLongFiles;
 
 /*
 ******************************************************************

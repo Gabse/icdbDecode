@@ -20,12 +20,24 @@
 ******************************************************************
 */
 #include "kicad.h"
-#include <stdio.h>		// Required for fprint, fopen, ...
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
-#include <stdlib.h>		// Required for calloc to work properly
-#include "common.h"		// Required for myfopen
-#include "cdbblks.h"	// Required for source data
-
+#include <stdio.h>					// Required for fprint, fopen, ...
+#include <stdint.h>					// Required for int32_t, uint32_t, ...
+#include <stdlib.h>					// Required for calloc to work properly
+#include "common.h"					// Required for myfopen
+#include "stringutil.h"				// Required for string manipulation
+#include "./cdbcatlg/pages.h"		// Required for pages
+#include "./cdbcatlg/groups.h"		// Required for groups
+#include "./cdbcatlg/grpobj.h"		// Required for groups
+#include "./cdbblks/sheets.h"		// Required for sheets
+#include "./cdbblks/properties.h"	// Required for properties
+#include "./cdbblks/label.h"		// Required for label
+#include "./cdbblks/arcs.h"			// Required for arcs
+#include "./cdbblks/circles.h"		// Required for circles
+#include "./cdbblks/rectangles.h"	// Required for rectangles
+#include "./cdbblks/text.h"			// Required for text
+#include "./cdbblks/lines.h"		// Required for lines
+#include "./cdbblks/net.h"			// Required for net
+#include "./cdbblks/bus.h"			// Required for bus
 
 /*
 ******************************************************************
@@ -34,62 +46,53 @@
 */
 #define _CRT_SECURE_NO_DEPRECATE
 
-#define CoordinateOffsetX 0
-#define CoordinateOffsetY 21000000
-#define CoordinateScaleX 1
-#define CoordinateScaleY -1
-#define DefaultTextOrigin 3
-#define FontScale 0.5  // Fonts in KiCad are rendered about half the size than in DxD. Exact size TBD
-#define BaseLineThickness 0.1524
-#define NewKiCad 1 // Create Kicad 9.99 required for filling pattern
+#define UserCoordinateOffsetX 0
+#define UserCoordinateOffsetY 0
+#define UserCoordinateScaleX 1
+#define UserCoordinateScaleY 1
+#define UserDefaultTextOrigin 3
+#define UserFontScale 0.5  // Fonts in KiCad are rendered ~0.5 the size from DxD. Exact scaling differs between fonts.
+#define UserBaseLineThickness 0.1
+#define NewKiCad 0 // Create Kicad 9.99 required for filling pattern
 #define KiCadFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
 
 /*
 ******************************************************************
-* Structures
+* Local Function Prototype
 ******************************************************************
 */
-typedef struct net_bus_segment_struct
-{
-	coordinate_struct StartCoord;
-	coordinate_struct EndCoord;
-	uint32_t ID;
-	uint32_t StartID;
-	uint32_t EndID;
-} net_bus_segment_struct;
+void KiCadProperties(FILE*, properties_struct, uint8_t);
+void KiCadSheetProp(FILE*, sheet_struct);
+void KiCadTextData(FILE*, textdata_struct);
+void KiCadUID(FILE*, uid_struct, uid_struct);
+void KiCadPrintString(FILE*, string_struct);
+void KiCadLabels(FILE*, uid_struct, label_struct, string_struct);
+void KiCadArcs(FILE*, uid_struct, unsigned int);
+void KiCadCircles(FILE*, uid_struct, unsigned int);
+void KiCadRectangles(FILE*, uid_struct, unsigned int);
+void KiCadText(FILE*, uid_struct, unsigned int);
+void KiCadLines(FILE*, uid_struct, unsigned int);
+void KiCadNets(FILE*, uid_struct, unsigned int);
+void KiCadBusses(FILE*, uid_struct, unsigned int);
 
-typedef struct net_bus_struct
-{
-	uint32_t IsBus;
-	style_type Style;
-	uint32_t NumSegments;
-	net_bus_segment_struct* Segments;
-	uint32_t ID;
-	uint32_t NumJoints;
-	coordinate_struct* Joints;
-} net_bus_struct;
-
-// Non dxd structs
-int32_t NumNetstyles = -1;
-style_struct* NetStyles = NULL;
-
-int32_t NumNetsBus = -1;
-net_bus_struct* NetBus = NULL;
-
-/*
-******************************************************************
-* Local Function Protptypes
-******************************************************************
-*/
-void KiCadProcessStyle(FILE*, uint32_t, uint8_t);
-void KiCadProcessText(FILE*, uint8_t );
-void Processing(void);
 /*
 ******************************************************************
 * Global Variables
 ******************************************************************
 */
+int CoordinateOffsetX	= UserCoordinateOffsetX;
+int CoordinateOffsetY	= UserCoordinateOffsetY;
+int CoordinateScaleX	= UserCoordinateScaleX;
+int CoordinateScaleY	= UserCoordinateScaleY;
+int DefaultTextOrigin	= UserDefaultTextOrigin;
+float FontScale			= UserFontScale;
+float BaseLineThickness = UserBaseLineThickness;
 
+/*
+******************************************************************
+* Global Functions
+******************************************************************
+*/
 /*
 ******************************************************************
 * - function name:	StoreAsKicadFile()
@@ -101,222 +104,86 @@ void Processing(void);
 * - return value: 	errorcode
 ******************************************************************
 */
-int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filelenth)
+int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
 {
+	unsigned int NumPages = GetNumSheets();
 	char* destination = NULL;
-	uint32_t completePathLength = addStrings(&destination, file, filelenth, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
-	Processing();
-	// Open file
-	FILE* KiCadFile = myfopen("w", path, pathlenth, destination, completePathLength, DIR_SEPERATOR);
-	if (KiCadFile != 0)
+	uid_struct temp = { 0 };
+	for (unsigned int i = 0; i < NumPages; i++)
 	{
-		myPrint("\n--------------- Writing KiCad file ---------------\n");
-		myPrint("File: [%s]\n", destination);
-		// Header
-		fprintf(KiCadFile, "(kicad_sch\n");
+		sheet_struct Sheet = GetSheet(i);
+		uint32_t completePathLength;
+
+		if (NumPages > 1) // Schematic name + sheet number + sheet name
+		{
+			group_struct group = GetGroup(i);
+			char* TempDest1 = NULL;
+			char* TempDest2 = malloc (10);
+			if (TempDest2 == NULL)
+			{
+				return -1;
+			}
+			sprintf(TempDest2, "%d", i + 1);
+			uint32_t completePathLengthTemp = addStrings(&TempDest1, page.Name.Text, page.Name.Length, TempDest2, stringLen(TempDest2, 10), '_');
+			completePathLengthTemp = addStrings(&TempDest2, TempDest1, completePathLengthTemp, group.Name.Text, group.Name.Length, '_');
+			completePathLength = addStrings(&destination, TempDest2, completePathLengthTemp, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
+			free(TempDest1);
+			free(TempDest2);
+		}
+		else // Schematic name only
+		{
+			completePathLength = addStrings(&destination, page.Name.Text, page.Name.Length, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
+		}
+
+		// Open file
+		FILE* KiCadFile = myfopen("w", path, pathlength, destination, completePathLength, DIR_SEPARATOR);
+		if (KiCadFile != 0)
+		{
+			myPrint("\n--------------- Writing KiCad file ---------------\n");
+			myPrint("File: [%s]\n", destination);
+			// File Header
+			fprintf(KiCadFile, "(kicad_sch\n");
 #if NewKiCad
-		fprintf(KiCadFile, "\t(version 20250222)\n");
-		fprintf(KiCadFile, "\t(generator_version %c9.99%c)\n", 0x22, 0x22);
-		fprintf(KiCadFile, "\t(generator %ceeschema%c)\n", 0x22, 0x22);
+			fprintf(KiCadFile, "\t(version 20250222)\n");
+			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
+			fprintf(KiCadFile, "\t(generator_version \"9.99\")\n");
 #else
-		fprintf(KiCadFile, "\t(version 20250114)\n");
-		fprintf(KiCadFile, "\t(generator_version %c9.0%c)\n", 0x22, 0x22);
-		fprintf(KiCadFile, "\t(generator %ceeschema%c)\n", 0x22, 0x22);
+			fprintf(KiCadFile, "\t(version 20250114)\n");
+			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
+			fprintf(KiCadFile, "\t(generator_version \"9.0\")\n");
 #endif
-		fprintf(KiCadFile, "\t(paper %cA4%c)\n", 0x22, 0x22);
-		fprintf(KiCadFile, "\t(lib_symbols)\n");
+			fprintf(KiCadFile, "\t");
+			KiCadUID(KiCadFile, page.UID, temp);
+			KiCadSheetProp(KiCadFile, Sheet);
+			fprintf(KiCadFile, "\t(lib_symbols)\n");
+			myPrint("\n");
 
-		// Nets / Busses
-		if (NumNetsBus > 0 && NetBus != 0)
-		{
-			myPrint("\nNets & Busses:\n");
-			for (uint32_t i = 0; i < NumNetsBus; i++)
-			{
-				if (NetBus[i].IsBus)
-				{
-					myPrint("Bus %d Junctions:\n", i + 1);
-				}
-				else
-				{
-					myPrint("Net %d Junctions:\n", i + 1);
-				}
-				// Joints
-				if (NetBus[i].NumJoints > 0 && NetBus[i].Joints != 0)
-				{
-					for (uint32_t j = 0; j < NetBus[i].NumJoints; j++)
-					{
-						fprintf(KiCadFile, "\t(junction\n");
+			// Elements
+			KiCadArcs(KiCadFile, page.UID, Sheet.Group);
+			KiCadCircles(KiCadFile, page.UID, Sheet.Group);
+			KiCadRectangles(KiCadFile, page.UID, Sheet.Group);
+			KiCadText(KiCadFile, page.UID, Sheet.Group);
+			KiCadLines(KiCadFile, page.UID, Sheet.Group);
+			KiCadNets(KiCadFile, page.UID, Sheet.Group);
+			KiCadBusses(KiCadFile, page.UID, Sheet.Group);
 
-						num_struct X = numProcess(NetBus[i].Joints[j].X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct Y = numProcess(NetBus[i].Joints[j].Y, CoordinateScaleY, CoordinateOffsetY);
+			// File Leader
+			fprintf(KiCadFile, "\t(sheet_instances\n");
+			fprintf(KiCadFile, "\t\t(path \"/\"\n");
+			fprintf(KiCadFile, "\t\t\t(page \"1\")\n");
+			fprintf(KiCadFile, "\t\t)\n");
+			fprintf(KiCadFile, "\t)\n");
 
-						fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-						myPrint("\tJunction at X: %d.%05d, Y %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-						uint32_t index = NetBus[i].Style;
-						if (Color[index].Key != 0xff)
-						{
-							fprintf(KiCadFile, "\t\t(color %d %d %d 1)\n", Color[index].Red, Color[index].Green, Color[index].Blue);
-						}
-						else
-						{
-							fprintf(KiCadFile, "\t\t(color 0 0 0 0)\n");
-						}
-						fprintf(KiCadFile, "\t)\n");
-					}
-				}
-				// Nets
-				if (NetBus[i].NumSegments > 0 && NetBus[i].Segments != 0)
-				{
-					for (uint32_t j = 0; j < NetBus[i].NumSegments; j++)
-					{
-						if (NetBus[i].IsBus)
-						{
-							fprintf(KiCadFile, "\t(bus\n");
-							myPrint("Bus %d\n", i + 1);
-						}
-						else
-						{
-							fprintf(KiCadFile, "\t(wire\n");
-							myPrint("Net %d\n", i + 1);
-						}
-						fprintf(KiCadFile, "\t\t(pts\n");
-						num_struct XStart = numProcess(NetBus[i].Segments[j].StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YStart = numProcess(NetBus[i].Segments[j].StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-						num_struct XEnd = numProcess(NetBus[i].Segments[j].EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YEnd = numProcess(NetBus[i].Segments[j].EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-
-						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
-
-						myPrint("\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-						myPrint("\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
-						fprintf(KiCadFile, "\t\t)\n");
-
-						KiCadProcessStyle(KiCadFile, NetBus[i].Style, 0);
-					}
-				}
-			}
+			fprintf(KiCadFile, ")\n");
+			fclose(KiCadFile);
 		}
-
-		// Lines
-		if (LinePointX != 0 && LinePointY != 0 && Line2Style != 0 && NumLines > 0)
+		else
 		{
-			myPrint("\nLines:\n");
-			for (uint32_t i = 0; i < NumLines; i++)
-			{
-				fprintf(KiCadFile, "\t(polyline\n");
-				fprintf(KiCadFile, "\t\t(pts\n");
-
-				num_struct XStart = numProcess(LinePointX[i].StartPoint, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YStart = numProcess(LinePointY[i].StartPoint, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XEnd = numProcess(LinePointX[i].StartPoint + LinePointX[i].Offset + 1, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YEnd = numProcess(LinePointY[i].StartPoint + LinePointY[i].Offset + 1, CoordinateScaleY, CoordinateOffsetY);
-
-				fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
-
-				myPrint("Line %d\n", i + 1);
-				myPrint("\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-				myPrint("\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
-				fprintf(KiCadFile, "\t\t)\n");
-
-				KiCadProcessStyle(KiCadFile, Line2Style[i].index - 1, 0);
-			}
+			myPrint("Error Writing [%s] !\n", destination);
+			return -1;
 		}
-
-		// Rectangles
-		if (RectCoord != 0 && NumRectangle > 0)
-		{
-			myPrint("\nRectangles:\n");
-			for (uint32_t i = 0; i < NumRectangle; i++)
-			{
-				fprintf(KiCadFile, "\t(rectangle\n");
-
-				num_struct XStart = numProcess(RectCoord[i].Start.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YStart = numProcess(RectCoord[i].Start.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XEnd = numProcess(RectCoord[i].End.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YEnd = numProcess(RectCoord[i].End.Y, CoordinateScaleY, CoordinateOffsetY);
-
-				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
-				fprintf(KiCadFile, "\t\t(end %d.%05d %d.%05d)\n", XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
-
-				myPrint("Rectangle %d\n", i + 1);
-				myPrint("\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-				myPrint("\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
-
-				KiCadProcessStyle(KiCadFile, Rect2Style[i].index - 1, 1);
-
-			}
-		}
-
-		// Circle
-		if (CircleRadius != 0 && CirclesPos != 0 && NumCircle > 0)
-		{
-			myPrint("\nCircles:\n");
-			for (uint32_t i = 0; i < NumCircle; i++)
-			{
-				fprintf(KiCadFile, "\t(circle\n");
-
-				num_struct X = numProcess(CirclesPos[i].X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct Y = numProcess(CirclesPos[i].Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct R = numProcess(CircleRadius[i], 1, 0);
-
-				fprintf(KiCadFile, "\t\t(center %d.%05d %d.%05d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-				fprintf(KiCadFile, "\t\t(radius %d.%05d)\n", R.Integ, R.Frac);
-
-				myPrint("Circle %d\n", i + 1);
-				myPrint("\tX: %d.%05d, Y: %d.%05d, Radius: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac, R.Integ, R.Frac);
-
-				KiCadProcessStyle(KiCadFile, Circle2Style[i].index - 1, 1);
-			}
-		}
-
-		// Arc
-		if (ArcEnd != 0 && ArcStart != 0 && ArcMid != 0 && NumArc > 0)
-		{
-			myPrint("\nArcs:\n");
-			for (uint32_t i = 0; i < NumArc; i++)
-			{
-				fprintf(KiCadFile, "\t(arc\n");
-
-				num_struct XStart = numProcess(ArcStart[i].X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YStart = numProcess(ArcStart[i].Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XMid = numProcess(ArcMid[i].X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YMid = numProcess(ArcMid[i].Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XEnd = numProcess(ArcEnd[i].X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YEnd = numProcess(ArcEnd[i].Y, CoordinateScaleY, CoordinateOffsetY);
-
-				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
-				fprintf(KiCadFile, "\t\t(mid %d.%05d %d.%05d)\n", XMid.Integ, XMid.Frac, YMid.Integ, YMid.Frac);
-				fprintf(KiCadFile, "\t\t(end %d.%05d %d.%05d)\n", XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
-
-				myPrint("Arc: %d\n", i + 1);
-				myPrint("\tX Start: %d.%05d, X Mid: %d.%05d X End: %d.%05d\n", XStart.Integ, XStart.Frac, XMid.Integ, XMid.Frac, XEnd.Integ, XEnd.Frac);
-				myPrint("\tY Start: %d.%05d, Y Mid: %d.%05d Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YMid.Integ, YMid.Frac, YEnd.Integ, YEnd.Frac);
-
-				KiCadProcessStyle(KiCadFile, Arc2Style[i].index - 1, 0);
-			}
-		}
-
-		// Text
-		KiCadProcessText(KiCadFile, 0);
-
-		// NetLabel
-		KiCadProcessText(KiCadFile, 1);
-
-		// Leader
-		fprintf(KiCadFile, "\t(sheet_instances\n");
-		fprintf(KiCadFile, "\t\t(path %c/%c\n", 0x22, 0x22);
-		fprintf(KiCadFile, "\t\t\t(page %c1%c)\n", 0x22, 0x22);
-		fprintf(KiCadFile, "\t\t)\n");
-		fprintf(KiCadFile, "\t)\n");
-		fprintf(KiCadFile, ")\n");
-		fclose(KiCadFile);
-		return 0;
 	}
-	else
-	{
-		myPrint("Error Writing [%s] !\n", destination);
-		return -1;
-	}
+	return 0;
 }
 
 /*
@@ -326,32 +193,33 @@ int StoreAsKicadFile(char* path, uint32_t pathlenth, char* file, uint32_t filele
 */
 /*
 ******************************************************************
-* - function name:	KiCadProcessStyle()
+* - function name:	KiCadProperties()
 *
-* - description: 	Stores styles in KiCad
+* - description: 	Stores properties in KiCad
 *
-* - parameter: 		Pointer to KiCad file; Index of Style; 1 for filled shape (Rect, Dircle, ..), 0 for not filled shape (Lines, ...)
+* - parameter: 		Pointer to KiCad file; Index of Properties; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Lines, ...)
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
+void KiCadProperties(FILE* KiCadFile, properties_struct Property, uint8_t Filling)
 {
 	fprintf(KiCadFile, "\t\t(stroke\n");
 
 	// Linewidth
-	if (Thickness[index] == -1)
+	if (Property.Thickness == thikness_Auto)
 	{
+		fprintf(KiCadFile, "\t\t\t(width 0)\n");
 		myPrint("\tLinewidth: Default\n");
 	}
-	else if (Thickness[index] >= 1 && Thickness[index] <= 10)
+	else
 	{
-		fprintf(KiCadFile, "\t\t\t(width %f)\n", (float)Thickness[index] * BaseLineThickness);
-		myPrint("\tLinewidth: %f\n", (float)Thickness[index] * BaseLineThickness);
+		fprintf(KiCadFile, "\t\t\t(width %f)\n", (float)Property.Thickness * BaseLineThickness);
+		myPrint("\tLinewidth: %f\n", (float)Property.Thickness * BaseLineThickness);
 	}
 
 	// Linestyle
-	switch (Style[index])
+	switch (Property.LineType)
 	{
 	case style_AutoSolid: // Solid (Automatic)
 		myPrint("\tLinestyle: Default\n");
@@ -383,15 +251,14 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 	}
 
 	// Color
-	if (Color[index].Key == 0xff)
+	if (Property.LineColor.Key == colorkey_default)
 	{ // Default Color
 		myPrint("\tColor: Default\n");
-		fprintf(KiCadFile, "\t\t\t(color 0 0 0 0)\n");
 	}
 	else
 	{ // Custom Color
-		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Color[index].Red, Color[index].Green, Color[index].Blue);
-		myPrint("\tColor: R:%d G:%d B:%d\n", Color[index].Red, Color[index].Green, Color[index].Blue);
+		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
+		myPrint("\tColor: R:%d G:%d B:%d\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
 	}
 	fprintf(KiCadFile, "\t\t)\n");
 
@@ -401,7 +268,7 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 		int8_t opacity = -1;
 #if NewKiCad
 		fprintf(KiCadFile, "\t\t(fill\n");
-		switch (Fill[index])
+		switch (Property.Fill)
 		{
 		case fill_AutoHollow: // Hollow (Automatic)
 		case fill_Hollow: // Hollow
@@ -475,27 +342,10 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 			break;
 
 		}
-
-		if (opacity != -1)
-		{
-			if (ColorExt[index].Key == 0xff)
-			{ // Default Color
-				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: Default\n");
-				fprintf(KiCadFile, "\t\t\t(color 0 0 0 %.2f)\n", ((float)opacity / 100.0));
-			}
-			else
-			{ // Custom Color
-				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue, ((float)opacity / 100.0));
-				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: R:%d G:%d B:%d\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue);
-			}
-		}
-		fprintf(KiCadFile, "\t\t)\n");
 #else
-		// Old KiCad has no fill patern. Translate into fill opacity
+		// Old KiCad has no fill pattern. Translate into fill opacity
 		fprintf(KiCadFile, "\t\t(fill\n");
-		switch (Fill[index])
+		switch (Property.Fill)
 		{
 		case fill_AutoHollow: // Hollow (Automatic)
 		case fill_Hollow: // Hollow
@@ -528,7 +378,7 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 			opacity = 92;
 			break;
 		}
-
+#endif
 		if (opacity == -1)
 		{
 			fprintf(KiCadFile, "\t\t\t(type none)\n");
@@ -537,7 +387,7 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 		else
 		{
 			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			if (ColorExt[index].Key == 0xff)
+			if (Property.FillColor.Key == colorkey_default)
 			{ // Default Color
 				myPrint("\tFill: %d%c\n", opacity, 0x25);
 				myPrint("\tColor: Default\n");
@@ -545,467 +395,771 @@ void KiCadProcessStyle(FILE* KiCadFile, uint32_t index, uint8_t Filling)
 			}
 			else
 			{ // Custom Color
-				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue, ((float)opacity / 100.0));
+				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue, ((float)opacity / 100.0));
 				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: R:%d G:%d B:%d\n", ColorExt[index].Red, ColorExt[index].Green, ColorExt[index].Blue);
+				myPrint("\tColor: R:%d G:%d B:%d\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue);
 			}
 		}
 		fprintf(KiCadFile, "\t\t)\n");
-#endif
 	}
-	fprintf(KiCadFile, "\t)\n");
 }
 
 /*
 ******************************************************************
-* - function name:	KiCadProcessText()
+* - function name:	KiCadPageProp()
 *
-* - description: 	Stores texts in KiCad
+* - description: 	Stores page properties in KiCad
 *
-* - parameter: 		Pointer to KiCad file; 1 for texts, 0 for labels
+* - parameter: 		Pointer to KiCad file; Index of Sheet Properties
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadProcessText(FILE* KiCadFile, uint8_t type)
+void KiCadSheetProp(FILE* KiCadFile, sheet_struct Sheet)
 {
-	text_struct* InputString;
-	uint32_t NumData;
-	uint32_t index;
-	uint8_t Overbar;
-
-	if (type == 0) // Text
+	fprintf(KiCadFile, "\t(paper \"");
+	myPrint("Paper Size: ");
+	switch (Sheet.SizeCode)
 	{
-		InputString = TextString;
-		NumData = NumTextData;
+	case sheetsize_A:
+		fprintf(KiCadFile, "A\"");
+		myPrint("A");
+		break;
+	case sheetsize_B:
+		fprintf(KiCadFile, "B\"");
+		myPrint("B");
+		break;
+	case sheetsize_C:
+		fprintf(KiCadFile, "C\"");
+		myPrint("C");
+		break;
+	case sheetsize_D:
+		fprintf(KiCadFile, "D\"");
+		myPrint("D");
+		break;
+	case sheetsize_E:
+		fprintf(KiCadFile, "E\"");
+		myPrint("E");
+		break;
+	case sheetsize_F:
+		fprintf(KiCadFile, "F\"");
+		myPrint("F");
+		break;
+	case sheetsize_A0:
+		fprintf(KiCadFile, "A0\"");
+		myPrint("A0");
+		break;
+	case sheetsize_A1:
+		fprintf(KiCadFile, "A1\"");
+		myPrint("A1");
+		break;
+	case sheetsize_A2:
+		fprintf(KiCadFile, "A2\"");
+		myPrint("A2");
+		break;
+	case sheetsize_A3:
+		fprintf(KiCadFile, "A3\"");
+		myPrint("A3");
+		break;
+	case sheetsize_A4:
+		fprintf(KiCadFile, "A4\"");
+		myPrint("A4");
+		break;
+	default: // Custom
+		fprintf(KiCadFile, "User\"");
+		num_struct X = numProcess(Sheet.Size.X, CoordinateScaleX, 0);
+		num_struct Y = numProcess(Sheet.Size.Y, CoordinateScaleY, CoordinateOffsetY);
+		fprintf(KiCadFile, " %d.%05d %d.%05d", X.Integ, X.Frac, Y.Integ, Y.Frac);
+		myPrint("%d.%05dx%d.%05d", X.Integ, X.Frac, Y.Integ, Y.Frac);
+		break;
+	}
+
+	// Modify Ancor
+	CoordinateOffsetY = UserCoordinateOffsetY + Sheet.Size.Y;
+	CoordinateScaleY = UserCoordinateScaleY * -1;
+
+	if (Sheet.Orientation == sheetorientation_Portrait)
+	{
+		fprintf(KiCadFile, " portrait");
+		myPrint(" Portrait");
+	}
+	else
+	{
+		myPrint(" Landscape");
+	}
+	myPrint("\n");
+	fprintf(KiCadFile, ")\n");
+}
+
+/*
+******************************************************************
+* - function name:	KiCadTextData()
+*
+* - description: 	Stores text data in KiCad
+*
+* - parameter: 		Pointer to KiCad file; Index of Properties; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Lines, ...)
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
+{
+	// Position + Rotation
+	num_struct X = numProcess(textdata.Position.X, CoordinateScaleX, CoordinateOffsetX);
+	num_struct Y = numProcess(textdata.Position.Y, CoordinateScaleY, CoordinateOffsetY);
+	myPrint("\tX: %d.%05d, Y: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
+	fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d %d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac, textdata.Orientation * 90);
+	myPrint("\tRotation: %d Degree\n", textdata.Orientation * 90);
+	
+	fprintf(KiCadFile, "\t\t(effects\n");
+	
+	// Font
+	fprintf(KiCadFile, "\t\t\t(font \n");
+	switch(textdata.Font.Font)
+	{
+		case font_Fixed:
+			break;
+		case font_Roman:
+			myPrint("\tFont: Default\n");
+			break;
+		case font_RomanItalic:
+			myPrint("\tFont: Default\n");
+			fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+			myPrint("\tItalic\n");
+			break;
+		case font_RomanBold:
+			myPrint("\tFont: Default\n");
+			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			myPrint("\tBold\n");
+			break;
+		case font_RomanBoldItalic:
+			myPrint("\tFont: Default\n");
+			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+			myPrint("\tBold & Italic\n");
+			break;
+		case font_SansSerif:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "SansSerif");
+			myPrint("\tFont: SansSerif\n");
+			break;
+		case font_Script:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "ScriptS");
+			myPrint("\tFont: ScriptS\n");
+			break;
+		case font_SansSerifBold:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "SansSerif");
+			myPrint("\tFont: SansSerif\n");
+			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			myPrint("\tBold\n");
+			break;
+		case font_ScriptBold:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "ScriptS");
+			myPrint("\tFont: ScriptS\n");
+			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			myPrint("\tBold\n");
+			break;
+		case font_Gothic:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "GothicE");
+			myPrint("\tFont: GothicE\n");
+			break;
+		case font_OldEnglish:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "Old English Text MT");
+			myPrint("\tFont: Old English Text MT\n");
+			break;
+		case font_Kanji:
+			myPrint("\tFont: Kanji => Not supported in KiCad!\n");
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "Kanji");
+			break;
+		case font_Plot:
+			myPrint("\tFont: Plot => Not supported in KiCad!\n");
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "Plot");
+			break;
+		case font_Custom:
+			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", textdata.Font.CustomFont);
+			myPrint("\tFont: %s\n", textdata.Font.CustomFont);
+			if (textdata.Font.Bold == option_true)
+			{
+				fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+				myPrint("\tBold\n");
+			}
+			break;
+	}
+	
+	// Text Size
+	num_struct Size = numProcess(textdata.Size * FontScale, 1, 0);
+	fprintf(KiCadFile, "\t\t\t\t(size %d.%05d %d.%05d)\n", Size.Integ, Size.Frac, Size.Integ, Size.Frac);
+	myPrint("\tSize: %d.%05d\n", Size.Integ, Size.Frac);
+	
+	// Text Color
+	if (textdata.LineColor.Key == colorkey_default)
+	{ // Default Color
+		fprintf(KiCadFile, "\t\t\t\t(color 0 0 0 0)\n");
+		myPrint("\tColor: Default\n");
+	}
+	else
+	{ // Custom Color
+		fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", textdata.LineColor.Red, textdata.LineColor.Green, textdata.LineColor.Blue);
+		myPrint("\tColor: R:%d G:%d B:%d\n", textdata.LineColor.Red, textdata.LineColor.Green, textdata.LineColor.Blue);
+	}
+	fprintf(KiCadFile, "\t\t\t)\n");
+	
+	// Text Orientation
+	fprintf(KiCadFile, "\t\t\t(justify");
+	
+	/*
+	Orientation codes:
+	Default = 0 (Lower left)
+	UpperLeft = 1
+	MiddleLeft = 2
+	LowerLeft = 3
+	UpperCenter = 4
+	MiddleCenter = 5
+	LowerCenter = 6
+	UpperRight = 7
+	MiddleRight = 8
+	LowerRight = 9
+	*/
+	uint32_t tempOrigin = textdata.Origin;
+	if (tempOrigin == textorigin_Default)
+	{
+		tempOrigin = DefaultTextOrigin;
+	}
+	else if (tempOrigin > textorigin_LowerRight)
+	{
+		myPrint("\tWarning, unknown orientation Code! %d\n", tempOrigin);
+		tempOrigin = DefaultTextOrigin;
+	}
+	
+	myPrint("\tOrientation: ");
+	if (!(tempOrigin % 3))
+	{
+		fprintf(KiCadFile, " bottom");
+		myPrint("Upper");
+	}
+	else if (!((tempOrigin + 2) % 3))
+	{
+		fprintf(KiCadFile, " top");
+		myPrint("Lower");
+	}
+	else
+	{
+		myPrint("Center");
+	}
+	
+	if (tempOrigin <= 3)
+	{
+		fprintf(KiCadFile, " left");
+		myPrint("Left\n");
+	}
+	else if (tempOrigin >= 7)
+	{
+		fprintf(KiCadFile, " right");
+		myPrint("Right\n");
+	}
+	else
+	{
+		myPrint("Center\n");
+	}
+	fprintf(KiCadFile, ")\n");
+	fprintf(KiCadFile, "\t\t)\n");
+}
+
+/*
+******************************************************************
+* - function name:	KiCadPrintString()
+*
+* - description: 	Prints strings to KiCad file
+*
+* - parameter: 		Pointer to KiCad file; String to print
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadPrintString(FILE* KiCadFile, string_struct String)
+{
+	myPrint("\t[");
+	char Overbar = 0;
+	// Print characters one by one to check for newline and overbar
+	for (uint32_t j = 0; j < String.Length; j++)
+	{
+		if (*((String.Text) + j) == '\n') // Check for line feed
+		{
+			fprintf(KiCadFile, "\\n"); // print \n, not linefeed character
+			myPrint("]\n\t[");
+		}
+		else if (*((String.Text) + j) == '"')
+		{
+			fprintf(KiCadFile, "\\\""); // print \n, not linefeed character
+			myPrint("\"");
+		}
+		else if (*((String.Text) + j) == '~') // Check for overbar
+		{
+			if (Overbar) // Overbar open
+			{
+				Overbar = 0;
+				fprintf(KiCadFile, "}"); // Close Overbar
+			}
+			else // Overbar closed
+			{
+				Overbar = 1;
+				fprintf(KiCadFile, "~{"); // Open Overbar
+			}
+			myPrint("~");
+		}
+		else
+		{
+			fprintf(KiCadFile, "%c", *((String.Text) + j));
+			myPrint("%c", *((String.Text) + j));
+		}
+	}
+	if (Overbar) // Close Overbar if open
+	{
+		fprintf(KiCadFile, "}");
+	}
+	fprintf(KiCadFile, "\"\n");
+	myPrint("]\n");
+}
+
+/*
+******************************************************************
+* - function name:	KiCadUID()
+*
+* - description: 	Stores UIDs
+*
+* - parameter: 		Pointer to KiCad file; UID of page; UID of element
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadUID(FILE* KiCadFile, uid_struct pageUID, uid_struct elementUID)
+{
+	uint8_t UIDs[16];
+	for (int i = 0; i < 8; i++)
+	{
+		UIDs[i] = swpnib(pageUID.UID[i]);
+	}
+	for (int i = 0; i < 8; i++)
+	{
+		UIDs[i + 8] = swpnib(elementUID.UID[i]);
+	}
+
+	myPrint("UID: %02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
+			UIDs[0],
+			UIDs[1],
+			UIDs[2],
+			UIDs[3],
+			UIDs[4],
+			UIDs[5],
+			UIDs[6],
+			UIDs[7],
+			UIDs[8],
+			UIDs[9],
+			UIDs[10],
+			UIDs[11],
+			UIDs[12],
+			UIDs[13],
+			UIDs[14],
+			UIDs[15]);
+	fprintf(KiCadFile, "(uuid \"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\")\n",
+			UIDs[0],
+			UIDs[1],
+			UIDs[2],
+			UIDs[3],
+			UIDs[4],
+			UIDs[5],
+			UIDs[6],
+			UIDs[7],
+			UIDs[8],
+			UIDs[9],
+			UIDs[10],
+			UIDs[11],
+			UIDs[12],
+			UIDs[13],
+			UIDs[14],
+			UIDs[15]);
+}
+
+/*
+******************************************************************
+* - function name:	KiCadLabels()
+*
+* - description: 	Stores label in KiCad
+*
+* - parameter: 		Pointer to KiCad file; UID of page; label to print; label text length; label text
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadLabels(FILE* KiCadFile, uid_struct UID, label_struct label, string_struct Name)
+{
+	if (
+		label.IndexDxDNet.UID[0] == 0 &&
+		label.IndexDxDNet.UID[1] == 0 &&
+		label.IndexDxDNet.UID[2] == 0 &&
+		label.IndexDxDNet.UID[3] == 0 &&
+		label.IndexDxDNet.UID[4] == 0 &&
+		label.IndexDxDNet.UID[5] == 0 &&
+		label.IndexDxDNet.UID[6] == 0 &&
+		label.IndexDxDNet.UID[7] == 0 )
+	{
+		// No actual Label, just net name
 	}
 	else // Label
 	{
-		InputString = NetLabel;
-		NumData = NumNetLabel;
-	}
-
-	if (InputString != 0 &&
-		TextPos != 0 &&
-		TextOrigin != 0 &&
-		TextSize != 0 &&
-		TextOrient != 0 &&
-		TextFont != 0 &&
-		TextColor != 0 &&
-		NumData > 0 &&
-		((Label2TextData != 0 && type != 0) || (Text2TextData != 0 && type == 0)))
-	{
-		if (type == 0) // Text
+		for (uint32_t i = 0; i < label.SublableNum; i++)
 		{
-			myPrint("\nText:\n");
-		}
-		else // Label
-		{
-			myPrint("\nLabel:\n");
-		}
-		for (uint32_t i = 0; i < NumText; i++)
-		{
-			if (type == 0)
+			if ((label.Sublable)[i].Visibility == visibility_vissible)
 			{
-				index = Text2TextData[i] - 1;
-			}
-			else
-			{
-				index = Label2TextData[i].ID - 1;
-			}
-			if (TextSize[index] != 0 ||
-				TextPos[index].X != 0 ||
-				TextPos[index].Y != 0 ||
-				TextOrigin[index] != 0 ||
-				TextOrient[index] != 0 ||
-				TextColor[index].Red != 0 ||
-				TextColor[index].Green != 0 ||
-				TextColor[index].Blue != 0 ||
-				TextColor[index].Key != 0)
-			{
-				if (type == 0) // Text
-				{
-					fprintf(KiCadFile, "\t(text %c", 0x22);
-				}
-				else // Label
-				{
-					fprintf(KiCadFile, "\t(label %c", 0x22);
-				}
-				// Text String
-				Overbar = 0;
-				for (uint32_t j = 0; j < InputString[i].Lenth; j++)
-				{
-					if (InputString[i].Text[j] == '\n') // Check for line feed
-					{
-						fprintf(KiCadFile, "%cn", 0x5C); // Newline
+				fprintf(KiCadFile, "\t(label \"");
+				myPrint("Label %d:\n", i + 1);
+				KiCadPrintString(KiCadFile, Name);
 
-					}
-					else if (InputString[i].Text[j] == '~') // Check for overbar
-					{
-						if (Overbar)
-						{
-							Overbar = 0;
-							fprintf(KiCadFile, "}"); // Close Overbar
-						}
-						else
-						{
-							Overbar = 1;
-							fprintf(KiCadFile, "~{"); // Open Overbar
-						}
-					}
-					else
-					{
-						fprintf(KiCadFile, "%c", InputString[i].Text[j]);
-					}
-				}
-				if (Overbar)
-				{
-					fprintf(KiCadFile, "}"); // Close Overbar
-				}
-				if (type == 0) // Text
-				{
-					myPrint("Text %d\n", i + 1);
-				}
-				else // Label
-				{
-					myPrint("Label %d\n", i + 1);
-				}
-				myPrint("\t[%s]\n", InputString[i].Text);
-
-				fprintf(KiCadFile, "%c\n", 0x22);
-
-				// Position
-				num_struct X = numProcess(TextPos[index].X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct Y = numProcess(TextPos[index].Y, CoordinateScaleY, CoordinateOffsetY);
-				myPrint("\tX: %d.%05d, Y: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-				fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d %d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac, TextOrient[index] * 90);
-
-				fprintf(KiCadFile, "\t\t(effects\n");
-				fprintf(KiCadFile, "\t\t\t(font \n");
-
-				// Font
-				font_type Font = font_Custom;
-				if (TextFont[index].Lenth == 1) // 1 digit code
-				{
-					Font = TextFont[index].Text[0] - '0';
-				}
-				else if (TextFont[index].Lenth == 2) // 2 digit code
-				{
-					Font = (TextFont[index].Text[0] - '0') * 10;
-					Font += TextFont[index].Text[1] - '0';
-				}
-				else // custom font
-				{
-					uint32_t index2 = (uint32_t)strchr(TextFont[index].Text, '|') - (uint32_t)TextFont[index].Text + 1; // get index of Font name
-					uint32_t FontNameLen = (uint32_t)strchr(TextFont[index].Text + index2, '|') - (uint32_t)TextFont[index].Text - index2;
-					char* FontString = calloc(FontNameLen + 1, sizeof(char));
-					if (FontString != 0) // Custom Font
-					{
-						memcpy(FontString, TextFont[index].Text + index2, FontNameLen);
-						FontString[FontNameLen] = '\0'; // Zero terminate
-
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, &FontString[0], 0x22);
-						myPrint("\tFont: %s\n", &FontString[0]);
-
-						if (TextFont[index].Text[FontNameLen + 7] == '1') // Strikeout
-						{
-
-						}
-						if (TextFont[index].Text[FontNameLen + 9] == '1') // Underlined
-						{
-
-						}
-						if (TextFont[index].Text[FontNameLen + 11] == '1') // Bold
-						{
-							fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-							myPrint("\tBold\n");
-						}
-						free(FontString);
-					}
-				}
-				switch(Font)
-				{
-					case font_Custom:
-						break;
-					case font_Default:
-						myPrint("\tFont: Default\n");
-						break;
-					case fontRomanItalic:
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-						myPrint("\tItalic\n");
-						break;
-					case font_RomanBold:
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-						break;
-					case font_RomanBoldItalic:
-						myPrint("\tFont: Default\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
-						myPrint("\tBold & Italic\n");
-						break;
-					case font_SansSerif:
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-						myPrint("\tFont: SansSerif\n");
-						break;
-					case font_Script:
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-						myPrint("\tFont: ScriptS\n");
-						break;
-					case font_SansSerifBold:
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "SansSerif", 0x22);
-						myPrint("\tFont: SansSerif\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-						break;
-					case font_ScriptBold:
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "ScriptS", 0x22);
-						myPrint("\tFont: ScriptS\n");
-						fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-						myPrint("\tBold\n");
-						break;
-					case font_Gothic:
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "GothicE", 0x22);
-						myPrint("\tFont: GothicE\n");
-						break;
-					case font_OldEnglish:
-						fprintf(KiCadFile, "\t\t\t\t(face %c%s%c)\n", 0x22, "Old English Text MT", 0x22);
-						myPrint("\tFont: Old English Text MT\n");
-						break;
-					case font_Kanji:
-						myPrint("\tFont: Kanji => Not supported in KiCad!\n");
-						break;
-					case font_Plot:
-						myPrint("\tFont: Plot => Not supported in KiCad!\n");
-						break;
-				}
-
-				// Text Size
-				num_struct Size = numProcess(TextSize[index] * FontScale, 1, 0);
-
-				fprintf(KiCadFile, "\t\t\t\t(size %d.%05d %d.%05d)\n", Size.Integ, Size.Frac, Size.Integ, Size.Frac);
-
-				// Text Color
-				if (TextColor[index].Key != 0xff)
-				{
-					fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
-					myPrint("\tColor: R:%d G:%d B:%d\n", TextColor[index].Red, TextColor[index].Green, TextColor[index].Blue);
-				}
-				else
-				{
-					myPrint("\tColor: Default");
-					fprintf(KiCadFile, "\t\t\t\t(color 0 0 0 0)\n");
-				}
-
-				fprintf(KiCadFile, "\t\t\t)\n");
-
-				myPrint("\tSize: %d.%05d\n", Size.Integ, Size.Frac);
-
-				// Text Orientation
-				fprintf(KiCadFile, "\t\t\t(justify");
-
-				/*
-				Orientation codes:
-				Default = 0 (Lower left)
-				UpperLeft = 1
-				MiddleLeft = 2
-				LowerLeft = 3
-				UpperCenter = 4
-				MiddleCenter = 5
-				LowerCenter = 6
-				UpperRight = 7
-				MiddleRight = 8
-				LowerRight = 9
-				*/
-				uint32_t tempOrigin = TextOrigin[index];
-				if (tempOrigin == 0)
-				{
-					tempOrigin = DefaultTextOrigin;
-				}
-				else if (tempOrigin > 9)
-				{
-					myPrint("\tWarning, unknown orientation Code! %d\n", tempOrigin);
-					tempOrigin = DefaultTextOrigin;
-				}
-
-				myPrint("\tOrientation: ");
-				if (!(tempOrigin % 3))
-				{
-					fprintf(KiCadFile, " bottom");
-					myPrint("Upper");
-				}
-				else if (!((tempOrigin + 2) % 3))
-				{
-					fprintf(KiCadFile, " top");
-					myPrint("Lower");
-				}
-				else
-				{
-					myPrint("Center");
-				}
-
-				if (tempOrigin <= 3)
-				{
-					fprintf(KiCadFile, " left");
-					myPrint("Left\n");
-				}
-				else if (tempOrigin >= 7)
-				{
-					fprintf(KiCadFile, " right");
-					myPrint("Right\n");
-				}
-				else
-				{
-					myPrint("Center\n");
-				}
-
-				fprintf(KiCadFile, ")\n");
-				fprintf(KiCadFile, "\t\t)\n");
-
+				KiCadTextData(KiCadFile, (label.Sublable)[i].TextData);
+				fprintf(KiCadFile, "\t\t");
+				myPrint("\t");
+				KiCadUID(KiCadFile, UID, label.IndexDxDNet);
 				fprintf(KiCadFile, "\t)\n");
-
-				// Rotation
-				myPrint("\tRotation: %d Degree\n", TextOrient[index] * 90);
-
 			}
 		}
+		myPrint("\n");
 	}
 }
 
 /*
 ******************************************************************
-* - function name:	Processing()
+* - function name:	KiCadArcs()
 *
-* - description: 	rearange nets into a more userfriendly form
+* - description: 	Stores arcs in KiCad
 *
-* - parameter: 		-
+* - parameter: 		Pointer to KiCad file, UID of page, page group
 *
 * - return value: 	-
 ******************************************************************
 */
-void Processing(void)
+void KiCadArcs(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	myPrint("\n------------------- Processing -------------------\n");
-	myPrint("\nAssigning Segments:\n");
-	NumNetsBus = NumSegments;
-	myPrint("Number of Nets/Busse: %d\n", NumNetsBus);
-	NetBus = calloc(NumNetsBus, sizeof(net_bus_struct)); // Reseve memory
-	uint32_t* PointOccurrence = calloc(NumJoint, sizeof(uint32_t)); // Temporary joint counter
-
-	// Assign Coordinates
-	if (Segments != 0 && NumNetsBus > 0 && NetBus != 0)
+	if (GetNumArcs() > 0)
 	{
-		for (uint32_t i = 0; i < NumNetsBus; i++)
+		for (uint32_t i = 0; i < GetNumArcs(); i++)
 		{
-			uint32_t address = 0;
-			NetBus[i].NumSegments = Segments[i].Len;
-			NetBus[i].Segments = calloc(NetBus[i].NumSegments, sizeof(net_bus_segment_struct));
-			if (Segments[i].Data != 0 && Segments[i].Len > 0 && NetBus[i].Segments != 0)
+			arc_struct Arcs = GetArc(i);
+			if (InsideGroup(Arcs.UID, page))
 			{
-				NetBus[i].NumSegments = Segments[i].Len;
-				for (uint32_t j = 0; j < Segments[i].Len; j++)
-				{
-					if (Segments[i].Data[j] != 0)
-					{
-						address += Segments[i].Data[j] + 1;
-					}
-					else
-					{
-						address++;
-					}
-					NetBus[i].Segments[j].ID = address - 1;
-					NetBus[i].Segments[j].StartID = Segment2Joints[address - 2].StartJoint;
-					NetBus[i].Segments[j].EndID = Segment2Joints[address - 2].EndJoint;
-					NetBus[i].Segments[j].StartCoord = JointPoss[NetBus[i].Segments[j].StartID - 1];
-					NetBus[i].Segments[j].EndCoord = JointPoss[NetBus[i].Segments[j].EndID - 1];
-					NetBus[i].Style = Net2NetDxD[i].ID - 1; // ToDo: Needs rework by using Net2GrpStyles or Bus2GrpStyles and putting Net2NetDxD at NetBUS address
+				fprintf(KiCadFile, "\t(arc\n");
 
-					// Count usages of each point
-					PointOccurrence[NetBus[i].Segments[j].StartID - 1]++;
-					PointOccurrence[NetBus[i].Segments[j].EndID - 1]++;
-					if (PointOccurrence[NetBus[i].Segments[j].StartID - 1] == 3) // Count up joints counter when 3 nets meet
-					{
-						NetBus[i].NumJoints++;
-					}
-					if (PointOccurrence[NetBus[i].Segments[j].EndID - 1] == 3) // Count up joints counter when 3 nets meet
-					{
-						NetBus[i].NumJoints++;
-					}
-				}
-				NetBus[i].Joints = calloc(NetBus[i].NumJoints, sizeof(coordinate_struct)); // Allocate memmory for joints
-				if (NetBus[i].Joints != 0 && PointOccurrence != 0)
-				{
-					uint32_t k = 0;
-					// Add Joints where 3 nets meet
-					for (uint32_t j = 0; j < Segments[i].Len; j++)
-					{
-						if (PointOccurrence[NetBus[i].Segments[j].StartID - 1] > 2)
-						{
-							NetBus[i].Joints[k] = NetBus[i].Segments[j].StartCoord;
-							PointOccurrence[NetBus[i].Segments[j].StartID - 1] = 0; // Reset counter
-							k++;
-						}
-						if (PointOccurrence[NetBus[i].Segments[j].EndID - 1] > 2)
-						{
-							NetBus[i].Joints[k] = NetBus[i].Segments[j].EndCoord;
-							PointOccurrence[NetBus[i].Segments[j].EndID - 1] = 0; // Reset counter
-							k++;
-						}
-					}
-				}
+				num_struct XStart = numProcess(Arcs.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YStart = numProcess(Arcs.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct XMid = numProcess(Arcs.MidCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YMid = numProcess(Arcs.MidCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct XEnd = numProcess(Arcs.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YEnd = numProcess(Arcs.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+
+				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
+				fprintf(KiCadFile, "\t\t(mid %d.%05d %d.%05d)\n", XMid.Integ, XMid.Frac, YMid.Integ, YMid.Frac);
+				fprintf(KiCadFile, "\t\t(end %d.%05d %d.%05d)\n", XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+
+				myPrint("Arc %d:\n", i + 1);
+				myPrint("\tX Start: %d.%05d, X Mid: %d.%05d X End: %d.%05d\n", XStart.Integ, XStart.Frac, XMid.Integ, XMid.Frac, XEnd.Integ, XEnd.Frac);
+				myPrint("\tY Start: %d.%05d, Y Mid: %d.%05d Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YMid.Integ, YMid.Frac, YEnd.Integ, YEnd.Frac);
+
+				KiCadProperties(KiCadFile, Arcs.Properties, 0);
+				fprintf(KiCadFile, "\t\t");
+				myPrint("\t");
+				KiCadUID(KiCadFile, UID, Arcs.UID);
+				fprintf(KiCadFile, "\t)\n");
 			}
 		}
-		free(PointOccurrence);
+		myPrint("\n");
 	}
+}
 
-	// Add Net/Bus info
-
-	//if (Bus2GrpSegments != 0 && Net2GrpSegments != 0 && NumSegments > 0 && NetBus != NULL)
-	//{
-	//	for (uint32_t i = 0; i < NumNet; i++)
-	//	{
-	//		NetBus[Net2GrpSegments[i].ID - 1].IsBus = 0; // this causes Memory leak!
-	//	}
-	//	for (uint32_t i = 0; i < NumBus; i++)
-	//	{
-	//		NetBus[Bus2GrpSegments[i].ID - 1].IsBus = 1;
-	//	}
-	//}
-
-
-	// Diag output
-	if (NumNetsBus > 0 && NetBus != 0)
+/*
+******************************************************************
+* - function name:	KiCadCircles()
+*
+* - description: 	Stores circles in KiCad
+*
+* - parameter: 		Pointer to KiCad file, UID of page, page group
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadCircles(FILE* KiCadFile, uid_struct UID, uint32_t page)
+{
+	if (GetNumCircles() > 0)
 	{
-		for (uint32_t i = 0; i < NumNetsBus; i++)
+		for (uint32_t i = 0; i < GetNumCircles(); i++)
 		{
-			myPrint("\tNet/Bus %d: \n\t\tType: ", i + 1);
-			if (NetBus[i].IsBus)
+			circle_struct Circles = GetCircle(i);
+			if (InsideGroup(Circles.UID, page))
 			{
-				myPrint("Bus\n");
+				fprintf(KiCadFile, "\t(circle\n");
+				num_struct X = numProcess(Circles.CenterCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct Y = numProcess(Circles.CenterCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct R = numProcess(Circles.Radius, 1, 0);
+
+				fprintf(KiCadFile, "\t\t(center %d.%05d %d.%05d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
+				fprintf(KiCadFile, "\t\t(radius %d.%05d)\n", R.Integ, R.Frac);
+
+				myPrint("Circle %d:\n", i + 1);
+				myPrint("\tX: %d.%05d, Y: %d.%05d, Radius: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac, R.Integ, R.Frac);
+
+				KiCadProperties(KiCadFile, Circles.Properties, 1);
+				fprintf(KiCadFile, "\t\t");
+				myPrint("\t");
+				KiCadUID(KiCadFile, UID, Circles.UID);
+				fprintf(KiCadFile, "\t)\n");
 			}
-			else
+		}
+		myPrint("\n");
+	}
+}
+
+/*
+******************************************************************
+* - function name:	KiCadRectangles()
+*
+* - description: 	Stores rectangles in KiCad
+*
+* - parameter: 		Pointer to KiCad file, UID of page, page group
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadRectangles(FILE* KiCadFile, uid_struct UID, uint32_t page)
+{
+	if (GetNumRectangles() > 0)
+	{
+		for (uint32_t i = 0; i < GetNumRectangles(); i++)
+		{
+			rectangle_struct Rectangle = GetRectangle(i);
+
+			if (InsideGroup(Rectangle.UID, page))
 			{
-				myPrint("Net\n");
+				fprintf(KiCadFile, "\t(rectangle\n");
+
+				num_struct XStart = numProcess(Rectangle.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YStart = numProcess(Rectangle.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct XEnd = numProcess(Rectangle.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YEnd = numProcess(Rectangle.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+
+				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
+				fprintf(KiCadFile, "\t\t(end %d.%05d %d.%05d)\n", XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+
+				myPrint("Rectangle %d:\n", i + 1);
+				myPrint("\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
+				myPrint("\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+				KiCadProperties(KiCadFile, Rectangle.Properties, 1);
+				fprintf(KiCadFile, "\t\t");
+				myPrint("\t");
+				KiCadUID(KiCadFile, UID, Rectangle.UID);
+				fprintf(KiCadFile, "\t)\n");
 			}
-			myPrint("\t\tStyle: %d\n", NetBus[i].Style + 1);
-			myPrint("\t\tSegments: %d\n", NetBus[i].NumSegments);
-			for (uint32_t j = 0; j < NetBus[i].NumSegments; j++)
+		}
+		myPrint("\n");
+	}
+}
+
+/*
+******************************************************************
+* - function name:	KiCadText()
+*
+* - description: 	Stores texts in KiCad
+*
+* - parameter: 		Pointer to KiCad file, UID of page, page group
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadText(FILE* KiCadFile, uid_struct UID, uint32_t page)
+{
+	if (GetNumTexts() > 0)
+	{
+		char Overbar = 0;
+		for (uint32_t i = 0; i < GetNumTexts(); i++)
+		{
+			text_struct Text = GetText(i);
+			if (InsideGroup(Text.UID, page))
 			{
-				if (NetBus[i].Segments != 0)
+
+				fprintf(KiCadFile, "\t(text \"");
+				myPrint("Text %d:\n", i + 1);
+				KiCadPrintString(KiCadFile, Text.String);
+
+				fprintf(KiCadFile, "\t\t(exclude_from_sim no)\n");
+				KiCadTextData(KiCadFile, Text.TextData);
+				fprintf(KiCadFile, "\t\t");
+				myPrint("\t");
+				KiCadUID(KiCadFile, UID, Text.UID);
+				fprintf(KiCadFile, "\t)\n");
+			}
+		}
+		myPrint("\n");
+	}
+}
+
+/*
+******************************************************************
+* - function name:	KiCadLines()
+*
+* - description: 	Stores lines in KiCad
+*
+* - parameter: 		Pointer to KiCad file, UID of page, page group
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadLines(FILE* KiCadFile, uid_struct UID, uint32_t page)
+{
+	if (GetNumLines() > 0)
+	{
+		for (uint32_t i = 0; i < GetNumLines(); i++)
+		{
+			line_struct Line = GetLine(i);
+			if (InsideGroup(Line.UID, page))
+			{
+				fprintf(KiCadFile, "\t(polyline\n");
+				fprintf(KiCadFile, "\t\t(pts\n");
+				myPrint("Line %d:\n", i + 1);
+				for (unsigned int j = 0; j < Line.numSegments; j++)
 				{
-					myPrint("\t\t\t ID: %d, Start X: %d, Start Y: %d, End X: %d, End Y: %d\n", NetBus[i].Segments[j].ID, NetBus[i].Segments[j].StartCoord.X, NetBus[i].Segments[j].StartCoord.Y, NetBus[i].Segments[j].EndCoord.X, NetBus[i].Segments[j].EndCoord.Y);
+					num_struct XStart = numProcess(Line.Segments[j].Start.X, CoordinateScaleX, CoordinateOffsetX);
+					num_struct YStart = numProcess(Line.Segments[j].Start.Y, CoordinateScaleY, CoordinateOffsetY);
+					num_struct XEnd = numProcess(Line.Segments[j].End.X, CoordinateScaleX, CoordinateOffsetX);
+					num_struct YEnd = numProcess(Line.Segments[j].End.Y, CoordinateScaleY, CoordinateOffsetY);
+
+					fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+
+					myPrint("\tSegment %d:\n", j + 1);
+					myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
+					myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
 				}
+				fprintf(KiCadFile, "\t\t)\n");
+				KiCadProperties(KiCadFile, Line.Properties, 0);
+				fprintf(KiCadFile, "\t\t");
+				myPrint("\t");
+				KiCadUID(KiCadFile, UID, Line.UID);
+				fprintf(KiCadFile, "\t)\n");
 			}
-			myPrint("\t\tJoints: %d\n", NetBus[i].NumJoints);
-			for (uint32_t j = 0; j < NetBus[i].NumJoints; j++)
+		}
+		myPrint("\n");
+	}
+}
+
+/*
+******************************************************************
+* - function name:	KiCadNets()
+*
+* - description: 	Stores nets in KiCad
+*
+* - parameter: 		Pointer to KiCad file, UID of page, page group
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
+{
+	if (GetNumNet() > 0)
+	{
+		for (uint32_t i = 0; i < GetNumNet(); i++)
+		{
+			net_struct Net = GetNet(i);
+			if (InsideGroup(Net.UID, page))
 			{
-				if (NetBus[i].Joints != 0)
+				for (unsigned int j = 0; j < Net.NumNetSegment; j++)
 				{
-					myPrint("\t\t\tX: %d, Y: %d\n", NetBus[i].Joints[j].X, NetBus[i].Joints[j].Y);
+					for (unsigned int k = 0; k < (Net.NetSegment)[j].Segments.numSegments; k++)
+					{
+						if ((Net.NetSegment)[j].Segments.Segments == NULL)
+						{
+							return;
+						}
+						fprintf(KiCadFile, "\t(wire\n");
+						fprintf(KiCadFile, "\t\t(pts\n");
+						myPrint("Net %d:\n", i + 1);
+						segment_section_struct Segment = (Net.NetSegment)[j].Segments.Segments[k];
+
+						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+						num_struct XEnd = numProcess(Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						num_struct YEnd = numProcess(Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+
+						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+
+						myPrint("\tSegment %d:\n", j + 1);
+						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
+						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+						fprintf(KiCadFile, "\t\t)\n");
+						KiCadProperties(KiCadFile, (Net.NetSegment)[j].Properties, 0);
+
+						fprintf(KiCadFile, "\t\t");
+						myPrint("\t");
+						KiCadUID(KiCadFile, UID, Net.UID);
+						fprintf(KiCadFile, "\t)\n");
+					}
+					KiCadLabels(KiCadFile, UID, (Net.NetSegment)[j].Label, Net.Name);
 				}
 			}
 		}
+		myPrint("\n");
+	}
+}
+
+/*
+******************************************************************
+* - function name:	KiCadBusses()
+*
+* - description: 	Stores buses in KiCad
+*
+* - parameter: 		Pointer to KiCad file, UID of page, page group
+*
+* - return value: 	-
+******************************************************************
+*/
+void KiCadBusses(FILE* KiCadFile, uid_struct UID, uint32_t page)
+{
+	if (GetNumBus() > 0)
+	{
+		for (uint32_t i = 0; i < GetNumBus(); i++)
+		{
+			bus_struct Bus = GetBus(i);
+			if (InsideGroup(Bus.UID, page))
+			{
+				for (unsigned int j = 0; j < Bus.BusSegmentLen; j++)
+				{
+					for (unsigned int k = 0; k < (Bus.BusSegment)[j].Segments.numSegments; k++)
+					{
+						if ((Bus.BusSegment)[j].Segments.Segments == NULL)
+						{
+							return;
+						}
+						fprintf(KiCadFile, "\t(bus\n");
+						fprintf(KiCadFile, "\t\t(pts\n");
+						myPrint("Bus %d:\n", i + 1);
+						segment_section_struct Segment = (Bus.BusSegment)[j].Segments.Segments[k];
+
+						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+						num_struct XEnd = numProcess(Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						num_struct YEnd = numProcess(Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+
+						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+
+						myPrint("\tSegment %d:\n", j + 1);
+						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
+						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+						fprintf(KiCadFile, "\t\t)\n");
+						KiCadProperties(KiCadFile, (Bus.BusSegment)[j].Properties, 0);
+
+						fprintf(KiCadFile, "\t\t");
+						myPrint("\t");
+						KiCadUID(KiCadFile, UID, Bus.UID);
+						fprintf(KiCadFile, "\t)\n");
+					}
+					KiCadLabels(KiCadFile, UID, (Bus.BusSegment)[j].Label, Bus.Name);
+				}
+			}
+		}
+		myPrint("\n");
 	}
 }

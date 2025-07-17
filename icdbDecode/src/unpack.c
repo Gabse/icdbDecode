@@ -26,6 +26,8 @@
 #include <time.h>		// Required for time_t
 #include <zlib.h>		// Required for decompression
 #include "common.h"		// Required for myfopen
+#include "stringutil.h" // Required for createPath
+#include "list.h"		// Required for list
 
 #ifdef WIN32 // Building for Windows
 	#include <windows.h> // Required for Linking of files
@@ -36,7 +38,7 @@
 ******************************************************************
 */
 #define DECOMPRESS_CHUNK_SIZE 1024
-#define _CRT_SECURE_NO_DEPRECATE			// Dissable unsecure function warning in VisualStudio
+#define _CRT_SECURE_NO_DEPRECATE			// Disable insecure function warning in VisualStudio
 
 /*
 ******************************************************************
@@ -113,7 +115,7 @@ typedef struct fragment_struct
 {
 	int payload_length; // Length of payload in this fragment
 	int fragment_length; // Total length of this fragment (Header + Payload + Padding)
-	int dublicates; // Number of files containing the same fragment of data
+	int duplicates; // Number of files containing the same fragment of data
 	int next_fragment; // Start address of the next fragment, 0 if there is no next fragment
 }fragment_struct;
 
@@ -123,13 +125,13 @@ typedef struct fragment_struct
 ******************************************************************
 */
 int nontDecompress = 0;
-int linkDoubleFiles = 0;
-int noDoubleFiles = 0;
+int linkLongLongFiles = 0;
+int noLongLongFiles = 0;
 
-int storepathLenth = 0;
+int storepathLength = 0;
 char* storepath = NULL;
 
-int databasepathLenth = 0;
+int databasepathLength = 0;
 char* databasepath = NULL;
 
 
@@ -164,7 +166,7 @@ int decompress(char*, int, char**);
 * - return value: 	error code
 ******************************************************************
 */
-int UnpackIcdb(char* sourcepath, int sourcepathLenth, char* destinationpath, int destinationpathLenth)
+int UnpackIcdb(char* sourcepath, int sourcepathLength, char* destinationpath, int destinationpathLength)
 {
 	int error = 0;
 	FILE* sourceFile = NULL;
@@ -173,10 +175,10 @@ int UnpackIcdb(char* sourcepath, int sourcepathLenth, char* destinationpath, int
 	file_struct** file = NULL;
 	unsigned int fileCNT = 0;
 	
-	storepathLenth = destinationpathLenth;
+	storepathLength = destinationpathLength;
 	storepath = destinationpath;
 
-	databasepathLenth = sourcepathLenth;
+	databasepathLength = sourcepathLength;
 	databasepath = sourcepath;
 	
 	// Open source file
@@ -564,9 +566,9 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 {
 	char* Payload = 0;
 	fragment_struct fragment;
-	unsigned int payload_lengthAcc = 0; // Acumulate length of multiple fragments
-	uint32_t DublicateTo = 0; // Duplicate files
-	unsigned int DublicateCnt = 0; // Count duplicate files
+	unsigned int payload_lengthAcc = 0; // Accumulate length of multiple fragments
+	uint32_t DuplicateTo = 0; // Duplicate files
+	unsigned int DuplicateCnt = 0; // Count duplicate files
 	unsigned int FragmentCnt = 0; // Count data fragments
 	for (unsigned int i = 0; i < databaseHeader->num_files; i++)
 	{
@@ -577,9 +579,9 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 		{
 			if(file[i]->data_address == file[j]->data_address)
 			{
-				DublicateTo = j;
-				DublicateCnt++;
-				myPrint("    File is identical to: [%s]!\n", file[DublicateTo]->filename);
+				DuplicateTo = j;
+				DuplicateCnt++;
+				myPrint("    File is identical to: [%s]!\n", file[DuplicateTo]->filename);
 				break;
 			}
 		}
@@ -603,10 +605,10 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 		myPrint("]\n");
 		
 		myPrint("    Total file size:\t[%d]\n", file[i]->data_size);
-		if(DublicateTo == 0 || (linkDoubleFiles == 0 && noDoubleFiles == 0))
+		if(DuplicateTo == 0 || (linkLongLongFiles == 0 && noLongLongFiles == 0))
 		{
 			// Create and open destination file
-			FILE* destFile = myfopen("wb", storepath, storepathLenth, file[i]->filename, file[i]->filename_length, 0);
+			FILE* destFile = myfopen("wb", storepath, storepathLength, file[i]->filename, file[i]->filename_length, 0);
 			if (destFile != 0)
 			{
 				// Allocate memory
@@ -639,8 +641,8 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 						
 						myPrint("    Fragment size:\t[%d]\n", fragment.payload_length);
 						
-						if (DublicateTo != 0 && fragment.dublicates == 0 && FragmentCnt == 1)
-							// Dublicates are only checked on the first data fragment, to allow files with a mix of unique and shared fragments
+						if (DuplicateTo != 0 && fragment.duplicates == 0 && FragmentCnt == 1)
+							// Duplicates are only checked on the first data fragment, to allow files with a mix of unique and shared fragments
 						{
 							myPrint("    Duplicate error!\n");
 							return 1;
@@ -677,9 +679,9 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 						myPrint("    Wrong filesize %d and %d!\n", payload_lengthAcc, file[i]->data_size);
 						return 1;
 					}
-					if(fragment.dublicates != 0)
+					if(fragment.duplicates != 0)
 					{
-						myPrint("    Copies of data:\t[%d]\n", fragment.dublicates);
+						myPrint("    Copies of data:\t[%d]\n", fragment.duplicates);
 					}
 					free(Payload);
 				}
@@ -692,24 +694,24 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 				return 1;
 			}
 		}
-		else if (linkDoubleFiles == 1 && noDoubleFiles == 0)
+		else if (linkLongLongFiles == 1 && noLongLongFiles == 0)
 		{ // Link
-			myPrint("    Linking file [%s] to file [%s]\n", file[i]->filename, file[DublicateTo]->filename);
-			if(mylink(storepath, storepathLenth, file[i]->filename, file[i]->filename_length, file[DublicateTo]->filename, file[DublicateTo]->filename_length) != 0)
+			myPrint("    Linking file [%s] to file [%s]\n", file[i]->filename, file[DuplicateTo]->filename);
+			if(mylink(storepath, storepathLength, file[i]->filename, file[i]->filename_length, file[DuplicateTo]->filename, file[DuplicateTo]->filename_length) != 0)
 			{
 				return 1;
 			}
 			myPrint("\n");
 		}
-		else // (linkDoubleFiles == 0 && noDoubleFiles == 1)
+		else // (linkLongLongFiles == 0 && noLongLongFiles == 1)
 		{
 			myPrint("    Skipping file!\n\n");
 		}
-		DublicateTo = 0;
+		DuplicateTo = 0;
 	}
-	if(DublicateCnt != 0)
+	if(DuplicateCnt != 0)
 	{
-		myPrint("[%d] total duplicate file(s) found!\n", DublicateCnt);
+		myPrint("[%d] total duplicate file(s) found!\n", DuplicateCnt);
 	}
 
 	return 0;
@@ -721,7 +723,7 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 *
 * - description: 	Remove file ending from Database, Assemble & create filepath
 *
-* - parameter: 		pointer to first part; lenth of first part; pointer to second part; lenth of second part
+* - parameter: 		pointer to first part; length of first part; pointer to second part; length of second part
 *
 * - return value: 	pointer to assembled path
 ******************************************************************
@@ -752,7 +754,7 @@ char* makePath(char* absolutepath, int absolutepathlength, char* filepath, int f
 *
 * - description: 	Assemble & create filepath, create link to existing file
 *
-* - parameter: 		pointer to first part; lenth of first part; pointer to source; lenth of source; pointer to destination; lenth of destination
+* - parameter: 		pointer to first part; length of first part; pointer to source; length of source; pointer to destination; length of destination
 *
 * - return value: 	error code
 ******************************************************************
@@ -773,7 +775,7 @@ int mylink(char* absolutepath, int absolutepathlength, char* sourcepath, int sou
 				myPrint("    Error [%d]!", returnvalue);
 				if(returnvalue == 1314) // Admin privileges required to create link
 				{
-					myPrint("Try to run the programm as Administrator!");
+					myPrint("Try to run the program as Administrator!");
 				}
 				myPrint("\n");
 			}
@@ -814,22 +816,22 @@ void printGUID(uint8_t Guid[24])
 	for (size_t i = 0; i < 4; i++)
 	{
 		// First 4 Byte
-		temp1 = ((Guid[i << 1] << 4) & 0xF0) | ((Guid[i << 1] >> 4) & 0x0F);
-		temp2 = ((Guid[(i << 1) + 1] << 4) & 0xF0) | ((Guid[(i << 1) + 1] >> 4) & 0x0F);
+		temp1 = swpnib(Guid[i << 1]);
+		temp2 = swpnib(Guid[(i << 1) + 1]);
 		myPrint("%02x%02x-", temp1, temp2);
 	}
 	for (size_t i = 8; i < 12; i++)
 	{
 		// Next 4 Byte
-		temp1 = ((Guid[i << 1] << 4) & 0xF0) | ((Guid[i << 1] >> 4) & 0x0F);
-		temp2 = ((Guid[(i << 1) + 1] << 4) & 0xF0) | ((Guid[(i << 1) + 1] >> 4) & 0x0F);
+		temp1 = swpnib(Guid[i << 1]);
+		temp2 = swpnib(Guid[(i << 1) + 1]);
 		myPrint("%02x%02x-", temp1, temp2);
 	}
 	for (size_t i = 4; i < 8; i++)
 	{
 		// Last 4 Byte
-		temp1 = ((Guid[i << 1] << 4) & 0xF0) | ((Guid[i << 1] >> 4) & 0x0F);
-		temp2 = ((Guid[(i << 1) + 1] << 4) & 0xF0) | ((Guid[(i << 1) + 1] >> 4) & 0x0F);
+		temp1 = swpnib(Guid[i << 1]);
+		temp2 = swpnib(Guid[(i << 1) + 1]);
 		myPrint("%02x%02x", temp1, temp2);
 		if (i < 7)
 		{
@@ -863,6 +865,7 @@ int decompress(char* input, int InputSize, char** output)
 
 	void* list = list_init();
 	char* data = 0;
+	myPrint("    Compressed file. decompressing...\n");
 
 	// Init Decompression
 	inflateInit(&ZStream);
@@ -884,10 +887,10 @@ int decompress(char* input, int InputSize, char** output)
 		// Append data to list
 		list_append(list, &Output[0], (DECOMPRESS_CHUNK_SIZE - ZStream.avail_out));
 
-		// Reperat untill end of file
+		// Reperat until end of file
 	} while (ZStream.avail_out == 0);
 
-	DecompressedSize = list_to_memblk(list, output);
+	DecompressedSize = list_to_memblk(list, (void**)output);
 	list_cleanup(&list);
 	myPrint("    Decompressed size:\t[%d]\n", DecompressedSize);
 	inflateEnd(&ZStream); // Just in case

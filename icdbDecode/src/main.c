@@ -19,11 +19,14 @@
 * Includes
 ******************************************************************
 */
-#include <stdlib.h>		// Required for malloc
-#include <string.h>		// Required for memcpy
-#include <time.h>		// Required for clock_t
-#include "log.h"		// Required for logging functions
-#include "unpack.h"		// Required for UnpackIcdb
+#include <stdlib.h>			// Required for malloc
+#include <string.h>			// Required for memcpy
+#include <stdio.h>			// Required for sprintf
+#include <time.h>			// Required for clock_t
+#include "log.h"			// Required for logging functions
+#include "unpack.h"			// Required for UnpackIcdb
+#include "stringutil.h"		// Required for removeFilenameExtension
+#include "parser.h"			// Required for ParseIcdb
 
 /*
 ******************************************************************
@@ -31,7 +34,7 @@
 ******************************************************************
 */
 #define DEFAULT_SOURCE "icdb.dat"
-#define _CRT_SECURE_NO_DEPRECATE			// Dissable unsecure function warning in VisualStudio
+#define _CRT_SECURE_NO_DEPRECATE			// Disable insecure function warning in VisualStudio
 
 /*
 ******************************************************************
@@ -48,26 +51,26 @@ int main(int argc, char** argv)
 {
 	clock_t starttime = clock();
 	int error = 0;
-	int filepathLenth = 0;
+	int filepathLength = 0;
 	char* filepath = NULL;
-	int storepathLenth = 0;
+	int storepathLength = 0;
 	char* storepath = NULL;
 
 	// Check parameter
 	for (int i = 0; i < argc; ++i)
 	{
-		if ((strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "-S") == 0) && filepathLenth == 0 && argc >= i + 1)
+		if ((strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "-S") == 0) && filepathLength == 0 && argc >= i + 1)
 		{	// Source
-			filepathLenth = strlen(argv[i + 1]) + 1;
-			filepath = calloc(filepathLenth, sizeof(char));
-			memcpy(filepath, argv[i + 1], filepathLenth);
+			filepathLength = strlen(argv[i + 1]) + 1;
+			filepath = calloc(filepathLength, sizeof(char));
+			memcpy(filepath, argv[i + 1], filepathLength);
 			printf("Using source path: \t[%s]\n", filepath);
 		}
-		else if ((strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0) && storepathLenth == 0 && argc >= i + 1)
+		else if ((strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0) && storepathLength == 0 && argc >= i + 1)
 		{	// Database
-			storepathLenth = strlen(argv[i + 1]) + 1;
-			storepath = calloc(storepathLenth, sizeof(char));
-			memcpy(storepath, argv[i + 1], storepathLenth);
+			storepathLength = strlen(argv[i + 1]) + 1;
+			storepath = calloc(storepathLength, sizeof(char));
+			memcpy(storepath, argv[i + 1], storepathLength);
 			printf("Using storing path: \t[%s]\n", storepath);
 		}
 		else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "-C") == 0)
@@ -78,13 +81,13 @@ int main(int argc, char** argv)
 		{
 			quietMode = 1;
 		}
-		else if ((strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "-L") == 0) && noDoubleFiles == 0)
+		else if ((strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "-L") == 0) && noLongLongFiles == 0)
 		{
-			linkDoubleFiles = 1;
+			linkLongLongFiles = 1;
 		}
-		else if ((strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-N") == 0) && linkDoubleFiles == 0)
+		else if ((strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-N") == 0) && linkLongLongFiles == 0)
 		{	
-			noDoubleFiles = 1;
+			noLongLongFiles = 1;
 		}
 		else if ((strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-H") == 0))
 		{
@@ -103,48 +106,48 @@ int main(int argc, char** argv)
 			printf("********************************\n\n");
 		}
 	}
-	if (filepathLenth == 0) // No argument specified
+	if (filepathLength == 0) // No argument specified
 	{
 		printf("No source specified. Using default path.\n");
-		filepathLenth = sizeof(DEFAULT_SOURCE);
-		filepath = calloc(filepathLenth, sizeof(char));
+		filepathLength = sizeof(DEFAULT_SOURCE);
+		filepath = calloc(filepathLength, sizeof(char));
 		if (filepath != 0)
 		{
-			memcpy(filepath, DEFAULT_SOURCE, filepathLenth);
+			memcpy(filepath, DEFAULT_SOURCE, filepathLength);
 		}
 	}
-	if (storepathLenth == 0) // No argument specified
+	if (storepathLength == 0) // No argument specified
 	{
 		printf("No destination specified. Using source path.\n");
-		storepathLenth = filepathLenth;
-		storepath = calloc(storepathLenth, sizeof(char));
+		storepathLength = filepathLength;
+		storepath = calloc(storepathLength, sizeof(char));
 		if (filepath != 0 && storepath != 0)
 		{
-			memcpy(storepath, filepath, storepathLenth);
+			memcpy(storepath, filepath, storepathLength);
 		}
 	}
 	
 	// Remove .dat ending from database
-	removeFilenameExtension(storepath, &storepathLenth);
+	removeFilenameExtension(storepath, &storepathLength);
 
 	// Create Log file
-	CreateLogfile(storepath, storepathLenth);
+	CreateLogfile(storepath, storepathLength);
 	
 	int quietModeTemp = quietMode;
 	quietMode = 0;
 	if (nontDecompress)
 	{
-		myPrint("Decompression dissabled\n");
+		myPrint("Decompression disabled\n");
 	}
 	if (quietModeTemp)
 	{
 		myPrint("Quiet mode enabled\n");
 	}
-	if (linkDoubleFiles)
+	if (linkLongLongFiles)
 	{
 		myPrint("Linking double files\n");
 	}
-	if (noDoubleFiles)
+	if (noLongLongFiles)
 	{	
 		myPrint("Skipping double files\n");
 	}
@@ -156,20 +159,20 @@ int main(int argc, char** argv)
 		printf("Working, please wait...\n\n");
 	}
 
-	error = UnpackIcdb(filepath, filepathLenth, storepath, storepathLenth);
+	error = UnpackIcdb(filepath, filepathLength, storepath, storepathLength);
 	if (error == 0)
 	{
 		myPrint("\n\n************************ Parsing Database ************************\n\n");
-		if (nontDecompress == 0 && noDoubleFiles == 0)
+		if (nontDecompress == 0 && noLongLongFiles == 0)
 		{
-			error = ParseIcdb(storepath, storepathLenth);
+			error = ParseIcdb(storepath, storepathLength);
 		}
 		else
 		{
-			myPrint("Parsing dissabled!\n\n");
+			myPrint("Parsing disabled!\n\n");
 		}
 	}
-
+	quietMode = 0;
 	myPrint("Finnish after %fs\n", (float)(clock() - starttime)/(float) CLOCKS_PER_SEC);
 	void CloseLogfile(void);
 	return error;

@@ -13,36 +13,43 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _SEGMENTS_H
+#define _SEGMENTS_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "joints.h" 		// Required for joints
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
+typedef struct segment_section_struct
+{
+	joint_struct StartJoint;
+	joint_struct EndJoint;
+	int ID;
+} segment_section_struct;
+
+typedef struct segment_struct
+{
+	unsigned int numSegments;
+	segment_section_struct* Segments;
+} segment_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessSegments(void);
+extern void InitSegments(void);
+extern unsigned int GetNumSegments(void);
+extern segment_struct GetSegment(int);
 
-#endif //_STRINGUTIL_H
+#endif //_SEGMENTS_H

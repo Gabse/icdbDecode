@@ -236,7 +236,7 @@ types:
         type: u4
         pos: block_address + 4
 
-      dublicates: # Number of files containing the same fragment of data
+      duplicates: # Number of files containing the same fragment of data
         type: u4
         pos: block_address + 8
 

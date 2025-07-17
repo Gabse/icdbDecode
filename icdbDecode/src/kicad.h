@@ -21,14 +21,17 @@
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>				// Required for int32_t, uint32_t, ...
+#include "common.h"				// Required for uid_struct
+#include "./cdbcatlg/pages.h"	// Required for pages
+
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-int StoreAsKicadFile(char*, uint32_t, char*, uint32_t);
+int StoreAsKicadFile(char*, uint32_t, page_struct);
 
 
 #endif //_KICAD_H

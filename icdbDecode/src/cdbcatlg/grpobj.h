@@ -13,36 +13,46 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _GRPOBJ_H
+#define _GRPOBJ_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "../common.h" 		// Required for uid struct
 
 /*
 ******************************************************************
 * Global Defines
 ******************************************************************
 */
+#define PATH_GRPOBJ "grpobj"
+
+/*
+******************************************************************
+* Structures
+******************************************************************
+*/
+typedef struct grpobj_struct
+{
+	uid_struct UID;
+	unsigned int numGroups; 
+	unsigned int* group;
+} grpobj_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern int ParseGrpobj(char*, uint32_t, char*, uint32_t);
+extern void InitGrpobj(void);
+extern unsigned int GetNumGrpobj(void);
+extern grpobj_struct GetGrpobj(unsigned int);
+extern unsigned int InsideGroup(uid_struct, unsigned int);
 
-#endif //_STRINGUTIL_H
+
+#endif //_GRPOBJ_H

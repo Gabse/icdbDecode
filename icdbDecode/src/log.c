@@ -21,8 +21,9 @@
 */
 #include "log.h"
 #include <stdio.h>		// Required for fprint, fopen, ...
-#include "common.h"		// Required for myfopen
 #include <stdarg.h>		// Required for va_list
+#include "common.h"		// Required for myfopen
+
 
 
 /*
@@ -31,7 +32,7 @@
 ******************************************************************
 */
 #define LOGFILE_NAME "\\icdbDecode.log"
-#define _CRT_SECURE_NO_DEPRECATE			// Dissable unsecure function warning in VisualStudio
+#define _CRT_SECURE_NO_DEPRECATE			// Disable insecure function warning in VisualStudio
 
 
 /*
@@ -85,10 +86,10 @@ void myPrint(const char* text, ...)
 * - return value: 	-
 ******************************************************************
 */
-void CreateLogfile(char* storepath, int storepathLenth)
+void CreateLogfile(char* storepath, int storepathLength)
 {
 	//Create log file path
-	logFile = myfopen("w", storepath, storepathLenth, LOGFILE_NAME, sizeof(LOGFILE_NAME), '\0');
+	logFile = myfopen("w", storepath, storepathLength, LOGFILE_NAME, sizeof(LOGFILE_NAME), '\0');
 	if (logFile == 0)
 	{
 		printf("Logfile not written! \n");

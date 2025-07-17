@@ -13,36 +13,50 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _NET_H
+#define _NET_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "label.h"			// Required for label struct
+#include "segments.h"		// Required for segment struct
+#include "properties.h"		// Required for properties struct
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
+typedef struct net_segment_struct
+{
+	label_struct Label;
+	segment_struct Segments;
+	properties_struct Properties;
+} net_segment_struct;
+
+typedef struct net_struct
+{
+	int Net;
+	uid_struct UID;
+	int NetID;
+	string_struct Name;
+	int NumNetSegment;
+	net_segment_struct* NetSegment;
+} net_struct;
+
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessNet(void);
+extern void InitNet(void);
+extern net_struct GetNet(int);
+extern unsigned int GetNumNet(void);
 
-#endif //_STRINGUTIL_H
+#endif //_NET_H

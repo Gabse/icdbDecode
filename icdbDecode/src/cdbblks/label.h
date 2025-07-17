@@ -13,36 +13,64 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _LABEL_H
+#define _LABEL_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "textdata.h" 		// Required for textdata struct
 
 /*
 ******************************************************************
-* Global Defines
+* Enums
 ******************************************************************
 */
+#if C23
+typedef enum visibility_type : uint8_t
+{
+#else
+typedef enum visibility_type
+{
+#endif
+	visibility_invissible	= 1,
+	visibility_vissible		= 4,
+	visibility_default		= 255,
+}visibility_type;
+
+/*
+******************************************************************
+* Structures
+******************************************************************
+*/
+typedef struct sublabel_struct
+{
+	textdata_struct TextData;
+	int Inverted;
+	int Scope;
+	int SegmentNum;
+	visibility_type Visibility;
+} sublabel_struct;
+
+typedef struct label_struct
+{
+	int IDDXD;
+	sublabel_struct* Sublable;
+	int SublableNum;
+	uid_struct IndexDxDNet;
+} label_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessLabels(void);
+extern void InitLabels(void);
+extern label_struct GetLabel(int);
+extern unsigned int GetNumLabels(void);
 
-#endif //_STRINGUTIL_H
+#endif //_LABEL_H

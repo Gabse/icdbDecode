@@ -13,36 +13,48 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _RECTANGLES_H
+#define _RECTANGLES_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "cdbblks.h" 		// Required for coordinate struct
+#include "properties.h" 	// Required for properties struct
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
+
+typedef struct rectcoord_struct
+{
+	coordinate_struct StartCoord;
+	coordinate_struct EndCoord;
+} rectcoord_struct;
+
+
+typedef struct rectangle_struct
+{
+	coordinate_struct StartCoord;
+	coordinate_struct EndCoord;
+	properties_struct Properties;
+	uid_struct UID;
+	int IDDxD;
+} rectangle_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessRectangles(void);
+extern void InitRectangles(void);
+extern rectangle_struct GetRectangle(int);
+extern unsigned int GetNumRectangles(void);
 
-#endif //_STRINGUTIL_H
+#endif //_RECTANGLES_H

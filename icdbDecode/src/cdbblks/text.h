@@ -13,36 +13,37 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _TEXT_H
+#define _TEXT_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "textdata.h" 		// Required for textdata struct
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
+typedef struct text_struct
+{
+	string_struct String;
+	textdata_struct TextData;
+	uid_struct UID;
+} text_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessTexts(void);
+extern void InitTexts(void);
+extern text_struct GetText(int);
+extern unsigned int GetNumTexts(void);
 
-#endif //_STRINGUTIL_H
+#endif //_TEXT_H

@@ -13,36 +13,38 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _JOINTS_H
+#define _JOINTS_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "cdbblks.h" 		// Required for coordinate struct
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
+
+typedef struct joint_struct
+{
+	coordinate_struct Coord;
+	uid_struct UID;
+	int ID;
+} joint_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+extern void ProcessJoints(void);
+extern void InitJoints(void);
+extern unsigned int GetNumJoints(void);
+extern joint_struct GetJoint(int);
 
-#endif //_STRINGUTIL_H
+#endif //_JOINTS_H

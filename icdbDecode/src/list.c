@@ -21,6 +21,9 @@
 */
 #include "list.h"
 #include <stdlib.h>		// Required for calloc to work properly
+#include <stdio.h>		// Required for memcpy
+#include <string.h>		// Required for memcpy
+
 
 /*
 ******************************************************************
@@ -32,7 +35,7 @@ typedef struct list_element_struct
 	void* previous_element;
 	void* next_element;
 	void* data;
-	unsigned int lenth;
+	unsigned int length;
 }list_element_struct;
 
 /*
@@ -55,13 +58,13 @@ typedef struct list_element_struct
 void* list_init()
 {
 	list_element_struct* list = NULL;
-	list = calloc(1, sizeof(list_element_struct)); // Reseve memory
+	list = calloc(1, sizeof(list_element_struct)); // Reserve memory
 	if (list != NULL)
 	{
 		list->previous_element = NULL;			// Link next element back
 		list->next_element = NULL;				// Terminate list
 		list->data = NULL;						// Zero data of next element
-		list->lenth = 0;						// Zero lenth of next element
+		list->length = 0;						// Zero length of next element
 	}
 	return list;
 }
@@ -81,7 +84,7 @@ void* list_address(void* head, unsigned int address)
 {
 	list_element_struct* list = head;
 	unsigned int element = 0;
-	while (list->next_element != NULL && element < address) // Itterate to element or end of list
+	while (list->next_element != NULL && element < address) // Iterate to element or end of list
 	{
 		list = list->next_element;							// Go to next entry
 		element++;											// Count up list elements
@@ -105,9 +108,9 @@ unsigned int list_size(void* head)
 	list_element_struct* list = head;
 	unsigned int totalsize = 0;
 	char* dest = NULL;
-	while (list != NULL)					// Itterate over whole list
+	while (list != NULL)					// Iterate over whole list
 	{
-		totalsize += list->lenth;			// Calculate total entry size
+		totalsize += list->length;			// Calculate total entry size
 		list = list->next_element;			// Jump to next entry
 	}
 	return totalsize;
@@ -117,7 +120,7 @@ unsigned int list_size(void* head)
 ******************************************************************
 * - function name:	list_elements()
 *
-* - description: 	count the number of entrys in a list
+* - description: 	count the number of entry’s in a list
 *
 * - parameter: 		pointer to head element
 *
@@ -128,7 +131,7 @@ unsigned int list_elements(void* head)
 {
 	list_element_struct* list = head;
 	unsigned int returnvalue = 0;
-	while (list != NULL)					// Itterate to end of list
+	while (list != NULL)					// Iterate to end of list
 	{
 		list = list->next_element;			// Go to next entry
 		returnvalue++;						// Count list elements
@@ -166,25 +169,25 @@ unsigned int list_append(void* head, void* element, unsigned int size)
 */
 void list_add(void* head, unsigned int address, void* element, unsigned int size)
 {
-	list_element_struct* newelement = calloc(1, sizeof(list_element_struct));	// Reseve memory for new element
+	list_element_struct* newelement = calloc(1, sizeof(list_element_struct));	// Reserve memory for new element
 	if (newelement != NULL)
 	{
 		// Remap Data
 		list_element_struct* currentelement = list_address(head, address);	// Insert new element before this element
 		newelement->data = currentelement->data;
-		newelement->lenth = currentelement->lenth;
+		newelement->length = currentelement->length;
 
 		// New data
 		if(size > 0)
 		{
-			currentelement->data = calloc(size, sizeof(char));			// Reseve memory for data
+			currentelement->data = calloc(size, sizeof(char));			// Reserve memory for data
 			memcpy(currentelement->data, element, size);				// Copy over data
 		}
 		else
 		{
 			currentelement->data = NULL;
 		}
-		currentelement->lenth = size;								// Store size of data to new list entry
+		currentelement->length = size;								// Store size of data to new list entry
 
 		// Insert newelement after currentelement in the list
 		newelement->next_element = currentelement->next_element;
@@ -221,7 +224,7 @@ void list_remove(void* head, unsigned int address)
 		{
 			currentelement = currentelement->next_element;
 			((list_element_struct*)head)->data = currentelement->data;
-			((list_element_struct*)head)->lenth = currentelement->lenth;
+			((list_element_struct*)head)->length = currentelement->length;
 			((list_element_struct*)head)->next_element = currentelement->next_element;
 		}
 		else
@@ -244,7 +247,7 @@ void list_remove(void* head, unsigned int address)
 ******************************************************************
 * - function name:	list_get()
 *
-* - description: 	returns the data and lenth of a list element
+* - description: 	returns the data and length of a list element
 *
 * - parameter: 		pointer to head element; index into list; pointer to where the data is
 *
@@ -255,7 +258,7 @@ unsigned int list_get(void* head, unsigned int address, void** destination)
 {
 	list_element_struct* currentelement = list_address(head, address);	// Get element
 	*destination = currentelement->data;
-	return currentelement->lenth;
+	return currentelement->length;
 }
 
 /*
@@ -273,7 +276,7 @@ void list_cleanup(void** head)
 {
 	list_element_struct* list = *head;
 	list_element_struct* nextlist = NULL;
-	while (list != NULL)			// Itterate over whole list
+	while (list != NULL)			// Iterate over whole list
 	{
 		nextlist = list->next_element;	// Backup next entry address
 		if (list->data != NULL)
@@ -290,7 +293,7 @@ void list_cleanup(void** head)
 ******************************************************************
 * - function name:	list_to_memblk()
 *
-* - description: 	transfrorms a list into a block of memory
+* - description: 	transforms a list into a block of memory
 *
 * - parameter: 		pointer to head element; pointer pointer to where to put the data
 *
@@ -304,13 +307,13 @@ unsigned int list_to_memblk(void* head, void** destination)
 	char* dest = NULL;
 	dest = calloc(list_size(head), sizeof(char));	// Reserve memory for entire data
 	list = head;									// Return to first list element
-	while (list->next_element != NULL)				// Itterate over whole list
+	while (list->next_element != NULL)				// Iterate over whole list
 	{
 		if(list->data != NULL)
 		{
-			memcpy(dest + totalsize, list->data, list->lenth);	// Append data from list to complete data block
+			memcpy(dest + totalsize, list->data, list->length);	// Append data from list to complete data block
 		}
-		totalsize += list->lenth;					// Inc size
+		totalsize += list->length;					// Inc size
 		list = list->next_element;					// Jump to next entry
 	}
 	*destination = dest;

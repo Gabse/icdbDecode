@@ -13,36 +13,42 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _STRINGUTIL_H
-#define _STRINGUTIL_H
+#ifndef _CDBBLKS_H
+#define _CDBBLKS_H
 
 /*
 ******************************************************************
-* Global Includes
+* Includes
 ******************************************************************
 */
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include "../common.h"	// Required for string_struct
 
 /*
 ******************************************************************
-* Global Defines
+* Structures
 ******************************************************************
 */
+typedef struct coordinate_struct
+{
+	int32_t X;
+	int32_t Y;
+} coordinate_struct;
+
+typedef struct color_struct
+{
+	uint8_t Red;
+	uint8_t Green;
+	uint8_t Blue;
+	uint8_t Key;
+} color_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern uint32_t addStrings(char**, char*, uint32_t, char*, uint32_t, char);
-extern uint32_t assemblePath(char**, char*, uint32_t, char*, uint32_t, char);
-extern void removeFilenameExtension(char* , uint32_t*);
-extern unsigned int removeFilePath(char*, unsigned int, char**);
-extern uint32_t createPath(char**, char*, uint32_t, char*, uint32_t, char);
-extern char* stringSmall(char*, unsigned int);
-extern char* stringBig(char*, unsigned int);
-extern char* stringAllBig(char*, unsigned int);
-extern char* stringAllSmall(char*, unsigned int);
-unsigned int stringLen(char*, unsigned int);
+int parseCdbblks(char*, uint32_t);
+void initCdbblks(void);
 
-#endif //_STRINGUTIL_H
+#endif //_CDBBLKS_H
