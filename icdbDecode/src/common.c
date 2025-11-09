@@ -9,7 +9,7 @@
 *
 * The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
-* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.
+* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
@@ -26,6 +26,7 @@
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
 #include <string.h>		// Required for strcmp
 #include "stringutil.h"	// Required for assemblePath
+#include <math.h>		// Required for fabs
 
 /*
 ******************************************************************
@@ -209,7 +210,7 @@ num_struct numProcess(int32_t input, int32_t Ratio, int32_t Offset)
 	num_struct Output;
 	int32_t Temp = input * Ratio + Offset;
 	Output.Integ = Temp / 100e3;
-	Output.Frac = abs(Temp - (Output.Integ * 100e3));
+	Output.Frac = fabs(Temp - (Output.Integ * 100e3));
 	return Output;
 }
 
@@ -273,11 +274,6 @@ void InitRegular(int32_t len, void** structure)
 */
 key_struct* ParseKey(FILE* sourceFile)
 {
-	uint32_t FileStart = ftell(sourceFile);
-	fseek(sourceFile, 0, SEEK_END);
-	uint32_t FileEnd = ftell(sourceFile);
-	fseek(sourceFile, FileStart, SEEK_SET);
-
 	key_struct* key = malloc(sizeof(key_struct));
 	if (key != NULL)
 	{
@@ -293,10 +289,10 @@ key_struct* ParseKey(FILE* sourceFile)
 		switch ((*key).Typecode)
 		{
 		case typecode_String:
-			(*key).Data = ParseString(sourceFile, (*key).Length, &(*key).LengthCalc);
+			(*key).Data = ParseString(sourceFile, (*key).Length, (uint32_t*) &(*key).LengthCalc);
 			break;
 		case typecode_IntArray:
-			(*key).Data = ParseIntArray(sourceFile, (*key).Length, &(*key).LengthCalc);
+			(*key).Data = ParseIntArray(sourceFile, (*key).Length, (uint32_t*) &(*key).LengthCalc);
 			break;
 		case typecode_UID:
 		case typecode_Long:
@@ -426,7 +422,7 @@ string_struct* ParseString(FILE* sourceFile, int32_t PayloadLenRaw, uint32_t* Nu
 			//fseek(sourceFile, sizeof(uint32_t), SEEK_CUR);
 			fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
 		}
-		else if (EntryLen8 == 0xff) // No more entry’s
+		else if (EntryLen8 == 0xff) // No more entryï¿½s
 		{
 			break;
 		}
@@ -462,7 +458,7 @@ string_struct* ParseString(FILE* sourceFile, int32_t PayloadLenRaw, uint32_t* Nu
 			{
 				fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
 			}
-			else if (EntryLen8 == 0xff) // No more entry’s
+			else if (EntryLen8 == 0xff) // No more entryï¿½s
 			{
 				break;
 			}
@@ -520,7 +516,7 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 		fseek(sourceFile, EntryLen * sizeof(uint32_t), SEEK_CUR);
 		fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
 	
-		if (EntryLen == 0x4FFFFFFF) // No more entry’s
+		if (EntryLen == 0x4FFFFFFF) // No more entryï¿½s
 		{
 			break;
 		}
@@ -544,7 +540,7 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 		for (uint32_t i = 0; i < *NumElements;)
 		{
 			fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
-			if (EntryLen == 0x4FFFFFFF) // No more entry’s
+			if (EntryLen == 0x4FFFFFFF) // No more entryï¿½s
 			{
 				break;
 			}
@@ -642,7 +638,7 @@ void* ParseInt(FILE* sourceFile, uint32_t NumElements, uint32_t strutSize)
 			{
 				fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
 			}
-			else if (Magic == 0x4FFFFFFF) // No more entry’s
+			else if (Magic == 0x4FFFFFFF) // No more entryï¿½s
 			{
 				break;
 			}

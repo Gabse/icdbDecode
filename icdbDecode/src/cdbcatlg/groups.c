@@ -9,7 +9,7 @@
 *
 * The tool is based on initial resegrouph done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.
 * The resegrouph was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
-* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.
+* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */

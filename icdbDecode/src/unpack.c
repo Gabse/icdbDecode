@@ -9,7 +9,7 @@
 * 
 * The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
-* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.
+* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 * 
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
@@ -443,11 +443,11 @@ int decodeDatabaseHeader(FILE* sourceFile, databaseHeader_Struct* databaseHeader
 		myPrint("Unknown Value3: \t[%d] and [%d]\n", databaseHeader->unknown3[0], databaseHeader->unknown3[1]);
 		
 		
-		if (databaseHeader->always_zero |= 0)
+		if (databaseHeader->always_zero != 0)
 		{
 			myPrint("always_zero in header is not zero, but %d!\n", databaseHeader->always_zero);
 		}
-		if (databaseHeader->always_zero2 |= 0)
+		if (databaseHeader->always_zero2 != 0)
 		{
 			myPrint("always_zero2 in header is not zero, but %d!\n", databaseHeader->always_zero2);
 		}
@@ -501,12 +501,12 @@ int decodefileList(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file
 	// Check "always zeros"
 	for (int i = 0; i < 4; i++)
 	{
-		if (fileList->always_zero[i] |= 0)
+		if (fileList->always_zero[i] != 0)
 		{
 			myPrint("always_zero[%d] in file entry header is not zero, but %d!\n", i, fileList->always_zero);
 		}
 	}
-	if (fileList->always_zero2 |= 0)
+	if (fileList->always_zero2 != 0)
 	{
 		myPrint("always_zero2 in file entry header is not zero, but %d!\n", fileList->always_zero2);
 	}
@@ -864,7 +864,6 @@ int decompress(char* input, int InputSize, char** output)
 	int DecompressedSize = 0;
 
 	void* list = list_init();
-	char* data = 0;
 	myPrint("    Compressed file. decompressing...\n");
 
 	// Init Decompression

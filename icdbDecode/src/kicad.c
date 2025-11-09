@@ -9,7 +9,7 @@
 *
 * The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
-* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.
+* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
@@ -248,6 +248,8 @@ void KiCadProperties(FILE* KiCadFile, properties_struct Property, uint8_t Fillin
 		myPrint("\tLinestyle: Dot\n");
 		fprintf(KiCadFile, "\t\t\t(type dot)\n");
 		break;
+	default:
+		break;
 	}
 
 	// Color
@@ -340,7 +342,8 @@ void KiCadProperties(FILE* KiCadFile, properties_struct Property, uint8_t Fillin
 			myPrint("\tFill: Solid\n");
 			opacity = 92;
 			break;
-
+		default:
+			break;
 		}
 #else
 		// Old KiCad has no fill pattern. Translate into fill opacity
@@ -376,6 +379,8 @@ void KiCadProperties(FILE* KiCadFile, properties_struct Property, uint8_t Fillin
 			break;
 		case fill_Grey92: // Grey92
 			opacity = 92;
+			break;
+		default:
 			break;
 		}
 #endif
@@ -582,6 +587,8 @@ void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 				fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
 				myPrint("\tBold\n");
 			}
+			break;
+		default:
 			break;
 	}
 	
@@ -975,7 +982,6 @@ void KiCadText(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
 	if (GetNumTexts() > 0)
 	{
-		char Overbar = 0;
 		for (uint32_t i = 0; i < GetNumTexts(); i++)
 		{
 			text_struct Text = GetText(i);

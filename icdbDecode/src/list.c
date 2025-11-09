@@ -9,7 +9,7 @@
 *
 * The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
-* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.
+* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
@@ -107,7 +107,6 @@ unsigned int list_size(void* head)
 {
 	list_element_struct* list = head;
 	unsigned int totalsize = 0;
-	char* dest = NULL;
 	while (list != NULL)					// Iterate over whole list
 	{
 		totalsize += list->length;			// Calculate total entry size
@@ -120,7 +119,7 @@ unsigned int list_size(void* head)
 ******************************************************************
 * - function name:	list_elements()
 *
-* - description: 	count the number of entry’s in a list
+* - description: 	count the number of entryï¿½s in a list
 *
 * - parameter: 		pointer to head element
 *

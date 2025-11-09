@@ -9,7 +9,7 @@
 *
 * The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
-* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.
+* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
@@ -52,16 +52,13 @@ int ParseGrpobj(char* path, uint32_t pathlength, char* file, uint32_t filelength
 	sourceFile = myfopen("rb", path, pathlength, file, filelength, DIR_SEPARATOR);
 	if (sourceFile != 0 && grpobj_num == 0)
 	{
-		uint32_t FileStart = ftell(sourceFile);
 		fseek(sourceFile, 0, SEEK_END);
 		uint32_t FileEnd = ftell(sourceFile);
 		fseek(sourceFile, 0x2000, SEEK_SET);
 		
-		uint32_t entryCnt = 0;
-		
 		uint32_t unknown;
 		fread(&unknown, sizeof(uint32_t), 1, sourceFile); // Might be something interesting
-		fread(&grpobj_num, sizeof(uint32_t), 1, sourceFile); // Number of entry’s
+		fread(&grpobj_num, sizeof(uint32_t), 1, sourceFile); // Number of entryï¿½s
 
 		grpobj = calloc(sizeof(grpobj_struct), grpobj_num);
 		if (grpobj == NULL)

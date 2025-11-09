@@ -190,7 +190,7 @@ int AnalyzerOpen()
 	fprintf(Cfile, "*\n");
 	fprintf(Cfile, "* The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.\n");
 	fprintf(Cfile, "* The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),\n");
-	fprintf(Cfile, "* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.\n");
+	fprintf(Cfile, "* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.\n");
 	fprintf(Cfile, "*\n");
 	fprintf(Cfile, "* This project uses the Zlib library (https://www.zlib.net/) for decompression.\n");
 	fprintf(Cfile, "*/\n");
@@ -223,7 +223,7 @@ int AnalyzerOpen()
 	fprintf(Hfile, "*\n");
 	fprintf(Hfile, "* The tool is based on initial research done by Patrick Yeon (https://github.com/patrickyeon/icdb2fs) in 2011.\n");
 	fprintf(Hfile, "* The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),\n");
-	fprintf(Hfile, "* No static or dynamic code analysis of any proprietary executable files was used to gain information’s about the file format.\n");
+	fprintf(Hfile, "* No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.\n");
 	fprintf(Hfile, "*\n");
 	fprintf(Hfile, "* This project uses the Zlib library (https://www.zlib.net/) for decompression.\n");
 	fprintf(Hfile, "*/\n");

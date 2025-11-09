@@ -1,0 +1,102 @@
+name: Compile and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        c_compiler: [gcc, clang, cl]
+        include:
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+        exclude:
+          - os: windows-latest
+            c_compiler: gcc
+          - os: windows-latest
+            c_compiler: clang
+          - os: ubuntu-latest
+            c_compiler: cl
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Set reusable strings icdbDecode
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "build-input-dir-icdbDecode=${{ github.workspace }}/icdbDecode" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir-icdbDecode=${{ github.workspace }}/icdbDecode/build" >> "$GITHUB_OUTPUT"
+        echo "build-input-dir-icdbAnalyzer=${{ github.workspace }}/tools/analyzer" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir-icdbAnalyzer=${{ github.workspace }}/tools/analyzer/build" >> "$GITHUB_OUTPUT"
+
+    - name: Configure icdbDecode CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir-icdbDecode }}
+        -S ${{ steps.strings.outputs.build-input-dir-icdbDecode }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+    - name: Build icdbDecode
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbDecode }} --config ${{ matrix.build_type }}
+
+    - name: Upload icdbDecode Linux
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: icdbDecode_${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir-icdbDecode }}/src/icdbDecode
+
+    - name: Upload icdbDecode Windows
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: icdbDecode_${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir-icdbDecode }}/src/Release
+
+    - name: Configure icdbAnalyzer CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}
+        -S ${{ steps.strings.outputs.build-input-dir-icdbAnalyzer }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+    - name: Build icdbAnalyzer
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }} --config ${{ matrix.build_type }}
+
+    - name: Upload icdbAnalyzer Linux
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: icdbAnalyzer_${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/icdbAnalyzer
+
+    - name: Upload icdbAnalyzer Windows
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: icdbAnalyzer_${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/Release
