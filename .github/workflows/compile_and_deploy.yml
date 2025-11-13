@@ -41,7 +41,7 @@ jobs:
       with:
         submodules: 'true'
 
-    - name: Set reusable strings icdbDecode
+    - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
@@ -50,6 +50,8 @@ jobs:
         echo "build-output-dir-icdbDecode=${{ github.workspace }}/icdbDecode/build" >> "$GITHUB_OUTPUT"
         echo "build-input-dir-icdbAnalyzer=${{ github.workspace }}/tools/analyzer" >> "$GITHUB_OUTPUT"
         echo "build-output-dir-icdbAnalyzer=${{ github.workspace }}/tools/analyzer/build" >> "$GITHUB_OUTPUT"
+        echo "build-input-dir-icdbCoder=${{ github.workspace }}/tools/coder" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir-icdbCoder=${{ github.workspace }}/tools/coder/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure icdbDecode CMake
       run: >
@@ -100,3 +102,28 @@ jobs:
       with:
         name: icdbAnalyzer_${{ matrix.os }}_${{ matrix.c_compiler }}
         path: ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/Release
+
+    - name: Configure icdbCoder CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir-icdbCoder }}
+        -S ${{ steps.strings.outputs.build-input-dir-icdbCoder }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+    - name: Build icdbCoder
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbCoder }} --config ${{ matrix.build_type }}
+
+    - name: Upload icdbCoder Linux
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: icdbCoder_${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir-icdbCoder }}/icdbCoder
+
+    - name: Upload icdbCoder Windows
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: icdbCoder_${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir-icdbCoder }}/Release
