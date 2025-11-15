@@ -64,20 +64,6 @@ jobs:
     - name: Build icdbDecode
       run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbDecode }} --config ${{ matrix.build_type }}
 
-    - name: Upload icdbDecode Linux
-      if: runner.os != 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: icdbDecode_${{ matrix.os }}_${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir-icdbDecode }}/src/icdbDecode
-
-    - name: Upload icdbDecode Windows
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: icdbDecode_${{ matrix.os }}_${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir-icdbDecode }}/src/Release
-
     - name: Configure icdbAnalyzer CMake
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}
@@ -88,20 +74,6 @@ jobs:
 
     - name: Build icdbAnalyzer
       run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }} --config ${{ matrix.build_type }}
-
-    - name: Upload icdbAnalyzer Linux
-      if: runner.os != 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: icdbAnalyzer_${{ matrix.os }}_${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/icdbAnalyzer
-
-    - name: Upload icdbAnalyzer Windows
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: icdbAnalyzer_${{ matrix.os }}_${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/Release
 
     - name: Configure icdbCoder CMake
       run: >
@@ -114,16 +86,26 @@ jobs:
     - name: Build icdbCoder
       run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbCoder }} --config ${{ matrix.build_type }}
 
-    - name: Upload icdbCoder Linux
+    - name: Collect Artifacts Linux 
       if: runner.os != 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: icdbCoder_${{ matrix.os }}_${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir-icdbCoder }}/icdbCoder
+      shell: bash
+      run: |
+        mkdir ${{ github.workspace }}/artifacts/
+        mv ${{ steps.strings.outputs.build-output-dir-icdbDecode }}/src/icdbDecode ${{ github.workspace }}/artifacts/icdbDecode
+        mv ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/icdbAnalyzer ${{ github.workspace }}/artifacts/icdbAnalyzer
+        mv ${{ steps.strings.outputs.build-output-dir-icdbCoder }}/icdbCoder ${{ github.workspace }}/artifacts/icdbCoder
 
-    - name: Upload icdbCoder Windows
+    - name: Collect Artifacts Windows 
       if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        mkdir ${{ github.workspace }}\artifacts\
+        move ${{ steps.strings.outputs.build-output-dir-icdbDecode }}\src\Release\icdbDecode.exe ${{ github.workspace }}\artifacts\icdbDecode.exe
+        move ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}\Release\icdbAnalyzer.exe ${{ github.workspace }}\artifacts\icdbAnalyzer.exe
+        move ${{ steps.strings.outputs.build-output-dir-icdbCoder }}\Release\icdbCoder.exe ${{ github.workspace }}\artifacts\icdbCoder.exe
+
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: icdbCoder_${{ matrix.os }}_${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir-icdbCoder }}/Release
+        name: ${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ github.workspace }}/artifacts/
