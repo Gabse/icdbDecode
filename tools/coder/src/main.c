@@ -21,7 +21,6 @@
 #include "../../../icdbDecode/src/common.h"		// Required for parseFile
 #include "../../../icdbDecode/src/stringutil.h"	// Required for string manipulation
 #include "../../../icdbDecode/src/list.h"		// Required for list
-#include "../../../icdbDecode/src/log.h"		// Required for list
 
 /*
 ******************************************************************
@@ -73,63 +72,99 @@ unsigned int PathLenTemp = 0;
 int main(int argc, char** argv)
 {
 	clock_t starttime = clock();
-	char* nameTemp = NULL;
-	
+	string_struct* names = NULL;
+	unsigned int numNames = 0;
+
 	// Check parameter
-	if(argc < 2)
+	if (argc < 2)
 	{
 		printf("No source file specified!\n");
 		return -1;
 	}
-	else if(argc == 2) // One file
+	else if (argc == 2) // One file
 	{
 		printf("Using source file %s\n", argv[1]);
 	}
 	else // Multiple files
 	{
 		printf("Using source files: %s", argv[1]);
-		for( uint32_t i = 2; i < argc; i++)
+		for (unsigned int i = 2; i < argc; i++)
 		{
 			printf(", %s", argv[i]);
 		}
 		printf("\n");
 	}
+	numNames = argc - 1;
 
-	for (uint32_t i = 1; i < argc; i++)
+	names = calloc(numNames, sizeof(string_struct));
+	if (names == NULL)
 	{
-		nameLen = strlen(argv[i]) + 1;
-		
+		return -1;
+	}
+	for (unsigned int i = 0; i < numNames; i++)
+	{
+		char* nameTemp = NULL;
+		char* nameTemp2 = NULL;
+
+		nameLen = strlen(argv[i + 1]) + 1;
 		nameTemp = malloc(nameLen);
-		if(nameTemp == NULL)
+		if (nameTemp == NULL)
 		{
 			return -1;
 		}
-		memcpy(nameTemp, argv[i], nameLen);
-	
+		memcpy(nameTemp, argv[i + 1], nameLen);
+
 		// Get filename without path
 		removeFilenameExtension(nameTemp, &nameLen);
-		nameLen = removeFilePath(nameTemp, nameLen, &name);
-		nameSmall = stringAllSmall(name, nameLen);
-		nameBig = stringBig(nameSmall, nameLen);
-		nameAllBig = stringAllBig(nameSmall, nameLen);
-
-		if (AnalyzerOpen())
+		(names[i]).Length = removeFilePath(nameTemp, nameLen, &nameTemp2);
+		(names[i]).Text = malloc((names[i]).Length);
+		if ((names[i]).Text == NULL)
 		{
-			printf("Error opening file!");
 			return -1;
 		}
-		if (parseFile(NULL, 0, argv[i], strlen(argv[i]), AnalyzerWrite))
-		{
-			printf("Error parsing file!");
-			return -1;
-		}
-
-		AnalyzerClose();
+		memcpy((names[i]).Text, nameTemp2, (names[i]).Length);
 		free(nameTemp); // also clears name
-		free(nameSmall);
-		free(nameBig);
-		free(nameAllBig);
 	}
+
+	for (unsigned int i = 0; i < numNames; i++)
+	{
+		if ((names[i]).Length >= 1) // Check if file is already parsed
+		{
+			name = (names[i]).Text;
+			nameLen = (names[i]).Length;
+			nameSmall = stringAllSmall(name, nameLen);
+			nameBig = stringBig(nameSmall, nameLen);
+			nameAllBig = stringAllBig(nameSmall, nameLen);
+
+			if (AnalyzerOpen())
+			{
+				printf("Error opening destination file!");
+				return -1;
+			}
+
+			// Check for identical file names 
+			for (unsigned int j = i; j < ((argc - 1)); j++)
+			{
+				// Check if file is already parsed and name match
+				if ((names[j]).Length != 0 && (strcmp((names[i]).Text, (names[j]).Text) == 0))
+				{
+					if (parseFile(NULL, 0, argv[j + 1], strlen(argv[j + 1]), AnalyzerWrite))
+					{
+						printf("Error opening source file!");
+						return -1;
+					}
+					(names[j]).Length = 0;
+				}
+			}
+			free((names[i]).Text);
+			(names[i]).Text = NULL;
+			AnalyzerClose();
+			free(nameSmall);
+			free(nameBig);
+			free(nameAllBig);
+		}
+	}
+	free(names);
 	printf("Finnish after %fs\n", (float)(clock() - starttime)/(float) CLOCKS_PER_SEC);
 	return 0;
 }
@@ -267,6 +302,24 @@ int AnalyzerOpen()
 */
 void AnalyzerWrite(FILE* sourceFile, char* Key, unsigned int KeyLen)
 {
+	unsigned int numNames = list_elements(list) - 1;
+	char* nameTemp = NULL;
+
+	for (unsigned int i = 0; i < numNames; i++)
+	{
+		// Check for duplicates
+		nameLen = list_get(list, i, (void**)&nameTemp);
+		int comp = strcmp(nameTemp, Key);
+		if (comp == 0) // Key already in list
+		{
+			return;
+		}
+		else if (comp > 0) // Append keys to list in alphabetic order
+		{
+			list_add(list, i, Key, KeyLen + 1);
+			return;
+		}
+	}
 	// Append Names to list
 	list_append(list, Key, KeyLen + 1);
 }
