@@ -11,10 +11,10 @@
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
 * No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
-* This project uses the Zlib library (https://www.zlib.bus/) for decompression.
+* This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _BUS_H
-#define _BUS_H
+#ifndef _JOINT_H
+#define _JOINT_H
 
 /*
 ******************************************************************
@@ -23,40 +23,28 @@
 */
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include "../common.h"				// Required for element_struct
-#include "../common/label.h"		// Required for label struct
-#include "segment.h"				// Required for segment struct
-#include "../common/property.h" 	// Required for property struct
+#include "../common/property.h" 	// Required for coordinate struct
 
 /*
 ******************************************************************
 * Structures
 ******************************************************************
 */
-typedef struct bus_segment_struct
-{
-	label_struct Label;
-	segment_struct Segment;
-	property_struct Property;
-	int Group;
-	int BusID;
-} bus_segment_struct;
 
-typedef struct bus_struct
+typedef struct joint_struct
 {
-	string_struct Name;
+	coordinate_struct Coord;
 	uid_struct UID;
-	bus_segment_struct* BusSegment;
-	int BusSegmentLen;
-	int BusType;
-} bus_struct;
+	int ID;
+} joint_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern void ProcessBus(element_struct*);
-extern void InitBus(element_struct*);
-extern bus_struct GetBus(element_struct*, int);
+extern void ProcessJoint(element_struct*);
+extern void InitJoint(element_struct*);
+extern joint_struct GetJoint(element_struct*, int);;
 
-#endif //_BUS_H
+#endif //_JOINT_H

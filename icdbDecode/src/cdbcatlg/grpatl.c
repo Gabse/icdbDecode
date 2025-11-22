@@ -108,7 +108,7 @@ void ProcessKeyGrpatl(FILE * sourceFile, char* Key, unsigned int KeyLen)
 	{
 		Grpatl_PrpStr = ParseKey(sourceFile);
 	}
-	else 
+	else
 	{
 		myPrint("Unknown Key in grpatl [%s]\n", Key);
 	}

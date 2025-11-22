@@ -25,19 +25,22 @@
 #include <stdlib.h>					// Required for calloc to work properly
 #include "common.h"					// Required for myfopen
 #include "stringutil.h"				// Required for string manipulation
-#include "./cdbcatlg/pages.h"		// Required for pages
-#include "./cdbcatlg/groups.h"		// Required for groups
-#include "./cdbcatlg/grpobj.h"		// Required for groups
-#include "./cdbblks/sheets.h"		// Required for sheets
-#include "./cdbblks/properties.h"	// Required for properties
-#include "./cdbblks/label.h"		// Required for label
-#include "./cdbblks/arcs.h"			// Required for arcs
-#include "./cdbblks/circles.h"		// Required for circles
-#include "./cdbblks/rectangles.h"	// Required for rectangles
-#include "./cdbblks/text.h"			// Required for text
-#include "./cdbblks/lines.h"		// Required for lines
+#include "./cdbcatlg/cdbcatlg.h"	// Required for cdbcatlg
+#include "./cdbcatlg/page.h"		// Required for page
+#include "./cdbcatlg/group.h"		// Required for group
+#include "./cdbcatlg/grpobj.h"		// Required for group
+#include "./cdbblks/cdbblks.h"		// Required for cdbblks
+#include "./cdbblks/sheet.h"		// Required for sheet
 #include "./cdbblks/net.h"			// Required for net
 #include "./cdbblks/bus.h"			// Required for bus
+#include "./common/property.h" 	// Required for property
+#include "./common/label.h"			// Required for label
+#include "./common/arc.h"			// Required for arc
+#include "./common/circle.h"		// Required for circle
+#include "./common/rectangle.h"	// Required for rectangle
+#include "./common/text.h"			// Required for text
+#include "./common/line.h"			// Required for line
+
 
 /*
 ******************************************************************
@@ -48,12 +51,12 @@
 
 #define UserCoordinateOffsetX 0
 #define UserCoordinateOffsetY 0
-#define UserCoordinateScaleX 1
-#define UserCoordinateScaleY 1
+#define UserCoordinateScaleX 1.0
+#define UserCoordinateScaleY 1.0
 #define UserDefaultTextOrigin 3
 #define UserFontScale 0.5  // Fonts in KiCad are rendered ~0.5 the size from DxD. Exact scaling differs between fonts.
 #define UserBaseLineThickness 0.1
-#define NewKiCad 0 // Create Kicad 9.99 required for filling pattern
+#define NewKiCad 0 // Create Kicad for 9.99 required for filling pattern
 #define KiCadFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
 
 /*
@@ -61,19 +64,19 @@
 * Local Function Prototype
 ******************************************************************
 */
-void KiCadProperties(FILE*, properties_struct, uint8_t);
+void KiCadProperty(FILE*, property_struct, uint8_t);
 void KiCadSheetProp(FILE*, sheet_struct);
 void KiCadTextData(FILE*, textdata_struct);
 void KiCadUID(FILE*, uid_struct, uid_struct);
 void KiCadPrintString(FILE*, string_struct);
-void KiCadLabels(FILE*, uid_struct, label_struct, string_struct);
-void KiCadArcs(FILE*, uid_struct, unsigned int);
-void KiCadCircles(FILE*, uid_struct, unsigned int);
-void KiCadRectangles(FILE*, uid_struct, unsigned int);
-void KiCadText(FILE*, uid_struct, unsigned int);
-void KiCadLines(FILE*, uid_struct, unsigned int);
-void KiCadNets(FILE*, uid_struct, unsigned int);
-void KiCadBusses(FILE*, uid_struct, unsigned int);
+void KiCadLabel(FILE*, uid_struct, label_struct, string_struct);
+void KiCadArc(FILE*, uid_struct, uint32_t);
+void KiCadCircle(FILE*, uid_struct, uint32_t);
+void KiCadRectangle(FILE*, uid_struct, uint32_t);
+void KiCadText(FILE*, uid_struct, uint32_t);
+void KiCadLine(FILE*, uid_struct, uint32_t);
+void KiCadNets(FILE*, uid_struct, uint32_t);
+void KiCadBusses(FILE*, uid_struct, uint32_t);
 
 /*
 ******************************************************************
@@ -106,19 +109,18 @@ float BaseLineThickness = UserBaseLineThickness;
 */
 int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
 {
-	unsigned int NumPages = GetNumSheets();
 	char* destination = NULL;
 	uid_struct temp = { 0 };
-	for (unsigned int i = 0; i < NumPages; i++)
+	for (unsigned int i = 0; i < cdbblks_sheet.Length; i++)
 	{
-		sheet_struct Sheet = GetSheet(i);
+		sheet_struct Sheet = GetSheet(&cdbblks_sheet, i);
 		uint32_t completePathLength;
 
-		if (NumPages > 1) // Schematic name + sheet number + sheet name
+		if (cdbblks_sheet.Length > 1) // Schematic name + sheet number + sheet name
 		{
-			group_struct group = GetGroup(i);
+			group_struct group = GetGroup(&cdbcatlg_group, i);
 			char* TempDest1 = NULL;
-			char* TempDest2 = malloc (10);
+			char* TempDest2 = malloc(10);
 			if (TempDest2 == NULL)
 			{
 				return -1;
@@ -144,10 +146,12 @@ int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
 			// File Header
 			fprintf(KiCadFile, "(kicad_sch\n");
 #if NewKiCad
-			fprintf(KiCadFile, "\t(version 20250222)\n");
+#pragma message ("Building for KiCad 9.99")
+			fprintf(KiCadFile, "\t(version 20251012)\n");
 			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
 			fprintf(KiCadFile, "\t(generator_version \"9.99\")\n");
 #else
+#pragma message ("Building for KiCad 9.0")
 			fprintf(KiCadFile, "\t(version 20250114)\n");
 			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
 			fprintf(KiCadFile, "\t(generator_version \"9.0\")\n");
@@ -159,11 +163,11 @@ int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
 			myPrint("\n");
 
 			// Elements
-			KiCadArcs(KiCadFile, page.UID, Sheet.Group);
-			KiCadCircles(KiCadFile, page.UID, Sheet.Group);
-			KiCadRectangles(KiCadFile, page.UID, Sheet.Group);
+			KiCadArc(KiCadFile, page.UID, Sheet.Group);
+			KiCadCircle(KiCadFile, page.UID, Sheet.Group);
+			KiCadRectangle(KiCadFile, page.UID, Sheet.Group);
 			KiCadText(KiCadFile, page.UID, Sheet.Group);
-			KiCadLines(KiCadFile, page.UID, Sheet.Group);
+			KiCadLine(KiCadFile, page.UID, Sheet.Group);
 			KiCadNets(KiCadFile, page.UID, Sheet.Group);
 			KiCadBusses(KiCadFile, page.UID, Sheet.Group);
 
@@ -176,10 +180,13 @@ int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
 
 			fprintf(KiCadFile, ")\n");
 			fclose(KiCadFile);
+			free(destination);
+
 		}
 		else
 		{
 			myPrint("Error Writing [%s] !\n", destination);
+			free(destination);
 			return -1;
 		}
 	}
@@ -193,16 +200,16 @@ int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
 */
 /*
 ******************************************************************
-* - function name:	KiCadProperties()
+* - function name:	KiCadProperty()
 *
-* - description: 	Stores properties in KiCad
+* - description: 	Stores property in KiCad
 *
-* - parameter: 		Pointer to KiCad file; Index of Properties; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Lines, ...)
+* - parameter: 		Pointer to KiCad file; Index of Property; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Line, ...)
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadProperties(FILE* KiCadFile, properties_struct Property, uint8_t Filling)
+void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 {
 	fprintf(KiCadFile, "\t\t(stroke\n");
 
@@ -413,9 +420,9 @@ void KiCadProperties(FILE* KiCadFile, properties_struct Property, uint8_t Fillin
 ******************************************************************
 * - function name:	KiCadPageProp()
 *
-* - description: 	Stores page properties in KiCad
+* - description: 	Stores page property in KiCad
 *
-* - parameter: 		Pointer to KiCad file; Index of Sheet Properties
+* - parameter: 		Pointer to KiCad file; Index of Sheet Property
 *
 * - return value: 	-
 ******************************************************************
@@ -502,7 +509,7 @@ void KiCadSheetProp(FILE* KiCadFile, sheet_struct Sheet)
 *
 * - description: 	Stores text data in KiCad
 *
-* - parameter: 		Pointer to KiCad file; Index of Properties; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Lines, ...)
+* - parameter: 		Pointer to KiCad file; Index of Property; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Line, ...)
 *
 * - return value: 	-
 ******************************************************************
@@ -788,7 +795,7 @@ void KiCadUID(FILE* KiCadFile, uid_struct pageUID, uid_struct elementUID)
 
 /*
 ******************************************************************
-* - function name:	KiCadLabels()
+* - function name:	KiCadLabel()
 *
 * - description: 	Stores label in KiCad
 *
@@ -797,7 +804,7 @@ void KiCadUID(FILE* KiCadFile, uid_struct pageUID, uid_struct elementUID)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadLabels(FILE* KiCadFile, uid_struct UID, label_struct label, string_struct Name)
+void KiCadLabel(FILE* KiCadFile, uid_struct UID, label_struct label, string_struct Name)
 {
 	if (
 		label.IndexDxDNet.UID[0] == 0 &&
@@ -834,32 +841,32 @@ void KiCadLabels(FILE* KiCadFile, uid_struct UID, label_struct label, string_str
 
 /*
 ******************************************************************
-* - function name:	KiCadArcs()
+* - function name:	KiCadArc()
 *
-* - description: 	Stores arcs in KiCad
+* - description: 	Stores arc in KiCad
 *
 * - parameter: 		Pointer to KiCad file, UID of page, page group
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadArcs(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadArc(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumArcs() > 0)
+	if (cdbblks_arc.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumArcs(); i++)
+		for (uint32_t i = 0; i < cdbblks_arc.Length; i++)
 		{
-			arc_struct Arcs = GetArc(i);
-			if (InsideGroup(Arcs.UID, page))
+			arc_struct Arc = GetArc((&cdbblks_arc), i);
+			if (InsideGroup(&cdbcatlg_grpobj, Arc.UID, page))
 			{
 				fprintf(KiCadFile, "\t(arc\n");
 
-				num_struct XStart = numProcess(Arcs.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YStart = numProcess(Arcs.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XMid = numProcess(Arcs.MidCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YMid = numProcess(Arcs.MidCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XEnd = numProcess(Arcs.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YEnd = numProcess(Arcs.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct XStart = numProcess(Arc.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YStart = numProcess(Arc.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct XMid = numProcess(Arc.MidCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YMid = numProcess(Arc.MidCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct XEnd = numProcess(Arc.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct YEnd = numProcess(Arc.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
 
 				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
 				fprintf(KiCadFile, "\t\t(mid %d.%05d %d.%05d)\n", XMid.Integ, XMid.Frac, YMid.Integ, YMid.Frac);
@@ -869,10 +876,10 @@ void KiCadArcs(FILE* KiCadFile, uid_struct UID, uint32_t page)
 				myPrint("\tX Start: %d.%05d, X Mid: %d.%05d X End: %d.%05d\n", XStart.Integ, XStart.Frac, XMid.Integ, XMid.Frac, XEnd.Integ, XEnd.Frac);
 				myPrint("\tY Start: %d.%05d, Y Mid: %d.%05d Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YMid.Integ, YMid.Frac, YEnd.Integ, YEnd.Frac);
 
-				KiCadProperties(KiCadFile, Arcs.Properties, 0);
+				KiCadProperty(KiCadFile, Arc.Property, 0);
 				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Arcs.UID);
+				KiCadUID(KiCadFile, UID, Arc.UID);
 				fprintf(KiCadFile, "\t)\n");
 			}
 		}
@@ -882,28 +889,28 @@ void KiCadArcs(FILE* KiCadFile, uid_struct UID, uint32_t page)
 
 /*
 ******************************************************************
-* - function name:	KiCadCircles()
+* - function name:	KiCadCircle()
 *
-* - description: 	Stores circles in KiCad
+* - description: 	Stores circle in KiCad
 *
 * - parameter: 		Pointer to KiCad file, UID of page, page group
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadCircles(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadCircle(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumCircles() > 0)
+	if (cdbblks_circle.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumCircles(); i++)
+		for (uint32_t i = 0; i < cdbblks_circle.Length; i++)
 		{
-			circle_struct Circles = GetCircle(i);
-			if (InsideGroup(Circles.UID, page))
+			circle_struct Circle = GetCircle(&cdbblks_circle, i);
+			if (InsideGroup(&cdbcatlg_grpobj, Circle.UID, page))
 			{
 				fprintf(KiCadFile, "\t(circle\n");
-				num_struct X = numProcess(Circles.CenterCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct Y = numProcess(Circles.CenterCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct R = numProcess(Circles.Radius, 1, 0);
+				num_struct X = numProcess(Circle.CenterCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				num_struct Y = numProcess(Circle.CenterCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				num_struct R = numProcess(Circle.Radius, 1, 0);
 
 				fprintf(KiCadFile, "\t\t(center %d.%05d %d.%05d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
 				fprintf(KiCadFile, "\t\t(radius %d.%05d)\n", R.Integ, R.Frac);
@@ -911,10 +918,10 @@ void KiCadCircles(FILE* KiCadFile, uid_struct UID, uint32_t page)
 				myPrint("Circle %d:\n", i + 1);
 				myPrint("\tX: %d.%05d, Y: %d.%05d, Radius: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac, R.Integ, R.Frac);
 
-				KiCadProperties(KiCadFile, Circles.Properties, 1);
+				KiCadProperty(KiCadFile, Circle.Property, 1);
 				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Circles.UID);
+				KiCadUID(KiCadFile, UID, Circle.UID);
 				fprintf(KiCadFile, "\t)\n");
 			}
 		}
@@ -924,24 +931,24 @@ void KiCadCircles(FILE* KiCadFile, uid_struct UID, uint32_t page)
 
 /*
 ******************************************************************
-* - function name:	KiCadRectangles()
+* - function name:	KiCadRectangle()
 *
-* - description: 	Stores rectangles in KiCad
+* - description: 	Stores rectangle in KiCad
 *
 * - parameter: 		Pointer to KiCad file, UID of page, page group
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadRectangles(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadRectangle(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumRectangles() > 0)
+	if (cdbblks_rectangle.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumRectangles(); i++)
+		for (uint32_t i = 0; i < cdbblks_rectangle.Length; i++)
 		{
-			rectangle_struct Rectangle = GetRectangle(i);
+			rectangle_struct Rectangle = GetRectangle(&cdbblks_rectangle, i);
 
-			if (InsideGroup(Rectangle.UID, page))
+			if (InsideGroup(&cdbcatlg_grpobj, Rectangle.UID, page))
 			{
 				fprintf(KiCadFile, "\t(rectangle\n");
 
@@ -956,7 +963,7 @@ void KiCadRectangles(FILE* KiCadFile, uid_struct UID, uint32_t page)
 				myPrint("Rectangle %d:\n", i + 1);
 				myPrint("\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
 				myPrint("\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
-				KiCadProperties(KiCadFile, Rectangle.Properties, 1);
+				KiCadProperty(KiCadFile, Rectangle.Property, 1);
 				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
 				KiCadUID(KiCadFile, UID, Rectangle.UID);
@@ -971,7 +978,7 @@ void KiCadRectangles(FILE* KiCadFile, uid_struct UID, uint32_t page)
 ******************************************************************
 * - function name:	KiCadText()
 *
-* - description: 	Stores texts in KiCad
+* - description: 	Stores text in KiCad
 *
 * - parameter: 		Pointer to KiCad file, UID of page, page group
 *
@@ -980,12 +987,12 @@ void KiCadRectangles(FILE* KiCadFile, uid_struct UID, uint32_t page)
 */
 void KiCadText(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumTexts() > 0)
+	if (cdbblks_text.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumTexts(); i++)
+		for (uint32_t i = 0; i < cdbblks_text.Length; i++)
 		{
-			text_struct Text = GetText(i);
-			if (InsideGroup(Text.UID, page))
+			text_struct Text = GetText(&cdbblks_text, i);
+			if (InsideGroup(&cdbcatlg_grpobj, Text.UID, page))
 			{
 
 				fprintf(KiCadFile, "\t(text \"");
@@ -1006,33 +1013,33 @@ void KiCadText(FILE* KiCadFile, uid_struct UID, uint32_t page)
 
 /*
 ******************************************************************
-* - function name:	KiCadLines()
+* - function name:	KiCadLine()
 *
-* - description: 	Stores lines in KiCad
+* - description: 	Stores line in KiCad
 *
 * - parameter: 		Pointer to KiCad file, UID of page, page group
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadLines(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadLine(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumLines() > 0)
+	if (cdbblks_line.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumLines(); i++)
+		for (uint32_t i = 0; i < cdbblks_line.Length; i++)
 		{
-			line_struct Line = GetLine(i);
-			if (InsideGroup(Line.UID, page))
+			line_struct Line = GetLine(&cdbblks_line, i);
+			if (InsideGroup(&cdbcatlg_grpobj, Line.UID, page))
 			{
 				fprintf(KiCadFile, "\t(polyline\n");
 				fprintf(KiCadFile, "\t\t(pts\n");
 				myPrint("Line %d:\n", i + 1);
-				for (unsigned int j = 0; j < Line.numSegments; j++)
+				for (unsigned int j = 0; j < Line.numSegment; j++)
 				{
-					num_struct XStart = numProcess(Line.Segments[j].Start.X, CoordinateScaleX, CoordinateOffsetX);
-					num_struct YStart = numProcess(Line.Segments[j].Start.Y, CoordinateScaleY, CoordinateOffsetY);
-					num_struct XEnd = numProcess(Line.Segments[j].End.X, CoordinateScaleX, CoordinateOffsetX);
-					num_struct YEnd = numProcess(Line.Segments[j].End.Y, CoordinateScaleY, CoordinateOffsetY);
+					num_struct XStart = numProcess(Line.Segment[j].Start.X, CoordinateScaleX, CoordinateOffsetX);
+					num_struct YStart = numProcess(Line.Segment[j].Start.Y, CoordinateScaleY, CoordinateOffsetY);
+					num_struct XEnd = numProcess(Line.Segment[j].End.X, CoordinateScaleX, CoordinateOffsetX);
+					num_struct YEnd = numProcess(Line.Segment[j].End.Y, CoordinateScaleY, CoordinateOffsetY);
 
 					fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
 
@@ -1041,7 +1048,7 @@ void KiCadLines(FILE* KiCadFile, uid_struct UID, uint32_t page)
 					myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
 				}
 				fprintf(KiCadFile, "\t\t)\n");
-				KiCadProperties(KiCadFile, Line.Properties, 0);
+				KiCadProperty(KiCadFile, Line.Property, 0);
 				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
 				KiCadUID(KiCadFile, UID, Line.UID);
@@ -1065,25 +1072,25 @@ void KiCadLines(FILE* KiCadFile, uid_struct UID, uint32_t page)
 */
 void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumNet() > 0)
+	if (cdbblks_net.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumNet(); i++)
+		for (uint32_t i = 0; i < cdbblks_net.Length; i++)
 		{
-			net_struct Net = GetNet(i);
-			if (InsideGroup(Net.UID, page))
+			net_struct Net = GetNet(&cdbblks_net, i);
+			if (InsideGroup(&cdbcatlg_grpobj, Net.UID, page))
 			{
 				for (unsigned int j = 0; j < Net.NumNetSegment; j++)
 				{
-					for (unsigned int k = 0; k < (Net.NetSegment)[j].Segments.numSegments; k++)
+					for (unsigned int k = 0; k < (Net.NetSegment)[j].Segment.numSegment; k++)
 					{
-						if ((Net.NetSegment)[j].Segments.Segments == NULL)
+						if ((Net.NetSegment)[j].Segment.Segment == NULL)
 						{
 							return;
 						}
 						fprintf(KiCadFile, "\t(wire\n");
 						fprintf(KiCadFile, "\t\t(pts\n");
 						myPrint("Net %d:\n", i + 1);
-						segment_section_struct Segment = (Net.NetSegment)[j].Segments.Segments[k];
+						segment_section_struct Segment = (Net.NetSegment)[j].Segment.Segment[k];
 
 						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
 						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
@@ -1096,14 +1103,14 @@ void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
 						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
 						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
 						fprintf(KiCadFile, "\t\t)\n");
-						KiCadProperties(KiCadFile, (Net.NetSegment)[j].Properties, 0);
+						KiCadProperty(KiCadFile, (Net.NetSegment)[j].Property, 0);
 
 						fprintf(KiCadFile, "\t\t");
 						myPrint("\t");
 						KiCadUID(KiCadFile, UID, Net.UID);
 						fprintf(KiCadFile, "\t)\n");
 					}
-					KiCadLabels(KiCadFile, UID, (Net.NetSegment)[j].Label, Net.Name);
+					KiCadLabel(KiCadFile, UID, (Net.NetSegment)[j].Label, Net.Name);
 				}
 			}
 		}
@@ -1124,25 +1131,25 @@ void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
 */
 void KiCadBusses(FILE* KiCadFile, uid_struct UID, uint32_t page)
 {
-	if (GetNumBus() > 0)
+	if (cdbblks_bus.Length > 0)
 	{
-		for (uint32_t i = 0; i < GetNumBus(); i++)
+		for (uint32_t i = 0; i < cdbblks_bus.Length; i++)
 		{
-			bus_struct Bus = GetBus(i);
-			if (InsideGroup(Bus.UID, page))
+			bus_struct Bus = GetBus(&cdbblks_bus, i);
+			if (InsideGroup(&cdbcatlg_grpobj, Bus.UID, page))
 			{
 				for (unsigned int j = 0; j < Bus.BusSegmentLen; j++)
 				{
-					for (unsigned int k = 0; k < (Bus.BusSegment)[j].Segments.numSegments; k++)
+					for (unsigned int k = 0; k < (Bus.BusSegment)[j].Segment.numSegment; k++)
 					{
-						if ((Bus.BusSegment)[j].Segments.Segments == NULL)
+						if ((Bus.BusSegment)[j].Segment.Segment == NULL)
 						{
 							return;
 						}
 						fprintf(KiCadFile, "\t(bus\n");
 						fprintf(KiCadFile, "\t\t(pts\n");
 						myPrint("Bus %d:\n", i + 1);
-						segment_section_struct Segment = (Bus.BusSegment)[j].Segments.Segments[k];
+						segment_section_struct Segment = (Bus.BusSegment)[j].Segment.Segment[k];
 
 						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
 						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
@@ -1155,14 +1162,14 @@ void KiCadBusses(FILE* KiCadFile, uid_struct UID, uint32_t page)
 						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
 						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
 						fprintf(KiCadFile, "\t\t)\n");
-						KiCadProperties(KiCadFile, (Bus.BusSegment)[j].Properties, 0);
+						KiCadProperty(KiCadFile, (Bus.BusSegment)[j].Property, 0);
 
 						fprintf(KiCadFile, "\t\t");
 						myPrint("\t");
 						KiCadUID(KiCadFile, UID, Bus.UID);
 						fprintf(KiCadFile, "\t)\n");
 					}
-					KiCadLabels(KiCadFile, UID, (Bus.BusSegment)[j].Label, Bus.Name);
+					KiCadLabel(KiCadFile, UID, (Bus.BusSegment)[j].Label, Bus.Name);
 				}
 			}
 		}

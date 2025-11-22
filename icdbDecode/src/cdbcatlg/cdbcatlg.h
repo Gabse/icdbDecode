@@ -26,9 +26,12 @@
 
 /*
 ******************************************************************
-* Structures
+* Global Variables
 ******************************************************************
 */
+extern element_struct cdbcatlg_group;
+extern element_struct cdbcatlg_grpobj;
+extern element_struct cdbcatlg_page;
 
 /*
 ******************************************************************

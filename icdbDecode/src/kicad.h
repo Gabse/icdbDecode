@@ -23,7 +23,7 @@
 */
 #include <stdint.h>				// Required for int32_t, uint32_t, ...
 #include "common.h"				// Required for uid_struct
-#include "./cdbcatlg/pages.h"	// Required for pages
+#include "./cdbcatlg/page.h"	// Required for page
 
 
 /*

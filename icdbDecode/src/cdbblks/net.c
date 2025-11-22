@@ -24,20 +24,13 @@
 #include <stdlib.h>					// Required for calloc to work properly
 #include <stdio.h>					// Required for memcpy
 #include <string.h>					// Required for memcpy
-#include "dxdatl.h"					// Required for keys
+#include "../common.h"				// Required for element_struct
+#include "../common/dxdatl.h"		// Required for keys
 #include "blkatl.h"					// Required for keys
-#include "properties.h" 			// Required for styles
+#include "../common/property.h" 	// Required for styles
 #include "cdbblks.h" 				// Required for coordinate struct
-#include "label.h"					// Required for label struct
-#include "segments.h"				// Required for segment struct
-
-/*
-******************************************************************
-* Global Variables
-******************************************************************
-*/
-unsigned int net_num = 0;
-net_struct* net = NULL;
+#include "../common/label.h"		// Required for label struct
+#include "segment.h"				// Required for segment struct
 
 /*
 ******************************************************************
@@ -48,14 +41,14 @@ net_struct* net = NULL;
 ******************************************************************
 * - function name:	ProcessNet()
 *
-* - description: 	Processes nets
+* - description: 	Processes net
 *
-* - parameter: 		-
+* - parameter: 		element_struct pointer
 *
 * - return value: 	-
 ******************************************************************
 */
-void ProcessNet(void)
+void ProcessNet(element_struct* net)
 {
 	// NetDxD => Unique Nets (Not graphically but electrically connected nets have one entry per unique graphical net)
 	// Net => Glogal Nets (Not graphically but electrically connected nets have one single entry)
@@ -75,52 +68,52 @@ void ProcessNet(void)
 		(*Dxdatl_Net2GrpSegments).LengthCalc == (*Dxdatl_NetID).LengthCalc &&
 		(*Dxdatl_Net2GrpSegments).LengthCalc == (*Dxdatl_NetLabel).LengthCalc &&
 		(*Dxdatl_Net2GrpSegments).LengthCalc == (*Dxdatl_Net2GrpLabels).LengthCalc &&
-		net_num == 0
+		net->Length == 0
 		)
 	{
-		net_num = (*Dxdatl_Net2GrpSegments).LengthCalc;
+		net->Length = (*Dxdatl_Net2GrpSegments).LengthCalc;
 
-		net = calloc(net_num, sizeof(net_struct));
-		if (net == NULL)
+		net->Data = calloc(net->Length, sizeof(net_struct));
+		if (net->Data == NULL)
 		{
 			return;
 		}
-		for (unsigned int i = 0; i < net_num; i++)
+		for (unsigned int i = 0; i < net->Length; i++)
 		{
 			// Net
-			(net[i]).Net = ((int*)(*Dxdatl_NetDxD2Net).Data)[i];
+			(((net_struct*)(net->Data))[i]).Net = ((int*)(*Dxdatl_NetDxD2Net).Data)[i];
 
 			// UID
-			memcpy(&(net[i]).UID, &(((char*)(*Dxdatl_NetDxDUID).Data)[i * 8]), 8);
+			memcpy(&(((net_struct*)(net->Data))[i]).UID, &(((char*)(*Dxdatl_NetDxDUID).Data)[i * 8]), 8);
 
 			// Net ID
-			(net[i]).NetID = ((int*)(*Dxdatl_NetID).Data)[i];
+			(((net_struct*)(net->Data))[i]).NetID = ((int*)(*Dxdatl_NetID).Data)[i];
 
 			// Net name
-			(net[i]).Name = CopyString(((string_struct*)(*Dxdatl_NetLabel).Data)[i]);
+			(((net_struct*)(net->Data))[i]).Name = CopyString(((string_struct*)(*Dxdatl_NetLabel).Data)[i]);
 
-			// Segments
+			// Segment
 			if (
 			(((int_array_struct*)(*Dxdatl_Net2GrpLabels).Data)[i].Length == ((int_array_struct*)(*Dxdatl_Net2GrpSegments).Data)[i].Length) &&
 			(((int_array_struct*)(*Dxdatl_Net2GrpLabels).Data)[i].Length == ((int_array_struct*)(*Dxdatl_Net2GrpStyles).Data)[i].Length)
 			)
 			{
-				net[i].NumNetSegment = ((int_array_struct*)(*Dxdatl_Net2GrpLabels).Data)[i].Length;
-				net[i].NetSegment = calloc(net[i].NumNetSegment, sizeof(net_segment_struct));
-				if (net[i].NetSegment == NULL)
+				((net_struct*)(net->Data))[i].NumNetSegment = ((int_array_struct*)(*Dxdatl_Net2GrpLabels).Data)[i].Length;
+				((net_struct*)(net->Data))[i].NetSegment = calloc(((net_struct*)(net->Data))[i].NumNetSegment, sizeof(net_segment_struct));
+				if (((net_struct*)(net->Data))[i].NetSegment == NULL)
 				{
 					return;
 				}
-				for (unsigned int j = 0; j < net[i].NumNetSegment; j++)
+				for (unsigned int j = 0; j < ((net_struct*)(net->Data))[i].NumNetSegment; j++)
 				{
 					// Label
-					((net[i]).NetSegment)[j].Label = GetLabel((((int_array_struct*)(*Dxdatl_Net2GrpLabels).Data)[i].Data[j]).u32[0] - 1);
+					((((net_struct*)(net->Data))[i]).NetSegment)[j].Label = GetLabel(&cdbblks_label, (((int_array_struct*)(*Dxdatl_Net2GrpLabels).Data)[i].Data[j]).u32[0] - 1);
 
-					// Segments
-					((net[i]).NetSegment)[j].Segments = GetSegment((((int_array_struct*)(*Dxdatl_Net2GrpSegments).Data)[i].Data[j]).u32[0] - 1);
+					// Segment
+					((((net_struct*)(net->Data))[i]).NetSegment)[j].Segment = GetSegment(&cdbblks_segment, (((int_array_struct*)(*Dxdatl_Net2GrpSegments).Data)[i].Data[j]).u32[0] - 1);
 
-					// Line Properties
-					((net[i]).NetSegment)[j].Properties = GetProperty((((int_array_struct*)(*Dxdatl_Net2GrpStyles).Data)[i].Data[j]).u32[0] - 1);
+					// Line Property
+					((((net_struct*)(net->Data))[i]).NetSegment)[j].Property = GetProperty(&cdbblks_property, (((int_array_struct*)(*Dxdatl_Net2GrpStyles).Data)[i].Data[j]).u32[0] - 1);
 				}
 			}
 		}
@@ -137,39 +130,24 @@ void ProcessNet(void)
 *
 * - description: 	Initializes net
 *
-* - parameter: 		-
+* - parameter: 		element_struct pointer
 *
 * - return value: 	-
 ******************************************************************
 */
-void InitNet(void)
+void InitNet(element_struct* net)
 {
-	if (net_num != 0 && net != NULL)
+	if (net->Length != 0 && net->Data != NULL)
 	{
-		for (unsigned int i = 0; i < net_num; i++)
+		for (unsigned int i = 0; i < net->Length; i++)
 		{
-			free(net[i].Name.Text);
-			free(net[i].NetSegment);
+			free(((net_struct*)(net->Data))[i].Name.Text);
+			free(((net_struct*)(net->Data))[i].NetSegment);
 		}
-		free(net);
-		net_num = 0;
+		free(net->Data);
+		net->Data = NULL;
+		net->Length = 0;
 	}
-}
-
-/*
-******************************************************************
-* - function name:	GetNumNet()
-*
-* - description: 	Returns the number of graphical nets in this file
-*
-* - parameter: 		-
-*
-* - return value: 	number of graphical nets in this file
-******************************************************************
-*/
-unsigned int GetNumNet(void)
-{
-	return net_num;
 }
 
 /*
@@ -178,16 +156,16 @@ unsigned int GetNumNet(void)
 *
 * - description: 	Returns the selected net
 *
-* - parameter: 		net index
+* - parameter: 		element_struct pointer, net index
 *
 * - return value: 	net struct
 ******************************************************************
 */
-net_struct GetNet(int idx)
+net_struct GetNet(element_struct* net, int idx)
 {
-	if (net != NULL && idx <= net_num && idx >= 0)
+	if (net->Data != NULL && idx <= net->Length && idx >= 0)
 	{
-		return net[idx];
+		return ((net_struct*)(net->Data))[idx];
 	}
 	return (net_struct){0};
 }

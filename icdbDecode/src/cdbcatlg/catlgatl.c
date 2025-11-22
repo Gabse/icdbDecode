@@ -633,7 +633,7 @@ void ProcessKeyCatlgatl(FILE * sourceFile, char* Key, unsigned int KeyLen)
 	{
 		Catlgatl_Version = ParseKey(sourceFile);
 	}
-	else 
+	else
 	{
 		myPrint("Unknown Key in catlgatl [%s]\n", Key);
 	}

@@ -17,6 +17,7 @@ There are mainly 3 tools in this repo:
 + icdbDecode -> This the main tool. It decompresses database files into a file structure, and attempts to export the schematic data as KiCad files.
 + tools/icdbAnalyzer -> This tool is used to bring the contents of *.v files into a format that is easyla readable, and comparable to other files.
 + tools/icdbCoder -> This tool creates parsing code for a given *.v file used in the icdbDecode application.
+
 A compiled version for windows and linux can be found under the build artifacts, that are updated on every push to the repo.
 Windows will throw a warning when you try to run the applications, as they are not signed. You can run them any way, or build them from source yourself.
 You can build all applications yourself using CMake and GCC.

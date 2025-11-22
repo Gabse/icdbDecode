@@ -323,7 +323,7 @@ void ProcessKeyBlkatl(FILE * sourceFile, char* Key, unsigned int KeyLen)
 	{
 		Blkatl_XtrUID = ParseKey(sourceFile);
 	}
-	else 
+	else
 	{
 		myPrint("Unknown Key in blkatl [%s]\n", Key);
 	}

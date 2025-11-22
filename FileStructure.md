@@ -124,7 +124,10 @@ after 0x2000:
 
 ## cdbcmpcache folder
 (i)CDB component cache folder?
-TBD
+This folder contains a copy of all components used in the schematic.
+It normally contains the following files:
+- catlgatl.v -> (catalog atlas?) Contains general information’s about the project such as schematic pages, their UID and their names.
+- grpatl.v -> (Group atlas?) Exact purpose currently unknown. Contains mainly timestamps.
 
 ## cdbcmps folder
 (i)CDB component folder?

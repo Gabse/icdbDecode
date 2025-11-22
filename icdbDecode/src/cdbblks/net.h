@@ -21,10 +21,11 @@
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>			// Required for int32_t, uint32_t, ...
-#include "label.h"			// Required for label struct
-#include "segments.h"		// Required for segment struct
-#include "properties.h"		// Required for properties struct
+#include <stdint.h>					// Required for int32_t, uint32_t, ...
+#include "../common.h"				// Required for element_struct
+#include "../common/label.h"		// Required for label struct
+#include "segment.h"				// Required for segment struct
+#include "../common/property.h" 	// Required for property struct
 
 /*
 ******************************************************************
@@ -34,8 +35,8 @@
 typedef struct net_segment_struct
 {
 	label_struct Label;
-	segment_struct Segments;
-	properties_struct Properties;
+	segment_struct Segment;
+	property_struct Property;
 } net_segment_struct;
 
 typedef struct net_struct
@@ -54,9 +55,8 @@ typedef struct net_struct
 * Global Functions
 ******************************************************************
 */
-extern void ProcessNet(void);
-extern void InitNet(void);
-extern net_struct GetNet(int);
-extern unsigned int GetNumNet(void);
+extern void ProcessNet(element_struct*);
+extern void InitNet(element_struct*);
+extern net_struct GetNet(element_struct*, int);
 
 #endif //_NET_H

@@ -11,7 +11,7 @@
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
 * No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
-* This project uses the Zlib library (https://www.zlib.bus/) for decompression.
+* This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
 
 /*
@@ -24,20 +24,13 @@
 #include <stdlib.h>					// Required for calloc to work properly
 #include <stdio.h>					// Required for memcpy
 #include <string.h>					// Required for memcpy
-#include "dxdatl.h"					// Required for keys
+#include "../common.h"				// Required for element_struct
+#include "../common/dxdatl.h"		// Required for keys
 #include "blkatl.h"					// Required for keys
-#include "properties.h" 			// Required for styles
+#include "../common/property.h" 	// Required for styles
 #include "cdbblks.h" 				// Required for coordinate struct
-#include "label.h"					// Required for label struct
-#include "segments.h"				// Required for segment struct
-
-/*
-******************************************************************
-* Global Variables
-******************************************************************
-*/
-unsigned int bus_num = 0;
-bus_struct* bus = NULL;
+#include "../common/label.h"		// Required for label struct
+#include "segment.h"				// Required for segment struct
 
 /*
 ******************************************************************
@@ -48,14 +41,14 @@ bus_struct* bus = NULL;
 ******************************************************************
 * - function name:	ProcessBus()
 *
-* - description: 	Processes busses
+* - description: 	Processes bus->Datases
 *
-* - parameter: 		-
+* - parameter: 		element_struct pointer
 *
 * - return value: 	-
 ******************************************************************
 */
-void ProcessBus(void)
+void ProcessBus(element_struct* bus)
 {
 	if (Blkatl_BusNam != NULL &&
 		Blkatl_BusUID != NULL &&
@@ -73,32 +66,32 @@ void ProcessBus(void)
 		(*Blkatl_BusNam).LengthCalc <= (*Dxdatl_Bus2GrpStyles).LengthCalc &&
 		(*Blkatl_BusNam).LengthCalc <= (*Dxdatl_Bus2Grps).LengthCalc &&
 		(*Blkatl_BusNam).LengthCalc <= (*Dxdatl_BusID).LengthCalc &&
-		bus_num == 0
+		bus->Length == 0
 		)
 	{
-		bus_num = (*Blkatl_BusNam).LengthCalc;
-		bus = calloc(bus_num, sizeof(bus_struct));
-		if (bus == NULL)
+		bus->Length = (*Blkatl_BusNam).LengthCalc;
+		bus->Data = calloc(bus->Length, sizeof(bus_struct));
+		if (bus->Data == NULL)
 		{
 			return;
 		}
 		unsigned int cnt = 0;
-		for (unsigned int i = 0; i < bus_num; i++)
+		for (unsigned int i = 0; i < bus->Length; i++)
 		{
 			// Bus name
-			(bus[i]).Name = CopyString(((string_struct*)(*Blkatl_BusNam).Data)[i]);
+			(((bus_struct*)(bus->Data))[i]).Name = CopyString(((string_struct*)(*Blkatl_BusNam).Data)[i]);
 
 			// UID
-			memcpy(&(bus[i]).UID, &(((char*)(*Blkatl_BusUID).Data)[i * 8]), 8);
+			memcpy(&(((bus_struct*)(bus->Data))[i]).UID, &(((char*)(*Blkatl_BusUID).Data)[i * 8]), 8);
 
 			// Type code
-			if (Blkatl_BusType != NULL && (*Blkatl_BusType).LengthCalc == bus_num) // Not present on older versions
+			if (Blkatl_BusType != NULL && (*Blkatl_BusType).LengthCalc == bus->Length) // Not present on older versions
 			{
-				(bus[i]).BusType = ((int*)(*Blkatl_BusType).Data)[i];
+				(((bus_struct*)(bus->Data))[i]).BusType = ((int*)(*Blkatl_BusType).Data)[i];
 			}
 			else
 			{
-				(bus[i]).BusType = 0;
+				(((bus_struct*)(bus->Data))[i]).BusType = 0;
 			}
 
 			if (
@@ -107,35 +100,35 @@ void ProcessBus(void)
 				(((int_array_struct*)(*Dxdatl_Bus2GrpSegments).Data)[i].Length == ((int_array_struct*)(*Dxdatl_BusID).Data)[i].Length)
 				)
 			{
-				bus[i].BusSegmentLen = ((int_array_struct*)(*Dxdatl_Bus2GrpSegments).Data)[i].Length;
-				bus[i].BusSegment = calloc(bus[i].BusSegmentLen, sizeof(bus_segment_struct));
-				if (bus[i].BusSegment == NULL)
+				((bus_struct*)(bus->Data))[i].BusSegmentLen = ((int_array_struct*)(*Dxdatl_Bus2GrpSegments).Data)[i].Length;
+				((bus_struct*)(bus->Data))[i].BusSegment = calloc(((bus_struct*)(bus->Data))[i].BusSegmentLen, sizeof(bus_segment_struct));
+				if (((bus_struct*)(bus->Data))[i].BusSegment == NULL)
 				{
 					return;
 				}
-				for (unsigned int j = 0; j < bus[i].BusSegmentLen; j++)
+				for (unsigned int j = 0; j < ((bus_struct*)(bus->Data))[i].BusSegmentLen; j++)
 				{
-					// Buses without custom names don't have a label entry, leading to a mismatch between Bus2GrpSegment and the other bus data. Detect buses without name ("$" Prefix) and skip them
-					if ((bus[i]).Name.Text[0] != '$')
+					// Buses without custom names don't have a label entry, leading to a mismatch between Bus2GrpSegments and the other bus->Data data. Detect bus->Dataes without name ("$" Prefix) and skip them
+					if ((((bus_struct*)(bus->Data))[i]).Name.Text[0] != '$')
 					{
 						if (((*Dxdatl_Bus2GrpLabels).LengthCalc > cnt) && (((int_array_struct*)(*Dxdatl_Bus2GrpSegments).Data)[i].Length == ((int_array_struct*)(*Dxdatl_Bus2GrpLabels).Data)[cnt].Length))
 						{
-							((bus[i]).BusSegment)[j].Label = GetLabel((((int_array_struct*)(*Dxdatl_Bus2GrpLabels).Data)[cnt].Data[j]).u32[0] - 1);
+							((((bus_struct*)(bus->Data))[i]).BusSegment)[j].Label = GetLabel(&cdbblks_label, (((int_array_struct*)(*Dxdatl_Bus2GrpLabels).Data)[cnt].Data[j]).u32[0] - 1);
 						}
 						cnt++;
 					}
 
-					// Bus Segments
-					((bus[i]).BusSegment)[j].Segments = GetSegment((((int_array_struct*)(*Dxdatl_Bus2GrpSegments).Data)[i].Data[j]).u32[0] - 1);
+					// Bus Segment
+					((((bus_struct*)(bus->Data))[i]).BusSegment)[j].Segment = GetSegment(&cdbblks_segment, (((int_array_struct*)(*Dxdatl_Bus2GrpSegments).Data)[i].Data[j]).u32[0] - 1);
 
-					// Bus Properties
-					((bus[i]).BusSegment)[j].Properties = GetProperty((((int_array_struct*)(*Dxdatl_Bus2GrpStyles).Data)[i].Data[j]).u32[0] - 1);
+					// Bus Property
+					((((bus_struct*)(bus->Data))[i]).BusSegment)[j].Property = GetProperty(&cdbblks_property, (((int_array_struct*)(*Dxdatl_Bus2GrpStyles).Data)[i].Data[j]).u32[0] - 1);
 
-					// Groups
-					((bus[i]).BusSegment)[j].Groups = (((int_array_struct*)(*Dxdatl_Bus2Grps).Data)[i].Data[j]).u32[0];
+					// Group
+					((((bus_struct*)(bus->Data))[i]).BusSegment)[j].Group = (((int_array_struct*)(*Dxdatl_Bus2Grps).Data)[i].Data[j]).u32[0];
 
 					// BusDXD
-					((bus[i]).BusSegment)[j].BusID = (((int_array_struct*)(*Dxdatl_BusID).Data)[i].Data[j]).u32[0];
+					((((bus_struct*)(bus->Data))[i]).BusSegment)[j].BusID = (((int_array_struct*)(*Dxdatl_BusID).Data)[i].Data[j]).u32[0];
 				}
 			}
 		}
@@ -152,39 +145,24 @@ void ProcessBus(void)
 *
 * - description: 	Initializes bus
 *
-* - parameter: 		-
+* - parameter: 		element_struct pointer
 *
 * - return value: 	-
 ******************************************************************
 */
-void InitBus(void)
+void InitBus(element_struct* bus)
 {
-	if (bus_num != 0 && bus != NULL)
+	if (bus->Length != 0 && bus->Data != NULL)
 	{
-		for (unsigned int i = 0; i < bus_num; i++)
+		for (unsigned int i = 0; i < bus->Length; i++)
 		{
-			free(bus[i].BusSegment);
-			free(bus[i].Name.Text);
+			free(((bus_struct*)(bus->Data))[i].BusSegment);
+			free(((bus_struct*)(bus->Data))[i].Name.Text);
 		}
-		free(bus);
-		bus_num = 0;
+		free(bus->Data);
+		bus->Data = NULL;
+		bus->Length = 0;
 	}
-}
-
-/*
-******************************************************************
-* - function name:	GetNumBus()
-*
-* - description: 	Returns the number of graphical buss in this file
-*
-* - parameter: 		-
-*
-* - return value: 	number of graphical buss in this file
-******************************************************************
-*/
-unsigned int GetNumBus(void)
-{
-	return bus_num;
 }
 
 /*
@@ -193,16 +171,16 @@ unsigned int GetNumBus(void)
 *
 * - description: 	Returns the selected bus
 *
-* - parameter: 		bus index
+* - parameter: 		element_struct pointer, bus index
 *
 * - return value: 	bus struct
 ******************************************************************
 */
-bus_struct GetBus(int idx)
+bus_struct GetBus(element_struct* bus, int idx)
 {
-	if (bus != NULL && idx <= bus_num && idx >= 0)
+	if (bus->Data != NULL && idx <= bus->Length && idx >= 0)
 	{
-		return bus[idx];
+		return ((bus_struct*)(bus->Data))[idx];
 	}
 	return (bus_struct){0};
 }

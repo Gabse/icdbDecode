@@ -26,22 +26,22 @@
 
 /*
 ******************************************************************
-* Structures
+* Global Variables
 ******************************************************************
 */
-typedef struct coordinate_struct
-{
-	int32_t X;
-	int32_t Y;
-} coordinate_struct;
-
-typedef struct color_struct
-{
-	uint8_t Red;
-	uint8_t Green;
-	uint8_t Blue;
-	uint8_t Key;
-} color_struct;
+extern element_struct cdbblks_arc;
+extern element_struct cdbblks_circle;
+extern element_struct cdbblks_label;
+extern element_struct cdbblks_line;
+extern element_struct cdbblks_property;
+extern element_struct cdbblks_rectangle;
+extern element_struct cdbblks_text;
+extern element_struct cdbblks_textdata;
+extern element_struct cdbblks_bus;
+extern element_struct cdbblks_joint;
+extern element_struct cdbblks_net;
+extern element_struct cdbblks_segment;
+extern element_struct cdbblks_sheet;
 
 /*
 ******************************************************************

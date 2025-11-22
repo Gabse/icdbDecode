@@ -21,11 +21,20 @@
 */
 #include "cdbcatlg.h"
 #include <stdint.h>			// Required for int32_t, uint32_t, ...
-#include "catlgatl.h" 		// Required for ProcessKeyCatlgatl 
+#include "catlgatl.h" 		// Required for ProcessKeyCatlgatl
 #include "grpatl.h" 		// Required for ProcessKeyGrpatl
 #include "grpobj.h" 		// Required for ParseGrpobj
-#include "pages.h" 			// Required for ParsePages
-#include "groups.h" 		// Required for ParseGroups
+#include "page.h" 			// Required for ParsePage
+#include "group.h" 			// Required for ParseGroup
+
+/*
+******************************************************************
+* Global Variables
+******************************************************************
+*/
+element_struct cdbcatlg_group = { 0, NULL };
+element_struct cdbcatlg_grpobj = { 0, NULL };
+element_struct cdbcatlg_page = { 0, NULL };
 
 /*
 ******************************************************************
@@ -49,10 +58,10 @@ int parseCdbcatlg(char* path, uint32_t pathlength)
 	int errorcode = 0;
 	errorcode |= parseFile(path, pathlength, PATH_CATLGATL, sizeof(PATH_CATLGATL), ProcessKeyCatlgatl);
 	errorcode |= parseFile(path, pathlength, PATH_GRPATL, sizeof(PATH_GRPATL), ProcessKeyGrpatl);
-	errorcode |= ParseGrpobj(path, pathlength, PATH_GRPOBJ, sizeof(PATH_GRPOBJ));
+	errorcode |= ParseGrpobj(&cdbcatlg_grpobj, path, pathlength, PATH_GRPOBJ, sizeof(PATH_GRPOBJ));
 
-	ProcessPages();
-	ProcessGroups();
+	ProcessPage(&cdbcatlg_page);
+	ProcessGroup(&cdbcatlg_group);
 	return errorcode;
 }
 /*
@@ -70,8 +79,8 @@ void initCdbcatlg(void)
 {
 	InitCatlgatl();
 	InitGrpatl();
-	InitGrpobj();
+	InitGrpobj(&cdbcatlg_grpobj);
 
-	InitPages();
-	InitGroups();
+	InitPage(&cdbcatlg_page);
+	InitGroup(&cdbcatlg_group);
 }

@@ -11,52 +11,56 @@
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
 * No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
-* This project uses the Zlib library (https://www.zlib.bus/) for decompression.
+* This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _BUS_H
-#define _BUS_H
+#ifndef _CMPATL_H
+#define _CMPATL_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>					// Required for int32_t, uint32_t, ...
-#include "../common.h"				// Required for element_struct
-#include "../common/label.h"		// Required for label struct
-#include "segment.h"				// Required for segment struct
-#include "../common/property.h" 	// Required for property struct
+#include <stdio.h>		// Required for FILE
+#include "../common.h"	// Required for key_struct
 
 /*
 ******************************************************************
-* Structures
+* Global Defines
 ******************************************************************
 */
-typedef struct bus_segment_struct
-{
-	label_struct Label;
-	segment_struct Segment;
-	property_struct Property;
-	int Group;
-	int BusID;
-} bus_segment_struct;
+#define PATH_CMPATL "cmpatl.v"
 
-typedef struct bus_struct
-{
-	string_struct Name;
-	uid_struct UID;
-	bus_segment_struct* BusSegment;
-	int BusSegmentLen;
-	int BusType;
-} bus_struct;
+/*
+******************************************************************
+* Global Variables
+******************************************************************
+*/
+// Cmpatl
+extern key_struct* Cmpatl_CmpPins;
+extern key_struct* Cmpatl_CmpPrps;
+extern key_struct* Cmpatl_Fixes;
+extern key_struct* Cmpatl_Pin2Prps;
+extern key_struct* Cmpatl_PinArrayWidth;
+extern key_struct* Cmpatl_PinLibUID;
+extern key_struct* Cmpatl_PinNam;
+extern key_struct* Cmpatl_PinTyp;
+extern key_struct* Cmpatl_PinUID;
+extern key_struct* Cmpatl_PrpAttr;
+extern key_struct* Cmpatl_PrpBit;
+extern key_struct* Cmpatl_PrpId;
+extern key_struct* Cmpatl_PrpNam;
+extern key_struct* Cmpatl_PrpOrder;
+extern key_struct* Cmpatl_PrpStr;
+extern key_struct* Cmpatl_PrpUID;
+extern key_struct* Cmpatl_Version;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern void ProcessBus(element_struct*);
-extern void InitBus(element_struct*);
-extern bus_struct GetBus(element_struct*, int);
+extern void ProcessKeyCmpatl(FILE*, char*, unsigned int);
+extern void InitCmpatl(void);
 
-#endif //_BUS_H
+#endif //_CMPATL_H

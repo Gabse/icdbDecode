@@ -11,52 +11,39 @@
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
 * No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
-* This project uses the Zlib library (https://www.zlib.bus/) for decompression.
+* This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _BUS_H
-#define _BUS_H
+#ifndef _CDBCMPCACHE_H
+#define _CDBCMPCACHE_H
 
 /*
 ******************************************************************
-* Global Includes
+* Includes
 ******************************************************************
 */
-#include <stdint.h>					// Required for int32_t, uint32_t, ...
-#include "../common.h"				// Required for element_struct
-#include "../common/label.h"		// Required for label struct
-#include "segment.h"				// Required for segment struct
-#include "../common/property.h" 	// Required for property struct
+#include <stdint.h>		// Required for int32_t, uint32_t, ...
+#include "../common.h"	// Required for string_struct
 
 /*
 ******************************************************************
-* Structures
+* Global Variables
 ******************************************************************
 */
-typedef struct bus_segment_struct
-{
-	label_struct Label;
-	segment_struct Segment;
-	property_struct Property;
-	int Group;
-	int BusID;
-} bus_segment_struct;
-
-typedef struct bus_struct
-{
-	string_struct Name;
-	uid_struct UID;
-	bus_segment_struct* BusSegment;
-	int BusSegmentLen;
-	int BusType;
-} bus_struct;
+extern element_struct cdbcmpcache_arc;
+extern element_struct cdbcmpcach_circle;
+extern element_struct cdbcmpcach_label;
+extern element_struct cdbcmpcach_line;
+extern element_struct cdbcmpcach_property;
+extern element_struct cdbcmpcach_rectangle;
+extern element_struct cdbcmpcach_text;
+extern element_struct cdbcmpcach_textdata;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern void ProcessBus(element_struct*);
-extern void InitBus(element_struct*);
-extern bus_struct GetBus(element_struct*, int);
+int parseCdbcmpcache(char*, uint32_t);
+void initCdbcmpcache(void);
 
-#endif //_BUS_H
+#endif //_CDBCMPCACHE_H

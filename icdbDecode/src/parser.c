@@ -20,13 +20,14 @@
 ******************************************************************
 */
 #include "parser.h"
-#include <stdint.h>					// Required for int32_t, uint32_t, ...
-#include <stdlib.h>					// Required for calloc to work properly
-#include "stringutil.h"				// Required for assemblePath
-#include "./cdbcatlg/pages.h"		// Required for pages
-#include "./cdbcatlg/cdbcatlg.h"	// Required for parseCatlgatl
-#include "./cdbblks/cdbblks.h"		// Required for parseCdbblks
-#include "kicad.h"					// Required for StoreAsKicadFile
+#include <stdint.h>						// Required for int32_t, uint32_t, ...
+#include <stdlib.h>						// Required for calloc to work properly
+#include "stringutil.h"					// Required for assemblePath
+#include "kicad.h"						// Required for StoreAsKicadFile
+#include "./cdbcatlg/page.h"			// Required for page
+#include "./cdbcatlg/cdbcatlg.h"		// Required for parseCatlgatl
+#include "./cdbblks/cdbblks.h"			// Required for parseCdbblks
+#include "./cdbcmpcache/cdbcmpcache.h"	// Required for parseCdbcmpcache
 
 /*
 ******************************************************************
@@ -107,10 +108,10 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 	free(Path);
 	// Change to cdbblks
 	PathLen = assemblePath(&Path, path, pathlength, "cdbblks", sizeof("cdbblks"), DIR_SEPARATOR);
-	for (uint32_t i = 0; i < GetNumPages(); i++)
+	for (uint32_t i = 0; i < cdbcatlg_page.Length; i++)
 	{
 		// Get filepath for block folder
-		page_struct page = GetPage(i);
+		page_struct page = GetPage(&cdbcatlg_page, i);
 		makePathFromUID((char*)&UIDpath, &page.UID);
 		uint32_t FullUIDpathLength = addStrings(&FullUIDpath, UIDpath, 16, ".blk", 4, '\0');
 	
@@ -122,7 +123,6 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 		error += parseCdbblks(SubPath, SubPathLen);
 		error += StoreAsKicadFile(Exportpath, sizeof(Exportpath), page);
 		free(SubPath);
-		initCdbblks();
 	}
 	initCdbcatlg();
 	free(Path);

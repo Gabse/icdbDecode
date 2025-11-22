@@ -11,52 +11,45 @@
 * The research was performed by analyzing various icdb.dat files (basically staring at the hex editor for hours),
 * No static or dynamic code analysis of any proprietary executable files was used to gain information about the file format.
 *
-* This project uses the Zlib library (https://www.zlib.bus/) for decompression.
+* This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _BUS_H
-#define _BUS_H
+#ifndef _SEGMENT_H
+#define _SEGMENT_H
 
 /*
 ******************************************************************
 * Global Includes
 ******************************************************************
 */
-#include <stdint.h>					// Required for int32_t, uint32_t, ...
-#include "../common.h"				// Required for element_struct
-#include "../common/label.h"		// Required for label struct
-#include "segment.h"				// Required for segment struct
-#include "../common/property.h" 	// Required for property struct
+#include <stdint.h>			// Required for int32_t, uint32_t, ...
+#include "../common.h"		// Required for element_struct
+#include "joint.h" 		// Required for joint
 
 /*
 ******************************************************************
 * Structures
 ******************************************************************
 */
-typedef struct bus_segment_struct
+typedef struct segment_section_struct
 {
-	label_struct Label;
-	segment_struct Segment;
-	property_struct Property;
-	int Group;
-	int BusID;
-} bus_segment_struct;
+	joint_struct StartJoint;
+	joint_struct EndJoint;
+	int ID;
+} segment_section_struct;
 
-typedef struct bus_struct
+typedef struct segment_struct
 {
-	string_struct Name;
-	uid_struct UID;
-	bus_segment_struct* BusSegment;
-	int BusSegmentLen;
-	int BusType;
-} bus_struct;
+	unsigned int numSegment;
+	segment_section_struct* Segment;
+} segment_struct;
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern void ProcessBus(element_struct*);
-extern void InitBus(element_struct*);
-extern bus_struct GetBus(element_struct*, int);
+extern void ProcessSegment(element_struct*);
+extern void InitSegment(element_struct*);
+extern segment_struct GetSegment(element_struct*, int);
 
-#endif //_BUS_H
+#endif //_SEGMENT_H

@@ -376,7 +376,7 @@ void AnalyzerClose()
 	}
 	
 	fprintf(Cfile, "\n\t{\n");
-	fprintf(Cfile, "\t\tmyPrint(%cUnknown Key in %s [%cs]\\n%c, Key);\n", '"', name, '%', '"');
+	fprintf(Cfile, "\t\tmyPrint(%cUnknown Key in %s [%cs]\\n%c, Key);\n", '"', nameSmall, '%', '"');
 	fprintf(Cfile, "\t}\n");
 	fprintf(Cfile, "}\n");
 	fprintf(Cfile, "\n");

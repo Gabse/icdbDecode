@@ -23,6 +23,7 @@
 */
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
 #include <stdio.h>		// Required for file type
+#include <stdlib.h>		// Required for min/max
 
 /*
 ******************************************************************
@@ -49,14 +50,14 @@
 # endif
 
 #ifndef max
-	#define max(a,b) \
+#define max(a,b) \
 	({ __typeof__ (a) _a = (a); \
 		__typeof__ (b) _b = (b); \
 		_a > _b ? _a : _b; })
 #endif
 
 #ifndef min
-	#define min(a,b) \
+#define min(a,b) \
 	({ __typeof__ (a) _a = (a); \
 		__typeof__ (b) _b = (b); \
 		_a < _b ? _a : _b; })
@@ -183,6 +184,11 @@ typedef struct key_struct
 	void* Data;
 } key_struct;
 
+typedef struct element_struct
+{
+	uint32_t Length;
+	void* Data;
+} element_struct;
 
 /*
 ******************************************************************

@@ -19,43 +19,33 @@
 * Includes
 ******************************************************************
 */
-#include "cdbblks.h"
+#include "cdbcmpcache.h"
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
-#include "../common.h" 				// Required for element_struct
 #include "../common/dxdatl.h" 		// Required for ProcessKeyDxdatl
-#include "blkatl.h" 				// Required for ProcessKeyBlkatl
+#include "cmpatl.h" 				// Required for ProcessKeyCmpatl
+#include "../common.h" 				// Required for element_struct
 #include "../common/property.h" 	// Required for ProcessProperty
 #include "../common/textdata.h"		// Required for ProcessTextdata
-#include "joint.h"					// Required for ProcessJoint
-#include "segment.h"				// Required for ProcessSegment
 #include "../common/label.h"		// Required for ProcessLabel
-#include "sheet.h"					// Required for ProcessPage
 #include "../common/arc.h" 			// Required for ProcessArc
 #include "../common/circle.h" 		// Required for ProcessCircle
 #include "../common/line.h" 		// Required for ProcessLine
 #include "../common/rectangle.h"	// Required for ProcessRectangle
 #include "../common/text.h"			// Required for ProcessText
-#include "net.h"					// Required for ProcessNet
-#include "bus.h"					// Required for ProcessBus
 
 /*
 ******************************************************************
 * Global Variables
 ******************************************************************
 */
-element_struct cdbblks_arc = { 0, NULL };
-element_struct cdbblks_circle = { 0, NULL };
-element_struct cdbblks_label = { 0, NULL };
-element_struct cdbblks_line = { 0, NULL };
-element_struct cdbblks_property = { 0, NULL };
-element_struct cdbblks_rectangle = { 0, NULL };
-element_struct cdbblks_text = { 0, NULL };
-element_struct cdbblks_textdata = { 0, NULL };
-element_struct cdbblks_bus = { 0, NULL };
-element_struct cdbblks_joint = { 0, NULL };
-element_struct cdbblks_net = { 0, NULL };
-element_struct cdbblks_segment = { 0, NULL };
-element_struct cdbblks_sheet = { 0, NULL };
+element_struct cdbcmpcache_arc = { 0, NULL };
+element_struct cdbcmpcach_circle = { 0, NULL };
+element_struct cdbcmpcach_label = { 0, NULL };
+element_struct cdbcmpcach_line = { 0, NULL };
+element_struct cdbcmpcach_property = { 0, NULL };
+element_struct cdbcmpcach_rectangle = { 0, NULL };
+element_struct cdbcmpcach_text = { 0, NULL };
+element_struct cdbcmpcach_textdata = { 0, NULL };
 
 /*
 ******************************************************************
@@ -64,66 +54,56 @@ element_struct cdbblks_sheet = { 0, NULL };
 */
 /*
 ******************************************************************
-* - function name:	parseCdbblks()
+* - function name:	parseCdbcmpcache()
 *
-* - description: 	Cdbblks Parser code
+* - description: 	Cdbcmpcache Parser code
 *
 * - parameter: 		source path string, string length
 *
 * - return value: 	error code
 ******************************************************************
 */
-int parseCdbblks(char* path, uint32_t pathlength)
+int parseCdbcmpcache(char* path, uint32_t pathlength)
 {
-	initCdbblks(); // Prevent memory leak
+	initCdbcmpcache(); // Prevent memory leak
 	int errorcode = 0;
 	errorcode |= parseFile(path, pathlength, PATH_DXDATL, sizeof(PATH_DXDATL), ProcessKeyDxdatl);
-	errorcode |= parseFile(path, pathlength, PATH_BLKATL, sizeof(PATH_BLKATL), ProcessKeyBlkatl);
+	errorcode |= parseFile(path, pathlength, PATH_CMPATL, sizeof(PATH_CMPATL), ProcessKeyCmpatl);
 
-	ProcessProperty(&cdbblks_property);					// Must be done before arc, circle, line & rect
-	ProcessTextdata(&cdbblks_textdata);					// Must be done before text and label
-	ProcessJoint(&cdbblks_joint); 							// Must be done before segment
-	ProcessSegment(&cdbblks_segment); 						// Must be done before nets
-	ProcessLabel(&cdbblks_label, &cdbblks_textdata);		// Must be done before nets
-	ProcessSheet(&cdbblks_sheet);
-	ProcessArc(&cdbblks_property, &cdbblks_arc);
-	ProcessCircle(&cdbblks_property, &cdbblks_circle);
-	ProcessLine(&cdbblks_property, &cdbblks_line);
-	ProcessRectangle(&cdbblks_property, &cdbblks_rectangle);
-	ProcessText(&cdbblks_text, &cdbblks_textdata);
-	ProcessNet(&cdbblks_net);
-	ProcessBus(&cdbblks_bus);
+	ProcessProperty(&cdbcmpcach_property);	// Must be done before arc, circle, line & rect
+	ProcessTextdata(&cdbcmpcach_textdata);		// Must be done before text and label
+	ProcessLabel(&cdbcmpcach_label, &cdbcmpcach_textdata);
+	ProcessArc(&cdbcmpcache_arc);
+	ProcessCircle(&cdbcmpcach_circle);
+	ProcessLine(&cdbcmpcach_line);
+	ProcessRectangle(&cdbcmpcach_rectangle);
+	ProcessText(&cdbcmpcach_text, &cdbcmpcach_textdata);
 
-	initCdbblks();
 	return errorcode;
 }
+
 /*
 ******************************************************************
-* - function name:	initCdbblks()
+* - function name:	initCdbcmpcache()
 *
-* - description: 	Cdbblks Parser init code
+* - description: 	Cdbcmpcache Parser init code
 *
 * - parameter: 		-
 *
 * - return value: 	-
 ******************************************************************
 */
-void initCdbblks(void)
+void initCdbcmpcache(void)
 {
 	InitDxdatl();
-	InitBlkatl();
+	InitCmpatl();
 
-	InitProperty(&cdbblks_property);
-	InitTextdata(&cdbblks_textdata);
-	InitJoint(&cdbblks_joint);
-	InitSegment(&cdbblks_segment);
-	InitLabel(&cdbblks_label);
-	InitSheet(&cdbblks_sheet);
-	InitArc(&cdbblks_arc);
-	InitCircle(&cdbblks_circle);
-	InitLine(&cdbblks_line);
-	InitRectangle(&cdbblks_rectangle);
-	InitText(&cdbblks_text);
-	InitNet(&cdbblks_net);
-	InitBus(&cdbblks_bus);
+	InitProperty(&cdbcmpcach_property);
+	InitTextdata(&cdbcmpcach_textdata);
+	InitLabel(&cdbcmpcach_label);
+	InitArc(&cdbcmpcache_arc);
+	InitCircle(&cdbcmpcach_circle);
+	InitLine(&cdbcmpcach_line);
+	InitRectangle(&cdbcmpcach_rectangle);
+	InitText(&cdbcmpcach_text);
 }
