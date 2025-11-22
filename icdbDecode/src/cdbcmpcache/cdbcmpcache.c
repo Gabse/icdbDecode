@@ -73,10 +73,10 @@ int parseCdbcmpcache(char* path, uint32_t pathlength)
 	ProcessProperty(&cdbcmpcach_property);	// Must be done before arc, circle, line & rect
 	ProcessTextdata(&cdbcmpcach_textdata);		// Must be done before text and label
 	ProcessLabel(&cdbcmpcach_label, &cdbcmpcach_textdata);
-	ProcessArc(&cdbcmpcache_arc);
-	ProcessCircle(&cdbcmpcach_circle);
-	ProcessLine(&cdbcmpcach_line);
-	ProcessRectangle(&cdbcmpcach_rectangle);
+	ProcessArc(&cdbcmpcach_property, &cdbcmpcache_arc);
+	ProcessCircle(&cdbcmpcach_property, &cdbcmpcach_circle);
+	ProcessLine(&cdbcmpcach_property, &cdbcmpcach_line);
+	ProcessRectangle(&cdbcmpcach_property, &cdbcmpcach_rectangle);
 	ProcessText(&cdbcmpcach_text, &cdbcmpcach_textdata);
 
 	return errorcode;

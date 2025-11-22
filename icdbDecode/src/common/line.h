@@ -77,7 +77,7 @@ typedef struct line_struct
 * Global Functions
 ******************************************************************
 */
-extern void ProcessLine(element_struct*);
+extern void ProcessLine(element_struct*, element_struct*);
 extern void InitLine(element_struct*);
 extern line_struct GetLine(element_struct*, int);
 

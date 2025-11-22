@@ -52,7 +52,7 @@ typedef struct rectangle_struct
 * Global Functions
 ******************************************************************
 */
-extern void ProcessRectangle(element_struct*);
+extern void ProcessRectangle(element_struct*, element_struct*);
 extern void InitRectangle(element_struct*);
 extern rectangle_struct GetRectangle(element_struct*, int);
 

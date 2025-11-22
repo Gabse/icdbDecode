@@ -45,7 +45,7 @@ typedef struct arc_struct
 * Global Functions
 ******************************************************************
 */
-extern void ProcessArc(element_struct*);
+extern void ProcessArc(element_struct*, element_struct*);
 extern void InitArc(element_struct*);
 extern arc_struct GetArc(element_struct*, int);
 

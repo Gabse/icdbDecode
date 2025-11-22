@@ -45,7 +45,7 @@ typedef struct circle_struct
 * Global Functions
 ******************************************************************
 */
-extern void ProcessCircle(element_struct*);
+extern void ProcessCircle(element_struct*, element_struct*);
 extern void InitCircle(element_struct*);
 extern circle_struct GetCircle(element_struct*, int);
 
