@@ -19,27 +19,27 @@
 * Includes
 ******************************************************************
 */
-#include "kicad.h"
+#include "kicad_schematic.h"
 #include <stdio.h>					// Required for fprint, fopen, ...
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include <stdlib.h>					// Required for calloc to work properly
-#include "common.h"					// Required for myfopen
-#include "stringutil.h"				// Required for string manipulation
-#include "./cdbcatlg/cdbcatlg.h"	// Required for cdbcatlg
-#include "./cdbcatlg/page.h"		// Required for page
-#include "./cdbcatlg/group.h"		// Required for group
-#include "./cdbcatlg/grpobj.h"		// Required for group
-#include "./cdbblks/cdbblks.h"		// Required for cdbblks
-#include "./cdbblks/sheet.h"		// Required for sheet
-#include "./cdbblks/net.h"			// Required for net
-#include "./cdbblks/bus.h"			// Required for bus
-#include "./common/property.h" 	// Required for property
-#include "./common/label.h"			// Required for label
-#include "./common/arc.h"			// Required for arc
-#include "./common/circle.h"		// Required for circle
-#include "./common/rectangle.h"	// Required for rectangle
-#include "./common/text.h"			// Required for text
-#include "./common/line.h"			// Required for line
+#include "../common.h"				// Required for myfopen
+#include "../stringutil.h"			// Required for string manipulation
+#include "../cdbcatlg/cdbcatlg.h"	// Required for cdbcatlg
+#include "../cdbcatlg/page.h"		// Required for page
+#include "../cdbcatlg/group.h"		// Required for group
+#include "../cdbcatlg/grpobj.h"		// Required for group
+#include "../cdbblks/cdbblks.h"		// Required for cdbblks
+#include "../cdbblks/sheet.h"		// Required for sheet
+#include "../cdbblks/net.h"			// Required for net
+#include "../cdbblks/bus.h"			// Required for bus
+#include "../common/property.h" 	// Required for property
+#include "../common/label.h"		// Required for label
+#include "../common/arc.h"			// Required for arc
+#include "../common/circle.h"		// Required for circle
+#include "../common/rectangle.h"	// Required for rectangle
+#include "../common/text.h"			// Required for text
+#include "../common/line.h"			// Required for line
 
 
 /*
@@ -98,7 +98,7 @@ float BaseLineThickness = UserBaseLineThickness;
 */
 /*
 ******************************************************************
-* - function name:	StoreAsKicadFile()
+* - function name:	StoreAsKicadSchematic()
 *
 * - description: 	Stores the parsed data as KiCad file
 *
@@ -107,7 +107,7 @@ float BaseLineThickness = UserBaseLineThickness;
 * - return value: 	errorcode
 ******************************************************************
 */
-int StoreAsKicadFile(char* path, uint32_t pathlength, page_struct page)
+int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
 {
 	char* destination = NULL;
 	uid_struct temp = { 0 };

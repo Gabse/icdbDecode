@@ -13,8 +13,8 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _KICAD_H
-#define _KICAD_H
+#ifndef _KICAD_SCHEMATIC_H
+#define _KICAD_SCHEMATIC_H
 
 /*
 ******************************************************************
@@ -22,8 +22,8 @@
 ******************************************************************
 */
 #include <stdint.h>				// Required for int32_t, uint32_t, ...
-#include "common.h"				// Required for uid_struct
-#include "./cdbcatlg/page.h"	// Required for page
+#include "../common.h"			// Required for uid_struct
+#include "../cdbcatlg/page.h"	// Required for page
 
 
 /*
@@ -31,7 +31,7 @@
 * Global Functions
 ******************************************************************
 */
-int StoreAsKicadFile(char*, uint32_t, page_struct);
+int StoreAsKicadSchematic(char*, uint32_t, page_struct);
 
 
-#endif //_KICAD_H
+#endif //_KICAD_SCHEMATIC_H
