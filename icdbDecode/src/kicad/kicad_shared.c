@@ -19,20 +19,16 @@
 * Includes
 ******************************************************************
 */
-#include "kicad_schematic.h"
+#include "kicad_shared.h"
 #include <stdio.h>					// Required for fprint, fopen, ...
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include <stdlib.h>					// Required for calloc to work properly
 #include "../common.h"				// Required for myfopen
 #include "../stringutil.h"			// Required for string manipulation
 #include "../cdbcatlg/cdbcatlg.h"	// Required for cdbcatlg
-#include "../cdbcatlg/page.h"		// Required for page
-#include "../cdbcatlg/group.h"		// Required for group
 #include "../cdbcatlg/grpobj.h"		// Required for group
 #include "../cdbblks/cdbblks.h"		// Required for cdbblks
 #include "../cdbblks/sheet.h"		// Required for sheet
-#include "../cdbblks/net.h"			// Required for net
-#include "../cdbblks/bus.h"			// Required for bus
 #include "../common/property.h" 	// Required for property
 #include "../common/label.h"		// Required for label
 #include "../common/arc.h"			// Required for arc
@@ -41,42 +37,12 @@
 #include "../common/text.h"			// Required for text
 #include "../common/line.h"			// Required for line
 
-
 /*
 ******************************************************************
 * Defines
 ******************************************************************
 */
 #define _CRT_SECURE_NO_DEPRECATE
-
-#define UserCoordinateOffsetX 0
-#define UserCoordinateOffsetY 0
-#define UserCoordinateScaleX 1.0
-#define UserCoordinateScaleY 1.0
-#define UserDefaultTextOrigin 3
-#define UserFontScale 0.5  // Fonts in KiCad are rendered ~0.5 the size from DxD. Exact scaling differs between fonts.
-#define UserBaseLineThickness 0.1
-#define NewKiCad 0 // Create Kicad for 9.99 required for filling pattern
-#define KiCadFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
-
-/*
-******************************************************************
-* Local Function Prototype
-******************************************************************
-*/
-void KiCadProperty(FILE*, property_struct, uint8_t);
-void KiCadSheetProp(FILE*, sheet_struct);
-void KiCadTextData(FILE*, textdata_struct);
-void KiCadUID(FILE*, uid_struct, uid_struct);
-void KiCadPrintString(FILE*, string_struct);
-void KiCadLabel(FILE*, uid_struct, label_struct, string_struct);
-void KiCadArc(FILE*, uid_struct, uint32_t);
-void KiCadCircle(FILE*, uid_struct, uint32_t);
-void KiCadRectangle(FILE*, uid_struct, uint32_t);
-void KiCadText(FILE*, uid_struct, uint32_t);
-void KiCadLine(FILE*, uid_struct, uint32_t);
-void KiCadNets(FILE*, uid_struct, uint32_t);
-void KiCadBusses(FILE*, uid_struct, uint32_t);
 
 /*
 ******************************************************************
@@ -96,413 +62,6 @@ float BaseLineThickness = UserBaseLineThickness;
 * Global Functions
 ******************************************************************
 */
-/*
-******************************************************************
-* - function name:	StoreAsKicadSchematic()
-*
-* - description: 	Stores the parsed data as KiCad file
-*
-* - parameter: 		source path string; string length; file name string; file name length
-*
-* - return value: 	errorcode
-******************************************************************
-*/
-int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
-{
-	char* destination = NULL;
-	uid_struct temp = { 0 };
-	for (unsigned int i = 0; i < cdbblks_sheet.Length; i++)
-	{
-		sheet_struct Sheet = GetSheet(&cdbblks_sheet, i);
-		uint32_t completePathLength;
-
-		if (cdbblks_sheet.Length > 1) // Schematic name + sheet number + sheet name
-		{
-			group_struct group = GetGroup(&cdbcatlg_group, i);
-			char* TempDest1 = NULL;
-			char* TempDest2 = malloc(10);
-			if (TempDest2 == NULL)
-			{
-				return -1;
-			}
-			sprintf(TempDest2, "%d", i + 1);
-			uint32_t completePathLengthTemp = addStrings(&TempDest1, page.Name.Text, page.Name.Length, TempDest2, stringLen(TempDest2, 10), '_');
-			completePathLengthTemp = addStrings(&TempDest2, TempDest1, completePathLengthTemp, group.Name.Text, group.Name.Length, '_');
-			completePathLength = addStrings(&destination, TempDest2, completePathLengthTemp, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
-			free(TempDest1);
-			free(TempDest2);
-		}
-		else // Schematic name only
-		{
-			completePathLength = addStrings(&destination, page.Name.Text, page.Name.Length, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
-		}
-
-		// Open file
-		FILE* KiCadFile = myfopen("w", path, pathlength, destination, completePathLength, DIR_SEPARATOR);
-		if (KiCadFile != 0)
-		{
-			myPrint("\n--------------- Writing KiCad file ---------------\n");
-			myPrint("File: [%s]\n", destination);
-			// File Header
-			fprintf(KiCadFile, "(kicad_sch\n");
-#if NewKiCad
-#pragma message ("Building for KiCad 9.99")
-			fprintf(KiCadFile, "\t(version 20251012)\n");
-			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
-			fprintf(KiCadFile, "\t(generator_version \"9.99\")\n");
-#else
-#pragma message ("Building for KiCad 9.0")
-			fprintf(KiCadFile, "\t(version 20250114)\n");
-			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
-			fprintf(KiCadFile, "\t(generator_version \"9.0\")\n");
-#endif
-			fprintf(KiCadFile, "\t");
-			KiCadUID(KiCadFile, page.UID, temp);
-			KiCadSheetProp(KiCadFile, Sheet);
-			fprintf(KiCadFile, "\t(lib_symbols)\n");
-			myPrint("\n");
-
-			// Elements
-			KiCadArc(KiCadFile, page.UID, Sheet.Group);
-			KiCadCircle(KiCadFile, page.UID, Sheet.Group);
-			KiCadRectangle(KiCadFile, page.UID, Sheet.Group);
-			KiCadText(KiCadFile, page.UID, Sheet.Group);
-			KiCadLine(KiCadFile, page.UID, Sheet.Group);
-			KiCadNets(KiCadFile, page.UID, Sheet.Group);
-			KiCadBusses(KiCadFile, page.UID, Sheet.Group);
-
-			// File Leader
-			fprintf(KiCadFile, "\t(sheet_instances\n");
-			fprintf(KiCadFile, "\t\t(path \"/\"\n");
-			fprintf(KiCadFile, "\t\t\t(page \"1\")\n");
-			fprintf(KiCadFile, "\t\t)\n");
-			fprintf(KiCadFile, "\t)\n");
-
-			fprintf(KiCadFile, ")\n");
-			fclose(KiCadFile);
-			free(destination);
-
-		}
-		else
-		{
-			myPrint("Error Writing [%s] !\n", destination);
-			free(destination);
-			return -1;
-		}
-	}
-	return 0;
-}
-
-/*
-******************************************************************
-* Local Functions
-******************************************************************
-*/
-/*
-******************************************************************
-* - function name:	KiCadProperty()
-*
-* - description: 	Stores property in KiCad
-*
-* - parameter: 		Pointer to KiCad file; Index of Property; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Line, ...)
-*
-* - return value: 	-
-******************************************************************
-*/
-void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
-{
-	fprintf(KiCadFile, "\t\t(stroke\n");
-
-	// Linewidth
-	if (Property.Thickness == thikness_Auto)
-	{
-		fprintf(KiCadFile, "\t\t\t(width 0)\n");
-		myPrint("\tLinewidth: Default\n");
-	}
-	else
-	{
-		fprintf(KiCadFile, "\t\t\t(width %f)\n", (float)Property.Thickness * BaseLineThickness);
-		myPrint("\tLinewidth: %f\n", (float)Property.Thickness * BaseLineThickness);
-	}
-
-	// Linestyle
-	switch (Property.LineType)
-	{
-	case style_AutoSolid: // Solid (Automatic)
-		myPrint("\tLinestyle: Default\n");
-		fprintf(KiCadFile, "\t\t\t(type default)\n");
-		break;
-	case style_Solid: // Solid
-		myPrint("\tLinestyle: Solid\n");
-		fprintf(KiCadFile, "\t\t\t(type solid)\n");
-		break;
-	case style_Dash: // Dash
-	case style_Mediumdash: // Medium dash
-	case style_Bigdash: // Big dash
-		myPrint("\tLinestyle: Dash\n");
-		fprintf(KiCadFile, "\t\t\t(type dash)\n");
-		break;
-	case style_Center: // Center
-	case style_DashDot: // Dash-Dot
-		myPrint("\tLinestyle: Dash-Dot\n");
-		fprintf(KiCadFile, "\t\t\t(type dash_dot)\n");
-		break;
-	case style_Phantom: // Phantom
-		myPrint("\tLinestyle: Dash-Dot-Dot\n");
-		fprintf(KiCadFile, "\t\t\t(type dash_dot_dot)\n");
-		break;
-	case style_Dot: // Dot
-		myPrint("\tLinestyle: Dot\n");
-		fprintf(KiCadFile, "\t\t\t(type dot)\n");
-		break;
-	default:
-		break;
-	}
-
-	// Color
-	if (Property.LineColor.Key == colorkey_default)
-	{ // Default Color
-		myPrint("\tColor: Default\n");
-	}
-	else
-	{ // Custom Color
-		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
-		myPrint("\tColor: R:%d G:%d B:%d\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
-	}
-	fprintf(KiCadFile, "\t\t)\n");
-
-	// Filling style
-	if (Filling)
-	{
-		int8_t opacity = -1;
-#if NewKiCad
-		fprintf(KiCadFile, "\t\t(fill\n");
-		switch (Property.Fill)
-		{
-		case fill_AutoHollow: // Hollow (Automatic)
-		case fill_Hollow: // Hollow
-			fprintf(KiCadFile, "\t\t\t(type none)\n");
-			myPrint("\tFill : None\n");
-			break;
-
-		case fill_Solid: // Solid
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 100;
-			break;
-
-		case fill_Diagdn1: // Diagdn1
-		case fill_Diagdn2: // Diagdn2
-			fprintf(KiCadFile, "\t\t\t(type reverse_hatch)\n");
-			myPrint("\tFill: Reverse Hatch\n");
-			opacity = 100;
-			break;
-
-		case fill_Diagup1: // Diagup1
-		case fill_Diagup2: // Diagup2
-			fprintf(KiCadFile, "\t\t\t(type hatch)\n");
-			myPrint("\tFill: Hatch\n");
-			opacity = 100;
-			break;
-			
-		case fill_X1: // X1
-		case fill_X2: // X2
-			fprintf(KiCadFile, "\t\t\t(type cross_hatch)\n");
-			myPrint("\tFill: Cross Hatch\n");
-			opacity = 100;
-			break;
-
-		case fill_Horiz: // Horiz
-		case fill_Vert: // Vert
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 8;
-			break;
-
-		case fill_Grid1: // Grid1
-		case fill_Grid2: // Grid2
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 16;
-			break;
-
-		case fill_Grey04: // Grey04
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 4;
-			break;
-
-		case fill_Grey08: // Grey08
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 8;
-			break;
-
-		case fill_Grey50: // Grey50
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 50;
-			break;
-
-		case fill_Grey92: // Grey92
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			myPrint("\tFill: Solid\n");
-			opacity = 92;
-			break;
-		default:
-			break;
-		}
-#else
-		// Old KiCad has no fill pattern. Translate into fill opacity
-		fprintf(KiCadFile, "\t\t(fill\n");
-		switch (Property.Fill)
-		{
-		case fill_AutoHollow: // Hollow (Automatic)
-		case fill_Hollow: // Hollow
-			break;
-		case fill_Solid: // Solid
-			opacity = 100;
-			break;
-		case fill_Diagup1: // Diagup1
-		case fill_Diagup2: // Diagup2
-		case fill_Diagdn1: // Diagdn1
-		case fill_Diagdn2: // Diagdn2
-		case fill_Horiz: // Horiz
-		case fill_Vert: // Vert
-		case fill_Grey08: // Grey08
-			opacity = 8;
-			break;
-		case fill_Grid1: // Grid1
-		case fill_Grid2: // Grid2
-		case fill_X1: // X1
-		case fill_X2: // X2
-			opacity = 16;
-			break;
-		case fill_Grey04: // Grey04
-			opacity = 4;
-			break;
-		case fill_Grey50: // Grey50
-			opacity = 50;
-			break;
-		case fill_Grey92: // Grey92
-			opacity = 92;
-			break;
-		default:
-			break;
-		}
-#endif
-		if (opacity == -1)
-		{
-			fprintf(KiCadFile, "\t\t\t(type none)\n");
-			myPrint("\tFill: None\n");
-		}
-		else
-		{
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
-			if (Property.FillColor.Key == colorkey_default)
-			{ // Default Color
-				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: Default\n");
-				fprintf(KiCadFile, "\t\t\t(color 0 0 0 %.2f)\n", ((float)opacity / 100.0));
-			}
-			else
-			{ // Custom Color
-				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue, ((float)opacity / 100.0));
-				myPrint("\tFill: %d%c\n", opacity, 0x25);
-				myPrint("\tColor: R:%d G:%d B:%d\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue);
-			}
-		}
-		fprintf(KiCadFile, "\t\t)\n");
-	}
-}
-
-/*
-******************************************************************
-* - function name:	KiCadPageProp()
-*
-* - description: 	Stores page property in KiCad
-*
-* - parameter: 		Pointer to KiCad file; Index of Sheet Property
-*
-* - return value: 	-
-******************************************************************
-*/
-void KiCadSheetProp(FILE* KiCadFile, sheet_struct Sheet)
-{
-	fprintf(KiCadFile, "\t(paper \"");
-	myPrint("Paper Size: ");
-	switch (Sheet.SizeCode)
-	{
-	case sheetsize_A:
-		fprintf(KiCadFile, "A\"");
-		myPrint("A");
-		break;
-	case sheetsize_B:
-		fprintf(KiCadFile, "B\"");
-		myPrint("B");
-		break;
-	case sheetsize_C:
-		fprintf(KiCadFile, "C\"");
-		myPrint("C");
-		break;
-	case sheetsize_D:
-		fprintf(KiCadFile, "D\"");
-		myPrint("D");
-		break;
-	case sheetsize_E:
-		fprintf(KiCadFile, "E\"");
-		myPrint("E");
-		break;
-	case sheetsize_F:
-		fprintf(KiCadFile, "F\"");
-		myPrint("F");
-		break;
-	case sheetsize_A0:
-		fprintf(KiCadFile, "A0\"");
-		myPrint("A0");
-		break;
-	case sheetsize_A1:
-		fprintf(KiCadFile, "A1\"");
-		myPrint("A1");
-		break;
-	case sheetsize_A2:
-		fprintf(KiCadFile, "A2\"");
-		myPrint("A2");
-		break;
-	case sheetsize_A3:
-		fprintf(KiCadFile, "A3\"");
-		myPrint("A3");
-		break;
-	case sheetsize_A4:
-		fprintf(KiCadFile, "A4\"");
-		myPrint("A4");
-		break;
-	default: // Custom
-		fprintf(KiCadFile, "User\"");
-		num_struct X = numProcess(Sheet.Size.X, CoordinateScaleX, 0);
-		num_struct Y = numProcess(Sheet.Size.Y, CoordinateScaleY, CoordinateOffsetY);
-		fprintf(KiCadFile, " %d.%05d %d.%05d", X.Integ, X.Frac, Y.Integ, Y.Frac);
-		myPrint("%d.%05dx%d.%05d", X.Integ, X.Frac, Y.Integ, Y.Frac);
-		break;
-	}
-
-	// Modify Ancor
-	CoordinateOffsetY = UserCoordinateOffsetY + Sheet.Size.Y;
-	CoordinateScaleY = UserCoordinateScaleY * -1;
-
-	if (Sheet.Orientation == sheetorientation_Portrait)
-	{
-		fprintf(KiCadFile, " portrait");
-		myPrint(" Portrait");
-	}
-	else
-	{
-		myPrint(" Landscape");
-	}
-	myPrint("\n");
-	fprintf(KiCadFile, ")\n");
-}
-
 /*
 ******************************************************************
 * - function name:	KiCadTextData()
@@ -1061,118 +620,218 @@ void KiCadLine(FILE* KiCadFile, uid_struct UID, uint32_t page)
 
 /*
 ******************************************************************
-* - function name:	KiCadNets()
+* - function name:	KiCadProperty()
 *
-* - description: 	Stores nets in KiCad
+* - description: 	Stores property in KiCad
 *
-* - parameter: 		Pointer to KiCad file, UID of page, page group
+* - parameter: 		Pointer to KiCad file; Index of Property; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Line, ...)
 *
 * - return value: 	-
 ******************************************************************
 */
-void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 {
-	if (cdbblks_net.Length > 0)
+	fprintf(KiCadFile, "\t\t(stroke\n");
+
+	// Linewidth
+	if (Property.Thickness == thikness_Auto)
 	{
-		for (uint32_t i = 0; i < cdbblks_net.Length; i++)
-		{
-			net_struct Net = GetNet(&cdbblks_net, i);
-			if (InsideGroup(&cdbcatlg_grpobj, Net.UID, page))
-			{
-				for (unsigned int j = 0; j < Net.NumNetSegment; j++)
-				{
-					for (unsigned int k = 0; k < (Net.NetSegment)[j].Segment.numSegment; k++)
-					{
-						if ((Net.NetSegment)[j].Segment.Segment == NULL)
-						{
-							return;
-						}
-						fprintf(KiCadFile, "\t(wire\n");
-						fprintf(KiCadFile, "\t\t(pts\n");
-						myPrint("Net %d:\n", i + 1);
-						segment_section_struct Segment = (Net.NetSegment)[j].Segment.Segment[k];
-
-						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
-						num_struct XEnd = numProcess(Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YEnd = numProcess(Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
-
-						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
-
-						myPrint("\tSegment %d:\n", j + 1);
-						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
-						fprintf(KiCadFile, "\t\t)\n");
-						KiCadProperty(KiCadFile, (Net.NetSegment)[j].Property, 0);
-
-						fprintf(KiCadFile, "\t\t");
-						myPrint("\t");
-						KiCadUID(KiCadFile, UID, Net.UID);
-						fprintf(KiCadFile, "\t)\n");
-					}
-					KiCadLabel(KiCadFile, UID, (Net.NetSegment)[j].Label, Net.Name);
-				}
-			}
-		}
-		myPrint("\n");
+		fprintf(KiCadFile, "\t\t\t(width 0)\n");
+		myPrint("\tLinewidth: Default\n");
 	}
-}
-
-/*
-******************************************************************
-* - function name:	KiCadBusses()
-*
-* - description: 	Stores buses in KiCad
-*
-* - parameter: 		Pointer to KiCad file, UID of page, page group
-*
-* - return value: 	-
-******************************************************************
-*/
-void KiCadBusses(FILE* KiCadFile, uid_struct UID, uint32_t page)
-{
-	if (cdbblks_bus.Length > 0)
+	else
 	{
-		for (uint32_t i = 0; i < cdbblks_bus.Length; i++)
+		fprintf(KiCadFile, "\t\t\t(width %f)\n", (float)Property.Thickness * BaseLineThickness);
+		myPrint("\tLinewidth: %f\n", (float)Property.Thickness * BaseLineThickness);
+	}
+
+	// Linestyle
+	switch (Property.LineType)
+	{
+	case style_AutoSolid: // Solid (Automatic)
+		myPrint("\tLinestyle: Default\n");
+		fprintf(KiCadFile, "\t\t\t(type default)\n");
+		break;
+	case style_Solid: // Solid
+		myPrint("\tLinestyle: Solid\n");
+		fprintf(KiCadFile, "\t\t\t(type solid)\n");
+		break;
+	case style_Dash: // Dash
+	case style_Mediumdash: // Medium dash
+	case style_Bigdash: // Big dash
+		myPrint("\tLinestyle: Dash\n");
+		fprintf(KiCadFile, "\t\t\t(type dash)\n");
+		break;
+	case style_Center: // Center
+	case style_DashDot: // Dash-Dot
+		myPrint("\tLinestyle: Dash-Dot\n");
+		fprintf(KiCadFile, "\t\t\t(type dash_dot)\n");
+		break;
+	case style_Phantom: // Phantom
+		myPrint("\tLinestyle: Dash-Dot-Dot\n");
+		fprintf(KiCadFile, "\t\t\t(type dash_dot_dot)\n");
+		break;
+	case style_Dot: // Dot
+		myPrint("\tLinestyle: Dot\n");
+		fprintf(KiCadFile, "\t\t\t(type dot)\n");
+		break;
+	default:
+		break;
+	}
+
+	// Color
+	if (Property.LineColor.Key == colorkey_default)
+	{ // Default Color
+		myPrint("\tColor: Default\n");
+	}
+	else
+	{ // Custom Color
+		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
+		myPrint("\tColor: R:%d G:%d B:%d\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
+	}
+	fprintf(KiCadFile, "\t\t)\n");
+
+	// Filling style
+	if (Filling)
+	{
+		int8_t opacity = -1;
+#if NewKiCad
+		fprintf(KiCadFile, "\t\t(fill\n");
+		switch (Property.Fill)
 		{
-			bus_struct Bus = GetBus(&cdbblks_bus, i);
-			if (InsideGroup(&cdbcatlg_grpobj, Bus.UID, page))
-			{
-				for (unsigned int j = 0; j < Bus.BusSegmentLen; j++)
-				{
-					for (unsigned int k = 0; k < (Bus.BusSegment)[j].Segment.numSegment; k++)
-					{
-						if ((Bus.BusSegment)[j].Segment.Segment == NULL)
-						{
-							return;
-						}
-						fprintf(KiCadFile, "\t(bus\n");
-						fprintf(KiCadFile, "\t\t(pts\n");
-						myPrint("Bus %d:\n", i + 1);
-						segment_section_struct Segment = (Bus.BusSegment)[j].Segment.Segment[k];
+		case fill_AutoHollow: // Hollow (Automatic)
+		case fill_Hollow: // Hollow
+			fprintf(KiCadFile, "\t\t\t(type none)\n");
+			myPrint("\tFill : None\n");
+			break;
 
-						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
-						num_struct XEnd = numProcess(Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YEnd = numProcess(Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+		case fill_Solid: // Solid
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 100;
+			break;
 
-						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+		case fill_Diagdn1: // Diagdn1
+		case fill_Diagdn2: // Diagdn2
+			fprintf(KiCadFile, "\t\t\t(type reverse_hatch)\n");
+			myPrint("\tFill: Reverse Hatch\n");
+			opacity = 100;
+			break;
 
-						myPrint("\tSegment %d:\n", j + 1);
-						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
-						fprintf(KiCadFile, "\t\t)\n");
-						KiCadProperty(KiCadFile, (Bus.BusSegment)[j].Property, 0);
+		case fill_Diagup1: // Diagup1
+		case fill_Diagup2: // Diagup2
+			fprintf(KiCadFile, "\t\t\t(type hatch)\n");
+			myPrint("\tFill: Hatch\n");
+			opacity = 100;
+			break;
+			
+		case fill_X1: // X1
+		case fill_X2: // X2
+			fprintf(KiCadFile, "\t\t\t(type cross_hatch)\n");
+			myPrint("\tFill: Cross Hatch\n");
+			opacity = 100;
+			break;
 
-						fprintf(KiCadFile, "\t\t");
-						myPrint("\t");
-						KiCadUID(KiCadFile, UID, Bus.UID);
-						fprintf(KiCadFile, "\t)\n");
-					}
-					KiCadLabel(KiCadFile, UID, (Bus.BusSegment)[j].Label, Bus.Name);
-				}
+		case fill_Horiz: // Horiz
+		case fill_Vert: // Vert
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 8;
+			break;
+
+		case fill_Grid1: // Grid1
+		case fill_Grid2: // Grid2
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 16;
+			break;
+
+		case fill_Grey04: // Grey04
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 4;
+			break;
+
+		case fill_Grey08: // Grey08
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 8;
+			break;
+
+		case fill_Grey50: // Grey50
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 50;
+			break;
+
+		case fill_Grey92: // Grey92
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			myPrint("\tFill: Solid\n");
+			opacity = 92;
+			break;
+		default:
+			break;
+		}
+#else
+		// Old KiCad has no fill pattern. Translate into fill opacity
+		fprintf(KiCadFile, "\t\t(fill\n");
+		switch (Property.Fill)
+		{
+		case fill_AutoHollow: // Hollow (Automatic)
+		case fill_Hollow: // Hollow
+			break;
+		case fill_Solid: // Solid
+			opacity = 100;
+			break;
+		case fill_Diagup1: // Diagup1
+		case fill_Diagup2: // Diagup2
+		case fill_Diagdn1: // Diagdn1
+		case fill_Diagdn2: // Diagdn2
+		case fill_Horiz: // Horiz
+		case fill_Vert: // Vert
+		case fill_Grey08: // Grey08
+			opacity = 8;
+			break;
+		case fill_Grid1: // Grid1
+		case fill_Grid2: // Grid2
+		case fill_X1: // X1
+		case fill_X2: // X2
+			opacity = 16;
+			break;
+		case fill_Grey04: // Grey04
+			opacity = 4;
+			break;
+		case fill_Grey50: // Grey50
+			opacity = 50;
+			break;
+		case fill_Grey92: // Grey92
+			opacity = 92;
+			break;
+		default:
+			break;
+		}
+#endif
+		if (opacity == -1)
+		{
+			fprintf(KiCadFile, "\t\t\t(type none)\n");
+			myPrint("\tFill: None\n");
+		}
+		else
+		{
+			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			if (Property.FillColor.Key == colorkey_default)
+			{ // Default Color
+				myPrint("\tFill: %d%c\n", opacity, 0x25);
+				myPrint("\tColor: Default\n");
+				fprintf(KiCadFile, "\t\t\t(color 0 0 0 %.2f)\n", ((float)opacity / 100.0));
+			}
+			else
+			{ // Custom Color
+				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue, ((float)opacity / 100.0));
+				myPrint("\tFill: %d%c\n", opacity, 0x25);
+				myPrint("\tColor: R:%d G:%d B:%d\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue);
 			}
 		}
-		myPrint("\n");
+		fprintf(KiCadFile, "\t\t)\n");
 	}
 }

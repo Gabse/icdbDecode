@@ -25,13 +25,11 @@
 #include "../common.h"			// Required for uid_struct
 #include "../cdbcatlg/page.h"	// Required for page
 
-
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-int StoreAsKicadSchematic(char*, uint32_t, page_struct);
-
+extern int StoreAsKicadSchematic(char*, uint32_t, page_struct);
 
 #endif //_KICAD_SCHEMATIC_H
