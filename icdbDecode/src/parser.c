@@ -23,7 +23,7 @@
 #include <stdint.h>						// Required for int32_t, uint32_t, ...
 #include <stdlib.h>						// Required for calloc to work properly
 #include "stringutil.h"					// Required for assemblePath
-#include "kicad.h"						// Required for StoreAsKicadFile
+#include "./kicad/kicad_schematic.h"	// Required for StoreAsKicadFile
 #include "./cdbcatlg/page.h"			// Required for page
 #include "./cdbcatlg/cdbcatlg.h"		// Required for parseCatlgatl
 #include "./cdbblks/cdbblks.h"			// Required for parseCdbblks
@@ -121,7 +121,7 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 	
 		// Parse cdbblks
 		error += parseCdbblks(SubPath, SubPathLen);
-		error += StoreAsKicadFile(Exportpath, sizeof(Exportpath), page);
+		error += StoreAsKicadSchematic(Exportpath, sizeof(Exportpath), page);
 		free(SubPath);
 	}
 	initCdbcatlg();
