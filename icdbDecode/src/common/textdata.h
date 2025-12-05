@@ -30,13 +30,8 @@
 * Enums
 ******************************************************************
 */
-#if C23
 typedef enum font_type : uint8_t
 {
-#else
-typedef enum font_type
-{
-#endif
 	font_Fixed				= 0,
 	font_Roman				= 1,
 	font_RomanItalic		= 2,
@@ -54,28 +49,16 @@ typedef enum font_type
 	font_Custom				= 255,
 }font_type;
 
-#if C23
 typedef enum textrotation_type : int32_t
 {
-#else
-typedef enum textrotation_type
-{
-	textrotation_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	textrotation_0Degree		= 0,
 	textrotation_90Degree		= 1,
 	textrotation_180Degree		= 2,
 	textrotation_270Degree		= 3,
 }textrotation_type;
 
-#if C23
 typedef enum textorigin_type : int32_t
 {
-#else
-typedef enum textorigin_type
-{
-	textorigin_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	textorigin_Default			= 0,
 	textorigin_UpperLeft		= 1,
 	textorigin_MiddleLeft		= 2,
@@ -88,14 +71,8 @@ typedef enum textorigin_type
 	textorigin_LowerRight		= 9,
 }textorigin_type;
 
-#if C23
 typedef enum option_type : uint8_t
 {
-#else
-typedef enum option_type
-{
-	option_hack = (int8_t)(288), // Hack to force size to 8bit signed
-#endif
 	option_true		= 1,
 	option_false	= 0,
 }option_type;

@@ -30,13 +30,8 @@
 * Enums
 ******************************************************************
 */
-#if C23
 typedef enum visibility_type : uint8_t
 {
-#else
-typedef enum visibility_type
-{
-#endif
 	visibility_invissible	= 1,
 	visibility_vissible		= 4,
 	visibility_default		= 255,

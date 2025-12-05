@@ -30,14 +30,8 @@
 * Enums
 ******************************************************************
 */
-#if C23
 typedef enum sheetsize_type : int32_t
 {
-#else
-typedef enum sheetsize_type
-{
-	sheetsize_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	sheetsize_A				= 0,
 	sheetsize_B				= 1,
 	sheetsize_C				= 2,

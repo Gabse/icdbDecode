@@ -39,12 +39,6 @@
 	#define  DIR_SEPARATOR DIR_SEPARATOR_UNIX
 #endif
 
-#ifdef __STDC_VERSION__
-	#if __STDC_VERSION__ >= 202000
-		#define C23
-	#endif
-#endif
-
 #if __x86_64__
 	#define B64Bit
 # endif

@@ -29,14 +29,8 @@
 * Enums
 ******************************************************************
 */
-#if C23
 typedef enum style_type : int32_t
 {
-#else
-typedef enum style_type
-{
-	style_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	style_AutoSolid		= -1,
 	style_Solid			= 0,
 	style_Dash			= 1,
@@ -48,14 +42,8 @@ typedef enum style_type
 	style_Mediumdash	= 7,
 }style_type;
 
-#if C23
 typedef enum fill_type : int32_t
 {
-#else
-typedef enum fill_type
-{
-	fill_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	fill_AutoHollow		= -1,
 	fill_Hollow			= 0,
 	fill_Solid			= 1,
@@ -75,14 +63,8 @@ typedef enum fill_type
 	fill_Grey04			= 15,
 }fill_type;
 
-#if C23
 typedef enum thikness_type : int32_t
 {
-#else
-typedef enum thikness_type
-{
-	thikness_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	thikness_Auto	= -1,
 	thikness_1		= 1,
 	thikness_2		= 2,
@@ -97,13 +79,8 @@ typedef enum thikness_type
 
 }thikness_type;
 
-#if C23
 typedef enum colorkey_type : uint8_t
 {
-#else
-typedef enum colorkey_type
-{
-#endif
 	colorkey_custom_F		= 0,
 	colorkey_custom_L		= 1,
 	colorkey_default		= 255,

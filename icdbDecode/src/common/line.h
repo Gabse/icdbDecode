@@ -31,14 +31,8 @@
 * Enums
 ******************************************************************
 */
-#if C23
 typedef enum lineending_type : int32_t
 {
-#else
-typedef enum lineending_type
-{
-	lineending_hack = (int32_t)(-2147483647), // Hack to force size to 32bit signed
-#endif
 	lineending_None					= 0,
 	lineending_SimpleArrow			= 1,
 	lineending_SimpleArrowFilled	= 2,
