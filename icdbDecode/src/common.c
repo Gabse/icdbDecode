@@ -126,17 +126,17 @@ int parseFile(char* path, uint32_t pathlength, char* file, uint32_t filelength, 
 		// Iterate over whole file
 		while(ftell(sourceFile) < FileEnd)
 		{
-			fread(&KeyLength, sizeof(uint32_t), 1, sourceFile); // Get key lenght
+			(void)!fread(&KeyLength, sizeof(uint32_t), 1, sourceFile); // Get key lenght
 			if (KeyLength > 0 && KeyLength < 0xFFFFFFFF)
 			{
 				Key = (char*)calloc(KeyLength + 1, sizeof(char)); // Reserve memory for key + zero termination
 				if (Key != 0)
 				{
-					fread(Key, sizeof(char), KeyLength, sourceFile); // Read key
+					(void)!fread(Key, sizeof(char), KeyLength, sourceFile); // Read key
 					Key[KeyLength] = '\0'; // Zero terminate key
 
 					// Better to be redone
-					fread(&type, sizeof(uint32_t), 1, sourceFile);
+					(void)!fread(&type, sizeof(uint32_t), 1, sourceFile);
 					fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
 
 					CheckKey(sourceFile, Key, KeyLength); // Process Key
@@ -182,7 +182,7 @@ void SkipBlock(FILE* sourceFile, uint32_t type)
 		uint8_t Data = 0;
 		while (Data != 0xFF && ftell(sourceFile) < FileEnd)
 		{
-			fread(&Data, sizeof(uint8_t), 1, sourceFile);
+			(void)!fread(&Data, sizeof(uint8_t), 1, sourceFile);
 		}
 	}
 	else // 32 bit exit code
@@ -190,7 +190,7 @@ void SkipBlock(FILE* sourceFile, uint32_t type)
 		uint32_t Data = 0;
 		while (Data != 0x4FFFFFFF && ftell(sourceFile) < FileEnd)
 		{
-			fread(&Data, sizeof(uint32_t), 1, sourceFile); // Read byte from file
+			(void)!fread(&Data, sizeof(uint32_t), 1, sourceFile); // Read byte from file
 		}
 	}
 }
@@ -277,8 +277,8 @@ key_struct* ParseKey(FILE* sourceFile)
 	key_struct* key = malloc(sizeof(key_struct));
 	if (key != NULL)
 	{
-		fread(&(*key).Typecode, sizeof(uint32_t), 1, sourceFile);
-		fread(&(*key).Length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&(*key).Typecode, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&(*key).Length, sizeof(uint32_t), 1, sourceFile);
 		fseek(sourceFile, 16, SEEK_CUR);
 
 		if ((*key).Length < 0) // ToDo: Look into negative size
@@ -408,11 +408,11 @@ string_struct* ParseString(FILE* sourceFile, int32_t PayloadLenRaw, uint32_t* Nu
 	// Count Entry (I haven't found a way to derive the number)
 	while (PayloadLenRaw > SizeAccumulator && ftell(sourceFile) < FileEnd)
 	{
-		fread(&EntryLen8, sizeof(uint8_t), 1, sourceFile);
+		(void)!fread(&EntryLen8, sizeof(uint8_t), 1, sourceFile);
 		// Get file entry
 		if (EntryLen8 == 0xfd) // More than 255 char in this string
 		{
-			fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
+			(void)!fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
 			fseek(sourceFile, EntryLen32, SEEK_CUR);
 			(*NumElements)++;
 			SizeAccumulator += 12 + 4 * (EntryLen32 / 4); // Always round to 4 character
@@ -420,7 +420,7 @@ string_struct* ParseString(FILE* sourceFile, int32_t PayloadLenRaw, uint32_t* Nu
 		else if (EntryLen8 == 0xfe) // Padding block. Skip next block
 		{
 			//fseek(sourceFile, sizeof(uint32_t), SEEK_CUR);
-			fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
+			(void)!fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
 		}
 		else if (EntryLen8 == 0xff) // No more entry�s
 		{
@@ -442,21 +442,21 @@ string_struct* ParseString(FILE* sourceFile, int32_t PayloadLenRaw, uint32_t* Nu
 		for (uint32_t i = 0; i < *NumElements;)
 		{
 			// Get file entry
-			fread(&EntryLen8, sizeof(uint8_t), 1, sourceFile);
+			(void)!fread(&EntryLen8, sizeof(uint8_t), 1, sourceFile);
 			if (EntryLen8 == 0xfd) // More than 255 char in this string
 			{
-				fread(&Struct[i].Length, sizeof(uint32_t), 1, sourceFile);
+				(void)!fread(&Struct[i].Length, sizeof(uint32_t), 1, sourceFile);
 				Struct[i].Text = (char*)calloc(Struct[i].Length + 1, sizeof(char));
 				if (Struct[i].Text != NULL)
 				{
-					fread(Struct[i].Text, sizeof(char), Struct[i].Length, sourceFile);
+					(void)!fread(Struct[i].Text, sizeof(char), Struct[i].Length, sourceFile);
 					Struct[i].Text[Struct[i].Length] = '\0'; // Zero terminate string
 				}
 				i++;
 			}
 			else if (EntryLen8 == 0xfe) // Unknown. Skip next block
 			{
-				fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
+				(void)!fread(&EntryLen32, sizeof(uint32_t), 1, sourceFile);
 			}
 			else if (EntryLen8 == 0xff) // No more entry�s
 			{
@@ -472,7 +472,7 @@ string_struct* ParseString(FILE* sourceFile, int32_t PayloadLenRaw, uint32_t* Nu
 				Struct[i].Text = (char*)calloc(Struct[i].Length + 1, sizeof(char));
 				if (Struct[i].Text != NULL)
 				{
-					fread(Struct[i].Text, sizeof(char), Struct[i].Length, sourceFile);
+					(void)!fread(Struct[i].Text, sizeof(char), Struct[i].Length, sourceFile);
 					Struct[i].Text[Struct[i].Length] = '\0'; // Zero terminate String
 				}
 				i++;
@@ -503,7 +503,7 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 	uint32_t SizeAccumulator = 0;
 
 	uint32_t blockaddress;	// Just a guess
-	fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
+	(void)!fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
 
 	uint32_t FileStart = ftell(sourceFile);
 	fseek(sourceFile, 0, SEEK_END);
@@ -514,7 +514,7 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 	while (PayloadLenRaw > SizeAccumulator && ftell(sourceFile) < FileEnd)
 	{
 		fseek(sourceFile, EntryLen * sizeof(uint32_t), SEEK_CUR);
-		fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
 	
 		if (EntryLen == 0x4FFFFFFF) // No more entry�s
 		{
@@ -522,7 +522,7 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 		}
 		else if (EntryLen == 0x4FFFFFFE) // Unknown. Skip next block
 		{
-			fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
+			(void)!fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
 			EntryLen = 0;
 		}
 		else
@@ -539,14 +539,14 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 	{
 		for (uint32_t i = 0; i < *NumElements;)
 		{
-			fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
+			(void)!fread(&EntryLen, sizeof(uint32_t), 1, sourceFile);
 			if (EntryLen == 0x4FFFFFFF) // No more entry�s
 			{
 				break;
 			}
 			else if (EntryLen == 0x4FFFFFFE) // Padding
 			{
-				fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
+				(void)!fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
 			}
 			else
 			{
@@ -554,7 +554,7 @@ int_array_struct* ParseIntArray(FILE* sourceFile, int32_t PayloadLenRaw, uint32_
 				Struct[i].Data = (IntData*)calloc(Struct[i].Length, sizeof(uint32_t));
 				if (Struct[i].Data != NULL)
 				{
-					fread(Struct[i].Data, sizeof(uint32_t), Struct[i].Length, sourceFile);
+					(void)!fread(Struct[i].Data, sizeof(uint32_t), Struct[i].Length, sourceFile);
 				}
 				i++;
 			}
@@ -587,7 +587,7 @@ void* ParseInt(FILE* sourceFile, uint32_t NumElements, uint32_t strutSize)
 	uint32_t structSize32 = (strutSize / sizeof(uint32_t));
 
 	uint32_t blockaddress;	// Just a guess
-	fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
+	(void)!fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
 
 	uint32_t FileStart = ftell(sourceFile);
 	fseek(sourceFile, 0, SEEK_END);
@@ -600,10 +600,10 @@ void* ParseInt(FILE* sourceFile, uint32_t NumElements, uint32_t strutSize)
 		for (uint32_t i = 0; i < NumElements;)
 		{
 			// Check entry for magic values
-			fread(&Magic, sizeof(uint32_t), 1, sourceFile);
+			(void)!fread(&Magic, sizeof(uint32_t), 1, sourceFile);
 			if (Magic == 0x4FFFFFFC) // Increasing value
 			{
-				fread(&Repetitions, sizeof(uint32_t), 1, sourceFile);
+				(void)!fread(&Repetitions, sizeof(uint32_t), 1, sourceFile);
 				while (Repetitions != 0 && i < NumElements && ftell(sourceFile) < FileEnd)
 				{
 					for (uint32_t j = 0; j < structSize32; j++) // Copy whole struct
@@ -623,7 +623,7 @@ void* ParseInt(FILE* sourceFile, uint32_t NumElements, uint32_t strutSize)
 			}
 			else if (Magic == 0x4FFFFFFD) // Repeated value
 			{
-				fread(&Repetitions, sizeof(uint32_t), 1, sourceFile);
+				(void)!fread(&Repetitions, sizeof(uint32_t), 1, sourceFile);
 				while (Repetitions != 0 && i < NumElements && ftell(sourceFile) < FileEnd)
 				{
 					for (uint32_t j = 0; j < structSize32; j++) // Copy whole struct
@@ -636,7 +636,7 @@ void* ParseInt(FILE* sourceFile, uint32_t NumElements, uint32_t strutSize)
 			}
 			else if (Magic == 0x4FFFFFFE) // Unknown. Skip next block
 			{
-				fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
+				(void)!fread(&blockaddress, sizeof(uint32_t), 1, sourceFile);
 			}
 			else if (Magic == 0x4FFFFFFF) // No more entry�s
 			{
@@ -646,7 +646,7 @@ void* ParseInt(FILE* sourceFile, uint32_t NumElements, uint32_t strutSize)
 			{
 				// No magic, seek back & read
 				fseek(sourceFile, (int)sizeof(uint32_t) * -1, SEEK_CUR);
-				fread(Struct + (i * structSize32), strutSize, 1, sourceFile);
+				(void)!fread(Struct + (i * structSize32), strutSize, 1, sourceFile);
 				i++;
 			}
 		}

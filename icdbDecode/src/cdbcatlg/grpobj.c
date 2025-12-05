@@ -49,8 +49,8 @@ int ParseGrpobj(element_struct* grpobj, char* path, uint32_t pathlength, char* f
 		fseek(sourceFile, 0x2000, SEEK_SET);
 		
 		uint32_t unknown;
-		fread(&unknown, sizeof(uint32_t), 1, sourceFile); // Might be something interesting
-		fread(&grpobj->Length, sizeof(uint32_t), 1, sourceFile); // Number of entry�s
+		(void)!fread(&unknown, sizeof(uint32_t), 1, sourceFile); // Might be something interesting
+		(void)!fread(&grpobj->Length, sizeof(uint32_t), 1, sourceFile); // Number of entry�s
 
 		grpobj->Data = calloc(sizeof(grpobj_struct), grpobj->Length);
 		if (grpobj->Data == NULL)
@@ -67,10 +67,10 @@ int ParseGrpobj(element_struct* grpobj, char* path, uint32_t pathlength, char* f
 			}
 
 			// UID
-			fread(&((grpobj_struct*)(grpobj->Data))[i].UID.UID[0], sizeof(uid_struct), 1, sourceFile);
+			(void)!fread(&((grpobj_struct*)(grpobj->Data))[i].UID.UID[0], sizeof(uid_struct), 1, sourceFile);
 
 			// Number of group
-			fread(&((grpobj_struct*)(grpobj->Data))[i].numGroup, sizeof(unsigned int), 1, sourceFile);
+			(void)!fread(&((grpobj_struct*)(grpobj->Data))[i].numGroup, sizeof(unsigned int), 1, sourceFile);
 			((grpobj_struct*)(grpobj->Data))[i].group = calloc(((grpobj_struct*)(grpobj->Data))[i].numGroup, sizeof(unsigned int));
 			if (((grpobj_struct*)(grpobj->Data))[i].group == NULL)
 			{
@@ -83,7 +83,7 @@ int ParseGrpobj(element_struct* grpobj, char* path, uint32_t pathlength, char* f
 				break;
 			}
 			// Read group
-			fread(((grpobj_struct*)(grpobj->Data))[i].group, sizeof(unsigned int), ((grpobj_struct*)(grpobj->Data))[i].numGroup, sourceFile);
+			(void)!fread(((grpobj_struct*)(grpobj->Data))[i].group, sizeof(unsigned int), ((grpobj_struct*)(grpobj->Data))[i].numGroup, sourceFile);
 		}
 		return 0;
 	}

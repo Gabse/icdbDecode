@@ -297,7 +297,7 @@ int decodeDatabaseHeader(FILE* sourceFile, databaseHeader_Struct* databaseHeader
 	rewind(sourceFile);
 
 	// Read beginning of file header
-	fread(databaseHeader, 0x68, 1, sourceFile);
+	(void)!fread(databaseHeader, 0x68, 1, sourceFile);
 
 	if (databaseHeader != 0)
 	{
@@ -312,93 +312,93 @@ int decodeDatabaseHeader(FILE* sourceFile, databaseHeader_Struct* databaseHeader
 		fseek(sourceFile, 0x85C, SEEK_SET);
 
 		// Editor version
-		fread(&databaseHeader->iCDBdiagnostic_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->iCDBdiagnostic_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->iCDBdiagnostic_length > 0)
 		{
 			databaseHeader->iCDBdiagnostic = malloc(databaseHeader->iCDBdiagnostic_length + 1);
 			if (databaseHeader->iCDBdiagnostic != 0)
 			{
-				fread(databaseHeader->iCDBdiagnostic, sizeof(char), databaseHeader->iCDBdiagnostic_length, sourceFile);
+				(void)!fread(databaseHeader->iCDBdiagnostic, sizeof(char), databaseHeader->iCDBdiagnostic_length, sourceFile);
 				*((databaseHeader->iCDBdiagnostic) + databaseHeader->iCDBdiagnostic_length) = '\0';
 			}
 		}
 
 		// PC Name
-		fread(&databaseHeader->pc_name_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->pc_name_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->pc_name_length > 0)
 		{
 			databaseHeader->pc_name = malloc(databaseHeader->pc_name_length + 1);
 			if (databaseHeader->pc_name != 0)
 			{
-				fread(databaseHeader->pc_name, sizeof(char), databaseHeader->pc_name_length, sourceFile);
+				(void)!fread(databaseHeader->pc_name, sizeof(char), databaseHeader->pc_name_length, sourceFile);
 				*((databaseHeader->pc_name) + databaseHeader->pc_name_length) = '\0';
 			}
 		}
 
 		// Username
-		fread(&databaseHeader->user_name_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->user_name_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->user_name_length > 0)
 		{
 			databaseHeader->user_name = malloc(databaseHeader->user_name_length + 1);
 			if (databaseHeader->user_name != 0)
 			{
-				fread(databaseHeader->user_name, sizeof(char), databaseHeader->user_name_length, sourceFile);
+				(void)!fread(databaseHeader->user_name, sizeof(char), databaseHeader->user_name_length, sourceFile);
 				*((databaseHeader->user_name) + databaseHeader->user_name_length) = '\0';
 			}
 		}
 
 		// Opening time
 		uint32_t tempTime;
-		fread(&tempTime, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&tempTime, sizeof(uint32_t), 1, sourceFile);
 		databaseHeader->edittime = tempTime;
 
 		// User PID
-		fread(&databaseHeader->pid, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->pid, sizeof(uint32_t), 1, sourceFile);
 
 		// Windows version info
-		fread(&databaseHeader->os_version_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->os_version_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->os_version_length > 0)
 		{
 			databaseHeader->os_version = malloc(databaseHeader->os_version_length + 1);
 			if (databaseHeader->os_version != 0)
 			{
-				fread(databaseHeader->os_version, sizeof(char), databaseHeader->os_version_length, sourceFile);
+				(void)!fread(databaseHeader->os_version, sizeof(char), databaseHeader->os_version_length, sourceFile);
 				*((databaseHeader->os_version) + databaseHeader->os_version_length) = '\0';
 			}
 		}
 
 		// iCDBstring
-		fread(&databaseHeader->iCDB_string_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->iCDB_string_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->iCDB_string_length > 0)
 		{
 			databaseHeader->iCDB_string = malloc(databaseHeader->iCDB_string_length + 1);
 			if (databaseHeader->iCDB_string != 0)
 			{
-				fread(databaseHeader->iCDB_string, sizeof(char), databaseHeader->iCDB_string_length, sourceFile);
+				(void)!fread(databaseHeader->iCDB_string, sizeof(char), databaseHeader->iCDB_string_length, sourceFile);
 				*((databaseHeader->iCDB_string) + databaseHeader->iCDB_string_length) = '\0';
 			}
 		}
 
 		// Filepath
-		fread(&databaseHeader->filepath_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->filepath_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->filepath_length > 0)
 		{
 			databaseHeader->filepath = malloc(databaseHeader->filepath_length + 1);
 			if (databaseHeader->filepath != 0)
 			{
-				fread(databaseHeader->filepath, sizeof(char), databaseHeader->filepath_length, sourceFile);
+				(void)!fread(databaseHeader->filepath, sizeof(char), databaseHeader->filepath_length, sourceFile);
 				*((databaseHeader->filepath) + databaseHeader->filepath_length) = '\0';
 			}
 		}
 
 		// Settings path
-		fread(&databaseHeader->settingspath_length, sizeof(uint32_t), 1, sourceFile);
+		(void)!fread(&databaseHeader->settingspath_length, sizeof(uint32_t), 1, sourceFile);
 		if (databaseHeader->settingspath_length > 0)
 		{
 			databaseHeader->settingspath = malloc(databaseHeader->settingspath_length + 1);
 			if (databaseHeader->settingspath != 0)
 			{
-				fread(databaseHeader->settingspath, sizeof(char), databaseHeader->settingspath_length, sourceFile);
+				(void)!fread(databaseHeader->settingspath, sizeof(char), databaseHeader->settingspath_length, sourceFile);
 				*((databaseHeader->settingspath) + databaseHeader->settingspath_length) = '\0';
 			}
 		}
@@ -477,7 +477,7 @@ int decodeDatabaseHeader(FILE* sourceFile, databaseHeader_Struct* databaseHeader
 int decodefileList(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_list_struct* fileList)
 {
 	// Read struct
-	fread(fileList, sizeof(file_list_struct), 1, sourceFile);
+	(void)!fread(fileList, sizeof(file_list_struct), 1, sourceFile);
 
 	// Check if counter match
 	if (fileList->file_cnt != fileList->file_cnt2)
@@ -528,7 +528,7 @@ int decodefile(FILE* sourceFile, file_struct* file)
 {
 	int Address = ftell(sourceFile);
 	// Read file entry
-	fread(file, sizeof(file_struct), 1, sourceFile);
+	(void)!fread(file, sizeof(file_struct), 1, sourceFile);
 
 	// Check address
 	if (Address != file->file_address)
@@ -622,12 +622,12 @@ int exportFiles(FILE* sourceFile, databaseHeader_Struct* databaseHeader, file_st
 					// Load file fragments
 					do {
 						fseek(sourceFile, fragment.next_fragment, SEEK_SET);
-						fread(&fragment, sizeof(fragment_struct), 1, sourceFile);
+						(void)!fread(&fragment, sizeof(fragment_struct), 1, sourceFile);
 
 						// Read data if in range
 						if ((fragment.payload_length != 0) && ((fragment.payload_length + payload_lengthAcc) <= file[i]->data_size))
 						{
-							fread(Payload + payload_lengthAcc, sizeof(char), fragment.payload_length, sourceFile);
+							(void)!fread(Payload + payload_lengthAcc, sizeof(char), fragment.payload_length, sourceFile);
 						}
 	
 						payload_lengthAcc += fragment.payload_length;
