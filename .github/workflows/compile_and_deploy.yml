@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build_windows:
     runs-on: ${{ matrix.os }}
     
     strategy:
@@ -15,13 +15,118 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         build_type: [Release]
         c_compiler: [gcc, clang, cl]
         include:
           - os: windows-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+        exclude:
+          - os: windows-latest
             c_compiler: cl
-            cpp_compiler: cl
+          - os: windows-latest
+            c_compiler: clang
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+        
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        release: true
+        update: false
+        path-type: inherit
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-gcc-libs
+          mingw-w64-x86_64-cmake
+
+    - name: Set reusable strings
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "build-input-dir-icdbDecode=${{ github.workspace }}/icdbDecode" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir-icdbDecode=${{ github.workspace }}/icdbDecode/build" >> "$GITHUB_OUTPUT"
+        echo "build-input-dir-icdbAnalyzer=${{ github.workspace }}/tools/analyzer" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir-icdbAnalyzer=${{ github.workspace }}/tools/analyzer/build" >> "$GITHUB_OUTPUT"
+        echo "build-input-dir-icdbCoder=${{ github.workspace }}/tools/coder" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir-icdbCoder=${{ github.workspace }}/tools/coder/build" >> "$GITHUB_OUTPUT"
+
+    - name: Configure icdbDecode CMake
+      shell: msys2 {0}
+      run: >
+        cmake -B "${{ steps.strings.outputs.build-output-dir-icdbDecode }}"
+        -S "${{ steps.strings.outputs.build-input-dir-icdbDecode }}"
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="-s"
+        -DCMAKE_CXX_FLAGS="-s"
+
+    - name: Build icdbDecode
+      shell: msys2 {0}
+      run: cmake --build "${{ steps.strings.outputs.build-output-dir-icdbDecode }}" --config Release
+
+    - name: Configure icdbAnalyzer CMake
+      shell: msys2 {0}
+      run: >
+        cmake -B "${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}"
+        -S "${{ steps.strings.outputs.build-input-dir-icdbAnalyzer }}"
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="-s"
+        -DCMAKE_CXX_FLAGS="-s"
+
+    - name: Build icdbAnalyzer
+      shell: msys2 {0}
+      run: cmake --build "${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}" --config Release
+
+    - name: Configure icdbCoder CMake
+      shell: msys2 {0}
+      run: >
+        cmake -B "${{ steps.strings.outputs.build-output-dir-icdbCoder }}"
+        -S "${{ steps.strings.outputs.build-input-dir-icdbCoder }}"
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="-s"
+        -DCMAKE_CXX_FLAGS="-s"
+
+    - name: Build icdbCoder
+      shell: msys2 {0}
+      run: cmake --build "${{ steps.strings.outputs.build-output-dir-icdbCoder }}" --config Release
+
+    - name: Collect Artifacts 
+      shell: cmd
+      run: |
+        mkdir ${{ github.workspace }}\artifacts\
+        move ${{ steps.strings.outputs.build-output-dir-icdbDecode }}\src\icdbDecode.exe ${{ github.workspace }}\artifacts\icdbDecode.exe
+        move ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}\icdbAnalyzer.exe ${{ github.workspace }}\artifacts\icdbAnalyzer.exe
+        move ${{ steps.strings.outputs.build-output-dir-icdbCoder }}\icdbCoder.exe ${{ github.workspace }}\artifacts\icdbCoder.exe
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}_${{ matrix.c_compiler }}
+        path: ${{ github.workspace }}/artifacts/
+    
+  build_linux:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-latest]
+        c_compiler: [gcc, clang, cl]
+        include:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -29,10 +134,6 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
         exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
           - os: ubuntu-latest
             c_compiler: cl
 
@@ -59,10 +160,12 @@ jobs:
         -S ${{ steps.strings.outputs.build-input-dir-icdbDecode }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="-s"
+        -DCMAKE_CXX_FLAGS="-s"
 
     - name: Build icdbDecode
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbDecode }} --config ${{ matrix.build_type }}
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbDecode }} --config Release
 
     - name: Configure icdbAnalyzer CMake
       run: >
@@ -70,10 +173,12 @@ jobs:
         -S ${{ steps.strings.outputs.build-input-dir-icdbAnalyzer }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="-s"
+        -DCMAKE_CXX_FLAGS="-s"
 
     - name: Build icdbAnalyzer
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }} --config ${{ matrix.build_type }}
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }} --config Release
 
     - name: Configure icdbCoder CMake
       run: >
@@ -81,28 +186,20 @@ jobs:
         -S ${{ steps.strings.outputs.build-input-dir-icdbCoder }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS="-s"
+        -DCMAKE_CXX_FLAGS="-s"
 
     - name: Build icdbCoder
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbCoder }} --config ${{ matrix.build_type }}
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir-icdbCoder }} --config Release
 
-    - name: Collect Artifacts Linux 
-      if: runner.os != 'Windows'
+    - name: Collect Artifacts
       shell: bash
       run: |
         mkdir ${{ github.workspace }}/artifacts/
         mv ${{ steps.strings.outputs.build-output-dir-icdbDecode }}/src/icdbDecode ${{ github.workspace }}/artifacts/icdbDecode
         mv ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}/icdbAnalyzer ${{ github.workspace }}/artifacts/icdbAnalyzer
         mv ${{ steps.strings.outputs.build-output-dir-icdbCoder }}/icdbCoder ${{ github.workspace }}/artifacts/icdbCoder
-
-    - name: Collect Artifacts Windows 
-      if: runner.os == 'Windows'
-      shell: cmd
-      run: |
-        mkdir ${{ github.workspace }}\artifacts\
-        move ${{ steps.strings.outputs.build-output-dir-icdbDecode }}\src\Release\icdbDecode.exe ${{ github.workspace }}\artifacts\icdbDecode.exe
-        move ${{ steps.strings.outputs.build-output-dir-icdbAnalyzer }}\Release\icdbAnalyzer.exe ${{ github.workspace }}\artifacts\icdbAnalyzer.exe
-        move ${{ steps.strings.outputs.build-output-dir-icdbCoder }}\Release\icdbCoder.exe ${{ github.workspace }}\artifacts\icdbCoder.exe
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
