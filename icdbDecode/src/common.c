@@ -33,6 +33,11 @@
 * Defines
 ******************************************************************
 */
+#ifdef B64Bit
+	#pragma message ("building 64bit application")
+#else
+	#pragma message ("building 32bit application")
+#endif
 
 /*
 ******************************************************************
