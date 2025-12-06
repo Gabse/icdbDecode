@@ -123,6 +123,7 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 		error += parseCdbblks(SubPath, SubPathLen);
 		error += StoreAsKicadSchematic(Exportpath, sizeof(Exportpath), page);
 		free(SubPath);
+		initCdbblks();
 	}
 	initCdbcatlg();
 	free(Path);

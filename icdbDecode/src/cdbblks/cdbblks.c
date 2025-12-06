@@ -82,9 +82,9 @@ int parseCdbblks(char* path, uint32_t pathlength)
 
 	ProcessProperty(&cdbblks_property);					// Must be done before arc, circle, line & rect
 	ProcessTextdata(&cdbblks_textdata);					// Must be done before text and label
-	ProcessJoint(&cdbblks_joint); 							// Must be done before segment
-	ProcessSegment(&cdbblks_segment); 						// Must be done before nets
-	ProcessLabel(&cdbblks_label, &cdbblks_textdata);		// Must be done before nets
+	ProcessJoint(&cdbblks_joint); 						// Must be done before segment
+	ProcessSegment(&cdbblks_segment); 					// Must be done before nets
+	ProcessLabel(&cdbblks_label, &cdbblks_textdata);	// Must be done before nets
 	ProcessSheet(&cdbblks_sheet);
 	ProcessArc(&cdbblks_property, &cdbblks_arc);
 	ProcessCircle(&cdbblks_property, &cdbblks_circle);
@@ -94,7 +94,6 @@ int parseCdbblks(char* path, uint32_t pathlength)
 	ProcessNet(&cdbblks_net);
 	ProcessBus(&cdbblks_bus);
 
-	initCdbblks();
 	return errorcode;
 }
 /*
