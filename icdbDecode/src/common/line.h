@@ -23,7 +23,8 @@
 */
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
 #include "../common.h"	// Required for element_struct
-#include "property.h" // Required for property struct
+#include "../uid.h"		// Required for uid_union
+#include "property.h"	// Required for property struct
 
 
 /*
@@ -62,7 +63,7 @@ typedef struct line_struct
 	int numSegment;
 	line_segment_struct* Segment;
 	property_struct Property;
-	uid_struct UID;
+	uid_union UID;
 	int IDDxD;
 } line_struct;
 

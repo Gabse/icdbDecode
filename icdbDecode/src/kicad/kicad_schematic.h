@@ -22,7 +22,8 @@
 ******************************************************************
 */
 #include <stdint.h>				// Required for int32_t, uint32_t, ...
-#include "../common.h"			// Required for uid_struct
+#include "../common.h"			// Required for element_struct
+#include "../uid.h"				// Required for uid_union
 #include "../cdbcatlg/page.h"	// Required for page
 
 /*

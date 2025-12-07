@@ -23,6 +23,7 @@
 */
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include "../common.h"				// Required for element_struct
+#include "../uid.h"					// Required for uid_union
 #include "../common/label.h"		// Required for label struct
 #include "segment.h"				// Required for segment struct
 #include "../common/property.h" 	// Required for property struct
@@ -42,7 +43,7 @@ typedef struct net_segment_struct
 typedef struct net_struct
 {
 	int Net;
-	uid_struct UID;
+	uid_union UID;
 	int NetID;
 	string_struct Name;
 	int NumNetSegment;

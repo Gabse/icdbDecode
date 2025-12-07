@@ -25,7 +25,8 @@
 #include <stdio.h>					// Required for memcpy
 #include <string.h>					// Required for memcpy
 #include "catlgatl.h"				// Required for keys
-#include "../common.h" 				// Required for uid struct
+#include "../common.h" 				// Required for element struct
+#include "../uid.h"					// Required for uid_union
 
 /*
 ******************************************************************

@@ -22,7 +22,8 @@
 ******************************************************************
 */
 #include <stdint.h>			// Required for int32_t, uint32_t, ...
-#include "../common.h" 		// Required for uid struct
+#include "../common.h" 		// Required for element struct
+#include "../uid.h"			// Required for uid_union
 
 /*
 ******************************************************************
@@ -38,7 +39,7 @@
 */
 typedef struct grpobj_struct
 {
-	uid_struct UID;
+	uid_union UID;
 	unsigned int numGroup;
 	unsigned int* group;
 } grpobj_struct;
@@ -51,7 +52,7 @@ typedef struct grpobj_struct
 extern int ParseGrpobj(element_struct*, char*, uint32_t, char*, uint32_t);
 extern void InitGrpobj(element_struct*);
 extern grpobj_struct GetGrpobj(element_struct*, unsigned int);
-extern unsigned int InsideGroup(element_struct*, uid_struct, unsigned int);
+extern unsigned int InsideGroup(element_struct*, uid_union, unsigned int);
 
 
 #endif //_GRPOBJ_H

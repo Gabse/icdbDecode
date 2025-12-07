@@ -165,11 +165,6 @@ typedef struct int_array_struct
 	IntData* Data;
 } int_array_struct;
 
-typedef struct uid_struct
-{
-	unsigned char UID[8];
-} uid_struct;
-
 typedef struct key_struct
 {
 	typecode_enum Typecode;

@@ -23,6 +23,7 @@
 */
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include "../common.h"				// Required for element_struct
+#include "../uid.h"					// Required for uid_union
 #include "../common/label.h"		// Required for label struct
 #include "segment.h"				// Required for segment struct
 #include "../common/property.h" 	// Required for property struct
@@ -44,7 +45,7 @@ typedef struct bus_segment_struct
 typedef struct bus_struct
 {
 	string_struct Name;
-	uid_struct UID;
+	uid_union UID;
 	bus_segment_struct* BusSegment;
 	int BusSegmentLen;
 	int BusType;

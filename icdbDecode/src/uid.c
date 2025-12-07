@@ -13,38 +13,34 @@
 *
 * This project uses the Zlib library (https://www.zlib.net/) for decompression.
 */
-#ifndef _TEXT_H
-#define _TEXT_H
+
 
 /*
 ******************************************************************
-* Global Includes
+* Includes
 ******************************************************************
 */
+#include "uid.h"
+#include <stdio.h>		// Required for fprint, fopen, ...
+#include <stdlib.h>		// Required for calloc to work properly
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
-#include "../common.h"	// Required for element_struct
-#include "../uid.h"		// Required for uid_union
-#include "textdata.h"  	// Required for textdata struct
+#include <string.h>		// Required for strcmp
+#include "stringutil.h"	// Required for assemblePath
 
 /*
 ******************************************************************
-* Structures
+* Defines
 ******************************************************************
 */
-typedef struct text_struct
-{
-	string_struct String;
-	textdata_struct TextData;
-	uid_union UID;
-} text_struct;
+
+/*
+******************************************************************
+* Function Prototypes 
+******************************************************************
+*/
 
 /*
 ******************************************************************
 * Global Functions
 ******************************************************************
 */
-extern void ProcessText(element_struct*, element_struct*);
-extern void InitText(element_struct*);
-extern text_struct GetText(element_struct*, int);
-
-#endif //_TEXT_H

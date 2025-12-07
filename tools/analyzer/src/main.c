@@ -20,6 +20,7 @@
 #include <time.h>		// Required for clock_t
 #include "../../../icdbDecode/src/common.h"		// Required for parseFile
 #include "../../../icdbDecode/src/stringutil.h"	// Required for string manipulation
+#include "../../../icdbDecode/src/uid.h"		// Required for uid_union
 
 /*
 ******************************************************************
@@ -251,8 +252,217 @@ void AnalyzerWrite(FILE* sourceFile, char* Key, unsigned int KeyLen)
 		fprintf(Txtfile, "\tPayload:\n");
 		for (unsigned int i = 0; i < Data->LengthCalc; i++)
 		{
-			fprintf(Datafile, "\t%d:\t[0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X]\n", i + 1, ((uid_struct*)(Data->Data))[i].UID[0], ((uid_struct*)(Data->Data))[i].UID[1], ((uid_struct*)(Data->Data))[i].UID[2], ((uid_struct*)(Data->Data))[i].UID[3], ((uid_struct*)(Data->Data))[i].UID[4], ((uid_struct*)(Data->Data))[i].UID[5], ((uid_struct*)(Data->Data))[i].UID[6], ((uid_struct*)(Data->Data))[i].UID[7]);
-			fprintf(Txtfile, "\t\t%d:\t[0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X]\n", i + 1, ((uid_struct*)(Data->Data))[i].UID[0], ((uid_struct*)(Data->Data))[i].UID[1], ((uid_struct*)(Data->Data))[i].UID[2], ((uid_struct*)(Data->Data))[i].UID[3], ((uid_struct*)(Data->Data))[i].UID[4], ((uid_struct*)(Data->Data))[i].UID[5], ((uid_struct*)(Data->Data))[i].UID[6], ((uid_struct*)(Data->Data))[i].UID[7]);
+			fprintf(Datafile, "\t%d:\t[0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ", i + 1, ((uid_union*)(Data->Data))[i].UID8[0], ((uid_union*)(Data->Data))[i].UID8[1], ((uid_union*)(Data->Data))[i].UID8[2], ((uid_union*)(Data->Data))[i].UID8[3], ((uid_union*)(Data->Data))[i].UID8[4], ((uid_union*)(Data->Data))[i].UID8[5], ((uid_union*)(Data->Data))[i].UID8[6], ((uid_union*)(Data->Data))[i].UID8[7]);
+			fprintf(Txtfile, "\t\t%d:\t[0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ", i + 1, ((uid_union*)(Data->Data))[i].UID8[0], ((uid_union*)(Data->Data))[i].UID8[1], ((uid_union*)(Data->Data))[i].UID8[2], ((uid_union*)(Data->Data))[i].UID8[3], ((uid_union*)(Data->Data))[i].UID8[4], ((uid_union*)(Data->Data))[i].UID8[5], ((uid_union*)(Data->Data))[i].UID8[6], ((uid_union*)(Data->Data))[i].UID8[7]);
+			fprintf(Datafile, ":: Owner: 0x%08X, ID: 0x%04X, Padding: 0x%02X, Type: 0x%02X => ", ((uid_union*)(Data->Data))[i].UID_Splitt.UID_Owner, ((uid_union*)(Data->Data))[i].UID_Splitt.UID_ID, ((uid_union*)(Data->Data))[i].UID_Splitt.UID_Padding, ((uid_union*)(Data->Data))[i].UID_Splitt.UID_Type);
+			fprintf(Txtfile, ":: Owner: 0x%08X, ID: 0x%04X, Padding: 0x%02X, Type: 0x%02X => ", ((uid_union*)(Data->Data))[i].UID_Splitt.UID_Owner, ((uid_union*)(Data->Data))[i].UID_Splitt.UID_ID, ((uid_union*)(Data->Data))[i].UID_Splitt.UID_Padding, ((uid_union*)(Data->Data))[i].UID_Splitt.UID_Type);
+			switch(((uid_union*)(Data->Data))[i].UID_Splitt.UID_Type)
+			{
+				case uid_type_Cnfg:
+					fprintf(Datafile, " uid_type_Cnfg ]\n");
+					fprintf(Txtfile, " uid_type_Cnfg ]\n");
+					break;
+				case uid_type_Path:
+					fprintf(Datafile, "uid_type_Path ]\n");
+					fprintf(Txtfile, "uid_type_Path ]\n");
+					break;
+				case uid_type_Blk:
+					fprintf(Datafile, "uid_type_Blk ]\n");
+					fprintf(Txtfile, "uid_type_Blk ]\n");
+					break;
+				case uid_type_Cmp:
+					fprintf(Datafile, "uid_type_Cmp ]\n");
+					fprintf(Txtfile, "uid_type_Cmp ]\n");
+					break;
+				case uid_type_BSym:
+					fprintf(Datafile, "uid_type_BSym ]\n");
+					fprintf(Txtfile, "uid_type_BSym ]\n");
+					break;
+				case uid_type_ISym:
+					fprintf(Datafile, "uid_type_ISym ]\n");
+					fprintf(Txtfile, "uid_type_ISym ]\n");
+					break;
+				case uid_type_Pin:
+					fprintf(Datafile, "uid_type_Pin ]\n");
+					fprintf(Txtfile, "uid_type_Pin ]\n");
+					break;
+				case uid_type_BPin:
+					fprintf(Datafile, "uid_type_BPin ]\n");
+					fprintf(Txtfile, "uid_type_BPin ]\n");
+					break;
+				case uid_type_IPin:
+					fprintf(Datafile, "uid_type_IPin ]\n");
+					fprintf(Txtfile, "uid_type_IPin ]\n");
+					break;
+				case uid_type_INet:
+					fprintf(Datafile, "uid_type_INet ]\n");
+					fprintf(Txtfile, "uid_type_INet ]\n");
+					break;
+				case uid_type_FNet:
+					fprintf(Datafile, "uid_type_FNet ]\n");
+					fprintf(Txtfile, "uid_type_FNet ]\n");
+					break;
+				case uid_type_PNet:
+					fprintf(Datafile, "uid_type_PNet ]\n");
+					fprintf(Txtfile, "uid_type_PNet ]\n");
+					break;
+				case uid_type_Xtr:
+					fprintf(Datafile, "uid_type_Xtr ]\n");
+					fprintf(Txtfile, "uid_type_Xtr ]\n");
+					break;
+				case uid_type_Bus:
+					fprintf(Datafile, "uid_type_Bus ]\n");
+					fprintf(Txtfile, "uid_type_Bus ]\n");
+					break;
+				case uid_type_Design:
+					fprintf(Datafile, "uid_type_Design ]\n");
+					fprintf(Txtfile, "uid_type_Design ]\n");
+					break;
+				case uid_type_Const:
+					fprintf(Datafile, "uid_type_Const ]\n");
+					fprintf(Txtfile, "uid_type_Const ]\n");
+					break;
+				case uid_type_Layer:
+					fprintf(Datafile, "uid_type_Layer ]\n");
+					fprintf(Txtfile, "uid_type_Layer ]\n");
+					break;
+				case uid_type_NetClass:
+					fprintf(Datafile, "uid_type_NetClass ]\n");
+					fprintf(Txtfile, "uid_type_NetClass ]\n");
+					break;
+				case uid_type_ClearRule:
+					fprintf(Datafile, "uid_type_ClearRule ]\n");
+					fprintf(Txtfile, "uid_type_ClearRule ]\n");
+					break;
+				case uid_type_ConstraintClass:
+					fprintf(Datafile, "uid_type_ConstraintClass ]\n");
+					fprintf(Txtfile, "uid_type_ConstraintClass ]\n");
+					break;
+				case uid_type_ViaSpan:
+					fprintf(Datafile, "uid_type_ViaSpan ]\n");
+					fprintf(Txtfile, "uid_type_ViaSpan ]\n");
+					break;
+				case uid_type_GenClearClass:
+					fprintf(Datafile, "uid_type_GenClearClass ]\n");
+					fprintf(Txtfile, "uid_type_GenClearClass ]\n");
+					break;
+				case uid_type_PartTech:
+					fprintf(Datafile, "uid_type_PartTech ]\n");
+					fprintf(Txtfile, "uid_type_PartTech ]\n");
+					break;
+				case uid_type_C2CClear:
+					fprintf(Datafile, "uid_type_C2CClear ]\n");
+					fprintf(Txtfile, "uid_type_C2CClear ]\n");
+					break;
+				case uid_type_Scheme:
+					fprintf(Datafile, "uid_type_Scheme ]\n");
+					fprintf(Txtfile, "uid_type_Scheme ]\n");
+					break;
+				case uid_type_SchemeNetClassRule:
+					fprintf(Datafile, "uid_type_SchemeNetClassRule ]\n");
+					fprintf(Txtfile, "uid_type_SchemeNetClassRule ]\n");
+					break;
+				case uid_type_ViaAssign:
+					fprintf(Datafile, "uid_type_ViaAssign ]\n");
+					fprintf(Txtfile, "uid_type_ViaAssign ]\n");
+					break;
+				case uid_type_LayerRuleUID:
+					fprintf(Datafile, "uid_type_LayerRuleUID ]\n");
+					fprintf(Txtfile, "uid_type_LayerRuleUID ]\n");
+					break;
+				case uid_type_SchemaClearRule:
+					fprintf(Datafile, "uid_type_SchemaClearRule ]\n");
+					fprintf(Txtfile, "uid_type_SchemaClearRule ]\n");
+					break;
+				case uid_type_LayerClearRule:
+					fprintf(Datafile, "uid_type_LayerClearRule ]\n");
+					fprintf(Txtfile, "uid_type_LayerClearRule ]\n");
+					break;
+				case uid_type_GenObjType:
+					fprintf(Datafile, "uid_type_GenObjType ]\n");
+					fprintf(Txtfile, "uid_type_GenObjType ]\n");
+					break;
+				case uid_type_GenCompObj:
+					fprintf(Datafile, "uid_type_GenCompObj ]\n");
+					fprintf(Txtfile, "uid_type_GenCompObj ]\n");
+					break;
+				case uid_type_DiffPair:
+					fprintf(Datafile, "uid_type_DiffPair ]\n");
+					fprintf(Txtfile, "uid_type_DiffPair ]\n");
+					break;
+				case uid_type_ElectricalNet:
+					fprintf(Datafile, "uid_type_ElectricalNet ]\n");
+					fprintf(Txtfile, "uid_type_ElectricalNet ]\n");
+					break;
+				case uid_type_PinPair:
+					fprintf(Datafile, "uid_type_PinPair ]\n");
+					fprintf(Txtfile, "uid_type_PinPair ]\n");
+					break;
+				case uid_type_PhysicalNet:
+					fprintf(Datafile, "uid_type_PhysicalNet ]\n");
+					fprintf(Txtfile, "uid_type_PhysicalNet ]\n");
+					break;
+				case uid_type_FromTo:
+					fprintf(Datafile, "uid_type_FromTo ]\n");
+					fprintf(Txtfile, "uid_type_FromTo ]\n");
+					break;
+				case uid_type_Component:
+					fprintf(Datafile, "uid_type_Component ]\n");
+					fprintf(Txtfile, "uid_type_Component ]\n");
+					break;
+				case uid_type_CesPin:
+					fprintf(Datafile, "uid_type_CesPin ]\n");
+					fprintf(Txtfile, "uid_type_CesPin ]\n");
+					break;
+				case uid_type_Part:
+					fprintf(Datafile, "uid_type_Part ]\n");
+					fprintf(Txtfile, "uid_type_Part ]\n");
+					break;
+				case uid_type_PartPin:
+					fprintf(Datafile, "uid_type_PartPin ]\n");
+					fprintf(Txtfile, "uid_type_PartPin ]\n");
+					break;
+				case uid_type_NetDxd:
+					fprintf(Datafile, "uid_type_NetDxd ]\n");
+					fprintf(Txtfile, "uid_type_NetDxd ]\n");
+					break;
+				case uid_type_Line:
+					fprintf(Datafile, "uid_type_Line ]\n");
+					fprintf(Txtfile, "uid_type_Line ]\n");
+					break;
+				case uid_type_Circle:
+					fprintf(Datafile, "uid_type_Circle ]\n");
+					fprintf(Txtfile, "uid_type_Circle ]\n");
+					break;
+				case uid_type_Arc:
+					fprintf(Datafile, "uid_type_Arc ]\n");
+					fprintf(Txtfile, "uid_type_Arc ]\n");
+					break;
+				case uid_type_Rectangle:
+					fprintf(Datafile, "uid_type_Rectangle ]\n");
+					fprintf(Txtfile, "uid_type_Rectangle ]\n");
+					break;
+				case uid_type_Text:
+					fprintf(Datafile, "uid_type_Text ]\n");
+					fprintf(Txtfile, "uid_type_Text ]\n");
+					break;
+				case uid_type_Via:
+					fprintf(Datafile, "uid_type_Via ]\n");
+					fprintf(Txtfile, "uid_type_Via ]\n");
+					break;
+				case uid_type_CESconfig:
+					fprintf(Datafile, "uid_type_CESconfig ]\n");
+					fprintf(Txtfile, "uid_type_CESconfig ]\n");
+					break;
+				case uid_type_Group:
+					fprintf(Datafile, "uid_type_Group ]\n");
+					fprintf(Txtfile, "uid_type_Group ]\n");
+					break;
+				default:
+					fprintf(Datafile, "unknown ]\n");
+					fprintf(Txtfile, "unknown ]\n");
+					break;
+			}
 		}
 		break;
 	case typecode_SUID:
@@ -303,8 +513,8 @@ void AnalyzerWrite(FILE* sourceFile, char* Key, unsigned int KeyLen)
 			time = ((TimeData*)(Data->Data))[i].u32[2];
 			strftime(temp3, 20, "%Y-%m-%d %H:%M:%S", localtime(&time));
 
-			fprintf(Datafile, "\t%d:\t[%08X %08X %08X %08X : %d %d %d %d :  %s   %s   %s ]\n", i + 1, ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], temp1, temp2, temp3);
-			fprintf(Txtfile, "\t\t%d:\t[%08X %08X %08X %08X : %d %d %d %d :  %s   %s   %s ]\n", i + 1, ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], temp1, temp2, temp3);
+			fprintf(Datafile, "\t%d:\t[%08X %08X %08X %08X :: %d %d %d %d ::  %s   %s   %s ]\n", i + 1, ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], temp1, temp2, temp3);
+			fprintf(Txtfile, "\t\t%d:\t[%08X %08X %08X %08X :: %d %d %d %d ::  %s   %s   %s ]\n", i + 1, ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], ((LongLongData*)(Data->Data))[i].u32[0], ((LongLongData*)(Data->Data))[i].u32[1], ((LongLongData*)(Data->Data))[i].u32[2], ((LongLongData*)(Data->Data))[i].u32[3], temp1, temp2, temp3);
 		}
 		break;
 	case typecode_Time:
@@ -323,8 +533,8 @@ void AnalyzerWrite(FILE* sourceFile, char* Key, unsigned int KeyLen)
 			time = ((TimeData*)(Data->Data))[i].u32[2];
 			strftime(temp3, 20, "%Y-%m-%d %H:%M:%S", localtime(&time));
 
-			fprintf(Datafile, "\t%d:\t[%08X %08X %08X : %d %d %d :  %s   %s   %s ]\n", i + 1, ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], temp1, temp2, temp3);
-			fprintf(Txtfile, "\t\t%d:\t[%08X %08X %08X : %d %d %d :  %s   %s   %s ]\n", i + 1, ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], temp1, temp2, temp3);
+			fprintf(Datafile, "\t%d:\t[%08X %08X %08X :: %d %d %d ::  %s   %s   %s ]\n", i + 1, ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], temp1, temp2, temp3);
+			fprintf(Txtfile, "\t\t%d:\t[%08X %08X %08X :: %d %d %d ::  %s   %s   %s ]\n", i + 1, ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], ((TimeData*)(Data->Data))[i].u32[0], ((TimeData*)(Data->Data))[i].u32[1], ((TimeData*)(Data->Data))[i].u32[2], temp1, temp2, temp3);
 		}
 		break;
 	case typecode_GUID:

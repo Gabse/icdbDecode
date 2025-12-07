@@ -25,6 +25,7 @@
 #include <stdio.h>					// Required for memcpy
 #include <string.h>					// Required for memcpy
 #include "../common.h"				// Required for element_struct
+#include "../uid.h"					// Required for uid_union
 #include "../common/dxdatl.h"		// Required for keys
 #include "../common/property.h"		// Required for keys
 
@@ -67,7 +68,7 @@ void ProcessJoint(element_struct* joint)
 			(((joint_struct*)(joint->Data))[i]).Coord = ((coordinate_struct*)(*Dxdatl_JointPos).Data)[i];
 
 			// UID
-			(((joint_struct*)(joint->Data))[i]).UID = ((uid_struct*)(*Dxdatl_Joint2UID).Data)[i];
+			(((joint_struct*)(joint->Data))[i]).UID = ((uid_union*)(*Dxdatl_Joint2UID).Data)[i];
 
 			// ID
 			//(((joint_struct*)(joint->Data))[i]).ID = ((int*)(*Dxdatl_JointID).Data)[i];

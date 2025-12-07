@@ -25,6 +25,7 @@
 #include <stdlib.h>					// Required for calloc to work properly#
 #include "kicad_shared.h"			// Required for shared kicad code
 #include "../common.h"				// Required for myfopen
+#include "../uid.h"					// Required for uid_union
 #include "../stringutil.h"			// Required for string manipulation
 #include "../cdbcatlg/cdbcatlg.h"	// Required for cdbcatlg
 #include "../cdbcatlg/page.h"		// Required for page
@@ -48,8 +49,8 @@
 ******************************************************************
 */
 void KiCadSheetProp(FILE*, sheet_struct);
-void KiCadNets(FILE*, uid_struct, uint32_t);
-void KiCadBusses(FILE*, uid_struct, uint32_t);
+void KiCadNets(FILE*, uid_union, uint32_t);
+void KiCadBusses(FILE*, uid_union, uint32_t);
 
 /*
 ******************************************************************
@@ -70,7 +71,7 @@ void KiCadBusses(FILE*, uid_struct, uint32_t);
 int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
 {
 	char* destination = NULL;
-	uid_struct temp = { 0 };
+	uid_union temp = { 0 };
 	for (unsigned int i = 0; i < cdbblks_sheet.Length; i++)
 	{
 		sheet_struct Sheet = GetSheet(&cdbblks_sheet, i);
@@ -256,7 +257,7 @@ void KiCadSheetProp(FILE* KiCadFile, sheet_struct Sheet)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadNets(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_net.Length > 0)
 	{
@@ -315,7 +316,7 @@ void KiCadNets(FILE* KiCadFile, uid_struct UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadBusses(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadBusses(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_bus.Length > 0)
 	{

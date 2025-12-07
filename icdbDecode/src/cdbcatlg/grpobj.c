@@ -23,7 +23,8 @@
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include <stdlib.h>					// Required for calloc to work properly
 #include "catlgatl.h"				// Required for keys
-#include "../common.h" 				// Required for uid struct
+#include "../common.h" 				// Required for element struct
+#include "../uid.h"					// Required for uid_union
 
 /*
 ******************************************************************
@@ -61,13 +62,13 @@ int ParseGrpobj(element_struct* grpobj, char* path, uint32_t pathlength, char* f
 		for (unsigned int i = 0; i < grpobj->Length; i++)
 		{
 			// Simple Safety
-			if ((ftell(sourceFile) + sizeof(uid_struct)) + sizeof(unsigned int) > FileEnd)
+			if ((ftell(sourceFile) + sizeof(uid_union)) + sizeof(unsigned int) > FileEnd)
 			{
 				break;
 			}
 
 			// UID
-			(void)!fread(&((grpobj_struct*)(grpobj->Data))[i].UID.UID[0], sizeof(uid_struct), 1, sourceFile);
+			(void)!fread(&((grpobj_struct*)(grpobj->Data))[i].UID.UID8[0], sizeof(uid_union), 1, sourceFile);
 
 			// Number of group
 			(void)!fread(&((grpobj_struct*)(grpobj->Data))[i].numGroup, sizeof(unsigned int), 1, sourceFile);
@@ -152,21 +153,18 @@ grpobj_struct GetGrpobj(element_struct* grpobj, unsigned int idx)
 * - return value: 	0 or 1
 ******************************************************************
 */
-unsigned int InsideGroup(element_struct* grpobj, uid_struct UID, unsigned int group)
+unsigned int InsideGroup(element_struct* grpobj, uid_union UID, unsigned int group)
 {
 	grpobj_struct obj;
 	for(unsigned int i = 0; i < grpobj->Length; i++)
 	{
 		obj = ((grpobj_struct*)(grpobj->Data))[i];
-		if(	obj.UID.UID[0] == UID.UID[0] &&
-			obj.UID.UID[1] == UID.UID[1] &&
-			obj.UID.UID[2] == UID.UID[2] &&
-			obj.UID.UID[3] == UID.UID[3] &&
-			obj.UID.UID[4] == UID.UID[4] &&
-			obj.UID.UID[5] == UID.UID[5] &&
-			obj.UID.UID[6] == UID.UID[6] &&
-			obj.UID.UID[7] == UID.UID[7]
-			)
+#ifdef B64Bit
+		if (obj.UID.UID64 == UID.UID64)
+#else
+		if (obj.UID.UID32[0] == UID.UID32[0] &&
+			obj.UID.UID32[1] == UID.UID32[1] )
+#endif
 		{
 			for (unsigned int j = 0; j < obj.numGroup; j++)
 			{

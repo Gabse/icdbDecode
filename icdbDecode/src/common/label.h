@@ -23,6 +23,7 @@
 */
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
 #include "../common.h"	// Required for element_struct
+#include "../uid.h"		// Required for uid_union
 #include "textdata.h"  	// Required for textdata struct
 
 /*
@@ -56,7 +57,7 @@ typedef struct label_struct
 	int IDDXD;
 	sublabel_struct* Sublable;
 	int SublableNum;
-	uid_struct IndexDxDNet;
+	uid_union IndexDxDNet;
 } label_struct;
 
 /*

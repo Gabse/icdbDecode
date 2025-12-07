@@ -22,7 +22,8 @@
 ******************************************************************
 */
 #include <stdint.h>				// Required for int32_t, uint32_t, ...
-#include "../common.h"			// Required for uid_struct
+#include "../common.h"			// Required for element_struct
+#include "../uid.h"				// Required for uid_union
 #include "../common/label.h"	// Required for label_struct
 #include "../common/textdata.h"	// Required for textdata_struct
 #include "../cdbcatlg/page.h"	// Required for page
@@ -63,14 +64,14 @@ extern float BaseLineThickness;
 */
 extern void KiCadProperty(FILE*, property_struct, uint8_t);
 extern void KiCadTextData(FILE*, textdata_struct);
-extern void KiCadUID(FILE*, uid_struct, uid_struct);
+extern void KiCadUID(FILE*, uid_union, uid_union);
 extern void KiCadPrintString(FILE*, string_struct);
-extern void KiCadLabel(FILE*, uid_struct, label_struct, string_struct);
-extern void KiCadArc(FILE*, uid_struct, uint32_t);
-extern void KiCadCircle(FILE*, uid_struct, uint32_t);
-extern void KiCadRectangle(FILE*, uid_struct, uint32_t);
-extern void KiCadText(FILE*, uid_struct, uint32_t);
-extern void KiCadLine(FILE*, uid_struct, uint32_t);
+extern void KiCadLabel(FILE*, uid_union, label_struct, string_struct);
+extern void KiCadArc(FILE*, uid_union, uint32_t);
+extern void KiCadCircle(FILE*, uid_union, uint32_t);
+extern void KiCadRectangle(FILE*, uid_union, uint32_t);
+extern void KiCadText(FILE*, uid_union, uint32_t);
+extern void KiCadLine(FILE*, uid_union, uint32_t);
 
 
 #endif //_KICAD_SHARED_H

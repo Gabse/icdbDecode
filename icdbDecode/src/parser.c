@@ -23,6 +23,7 @@
 #include <stdint.h>						// Required for int32_t, uint32_t, ...
 #include <stdlib.h>						// Required for calloc to work properly
 #include "stringutil.h"					// Required for assemblePath
+#include "uid.h"						// Required for uid_union
 #include "./kicad/kicad_schematic.h"	// Required for StoreAsKicadFile
 #include "./cdbcatlg/page.h"			// Required for page
 #include "./cdbcatlg/cdbcatlg.h"		// Required for parseCatlgatl
@@ -42,7 +43,7 @@
 ******************************************************************
 */
 int parseSessionFolder(char*, uint32_t);
-void makePathFromUID(char* output, uid_struct* input);
+void makePathFromUID(char* output, uid_union* input);
 
 
 /*
@@ -141,13 +142,13 @@ int parseSessionFolder(char* path, uint32_t pathlength)
 * - return value: 	-
 ******************************************************************
 */
-void makePathFromUID(char* output, uid_struct* input)
+void makePathFromUID(char* output, uid_union* input)
 {
 	uint8_t temp = 0;
 	for (uint8_t i = 0; i < 8; i++)
 	{
 		// Right part
-		temp = (input->UID[i] & 0x0F);
+		temp = (input->UID8[i] & 0x0F);
 		if (temp < 0x0A)
 		{
 			temp += '0'; // To ASCII
@@ -158,7 +159,7 @@ void makePathFromUID(char* output, uid_struct* input)
 		}
 		output[i << 1] = temp;
 		// Left part
-		temp = ((input->UID[i] & 0xF0) >> 4);
+		temp = ((input->UID8[i] & 0xF0) >> 4);
 		if (temp < 0x0A)
 		{
 			temp += '0'; // To ASCII

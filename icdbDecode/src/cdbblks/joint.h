@@ -23,6 +23,7 @@
 */
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include "../common.h"				// Required for element_struct
+#include "../uid.h"					// Required for uid_union
 #include "../common/property.h" 	// Required for coordinate struct
 
 /*
@@ -34,7 +35,7 @@
 typedef struct joint_struct
 {
 	coordinate_struct Coord;
-	uid_struct UID;
+	uid_union UID;
 	int ID;
 } joint_struct;
 

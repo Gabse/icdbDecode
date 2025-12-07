@@ -22,7 +22,8 @@
 ******************************************************************
 */
 #include <stdint.h>			// Required for int32_t, uint32_t, ...
-#include "../common.h" 		// Required for uid struct
+#include "../common.h" 		// Required for element struct
+#include "../uid.h"			// Required for uid_union
 
 /*
 ******************************************************************
@@ -32,7 +33,7 @@
 typedef struct page_struct
 {
 	string_struct Name;
-	uid_struct UID;
+	uid_union UID;
 } page_struct;
 
 /*

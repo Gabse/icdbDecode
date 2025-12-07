@@ -23,6 +23,7 @@
 */
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
 #include "../common.h"	// Required for element_struct
+#include "../uid.h"		// Required for uid_union
 #include "property.h"	// Required for property struct
 
 /*
@@ -36,7 +37,7 @@ typedef struct arc_struct
 	coordinate_struct EndCoord;
 	coordinate_struct MidCoord;
 	property_struct Property;
-	uid_struct UID;
+	uid_union UID;
 	int IDDxD;
 } arc_struct;
 

@@ -24,6 +24,7 @@
 #include <stdint.h>					// Required for int32_t, uint32_t, ...
 #include <stdlib.h>					// Required for calloc to work properly
 #include "../common.h"				// Required for myfopen
+#include "../uid.h"					// Required for uid_union
 #include "../stringutil.h"			// Required for string manipulation
 #include "../cdbcatlg/cdbcatlg.h"	// Required for cdbcatlg
 #include "../cdbcatlg/grpobj.h"		// Required for group
@@ -257,12 +258,12 @@ void KiCadPrintString(FILE* KiCadFile, string_struct String)
 	{
 		if (*((String.Text) + j) == '\n') // Check for line feed
 		{
-			fprintf(KiCadFile, "\\n"); // print \n, not linefeed character
+			fprintf(KiCadFile, "\\n"); // print \n as text, not linefeed character
 			myPrint("]\n\t[");
 		}
 		else if (*((String.Text) + j) == '"')
 		{
-			fprintf(KiCadFile, "\\\""); // print \n, not linefeed character
+			fprintf(KiCadFile, "\\\""); // print \" as text
 			myPrint("\"");
 		}
 		else if (*((String.Text) + j) == '~') // Check for overbar
@@ -304,16 +305,16 @@ void KiCadPrintString(FILE* KiCadFile, string_struct String)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadUID(FILE* KiCadFile, uid_struct pageUID, uid_struct elementUID)
+void KiCadUID(FILE* KiCadFile, uid_union pageUID, uid_union elementUID)
 {
 	uint8_t UIDs[16];
 	for (int i = 0; i < 8; i++)
 	{
-		UIDs[i] = swpnib(pageUID.UID[i]);
+		UIDs[i] = swpnib(pageUID.UID8[i]);
 	}
 	for (int i = 0; i < 8; i++)
 	{
-		UIDs[i + 8] = swpnib(elementUID.UID[i]);
+		UIDs[i + 8] = swpnib(elementUID.UID8[i]);
 	}
 
 	myPrint("UID: %02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
@@ -363,17 +364,14 @@ void KiCadUID(FILE* KiCadFile, uid_struct pageUID, uid_struct elementUID)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadLabel(FILE* KiCadFile, uid_struct UID, label_struct label, string_struct Name)
+void KiCadLabel(FILE* KiCadFile, uid_union UID, label_struct label, string_struct Name)
 {
-	if (
-		label.IndexDxDNet.UID[0] == 0 &&
-		label.IndexDxDNet.UID[1] == 0 &&
-		label.IndexDxDNet.UID[2] == 0 &&
-		label.IndexDxDNet.UID[3] == 0 &&
-		label.IndexDxDNet.UID[4] == 0 &&
-		label.IndexDxDNet.UID[5] == 0 &&
-		label.IndexDxDNet.UID[6] == 0 &&
-		label.IndexDxDNet.UID[7] == 0 )
+#ifdef B64Bit
+	if (label.IndexDxDNet.UID64 == 0 )
+#else
+	if (label.IndexDxDNet.UID32[0] == 0 &&
+		label.IndexDxDNet.UID32[1] == 0 )
+#endif
 	{
 		// No actual Label, just net name
 	}
@@ -409,7 +407,7 @@ void KiCadLabel(FILE* KiCadFile, uid_struct UID, label_struct label, string_stru
 * - return value: 	-
 ******************************************************************
 */
-void KiCadArc(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadArc(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_arc.Length > 0)
 	{
@@ -457,7 +455,7 @@ void KiCadArc(FILE* KiCadFile, uid_struct UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadCircle(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadCircle(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_circle.Length > 0)
 	{
@@ -499,7 +497,7 @@ void KiCadCircle(FILE* KiCadFile, uid_struct UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadRectangle(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadRectangle(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_rectangle.Length > 0)
 	{
@@ -544,7 +542,7 @@ void KiCadRectangle(FILE* KiCadFile, uid_struct UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadText(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadText(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_text.Length > 0)
 	{
@@ -581,7 +579,7 @@ void KiCadText(FILE* KiCadFile, uid_struct UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadLine(FILE* KiCadFile, uid_struct UID, uint32_t page)
+void KiCadLine(FILE* KiCadFile, uid_union UID, uint32_t page)
 {
 	if (cdbblks_line.Length > 0)
 	{
