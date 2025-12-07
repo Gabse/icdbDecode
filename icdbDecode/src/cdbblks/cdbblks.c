@@ -94,6 +94,8 @@ int parseCdbblks(char* path, uint32_t pathlength)
 	ProcessNet(&cdbblks_net);
 	ProcessBus(&cdbblks_bus);
 
+	InitDxdatl();
+	InitBlkatl();
 	return errorcode;
 }
 /*
@@ -109,8 +111,6 @@ int parseCdbblks(char* path, uint32_t pathlength)
 */
 void initCdbblks(void)
 {
-	InitDxdatl();
-	InitBlkatl();
 
 	InitProperty(&cdbblks_property);
 	InitTextdata(&cdbblks_textdata);

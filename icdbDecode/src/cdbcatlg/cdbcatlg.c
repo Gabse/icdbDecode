@@ -58,10 +58,14 @@ int parseCdbcatlg(char* path, uint32_t pathlength)
 	int errorcode = 0;
 	errorcode |= parseFile(path, pathlength, PATH_CATLGATL, sizeof(PATH_CATLGATL), ProcessKeyCatlgatl);
 	errorcode |= parseFile(path, pathlength, PATH_GRPATL, sizeof(PATH_GRPATL), ProcessKeyGrpatl);
+
 	errorcode |= ParseGrpobj(&cdbcatlg_grpobj, path, pathlength, PATH_GRPOBJ, sizeof(PATH_GRPOBJ));
 
 	ProcessPage(&cdbcatlg_page);
 	ProcessGroup(&cdbcatlg_group);
+
+	InitCatlgatl();
+	InitGrpatl();
 	return errorcode;
 }
 /*
@@ -77,10 +81,7 @@ int parseCdbcatlg(char* path, uint32_t pathlength)
 */
 void initCdbcatlg(void)
 {
-	InitCatlgatl();
-	InitGrpatl();
-	InitGrpobj(&cdbcatlg_grpobj);
-
 	InitPage(&cdbcatlg_page);
 	InitGroup(&cdbcatlg_group);
+	InitGrpobj(&cdbcatlg_grpobj);
 }

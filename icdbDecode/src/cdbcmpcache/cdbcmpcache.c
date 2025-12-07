@@ -79,6 +79,8 @@ int parseCdbcmpcache(char* path, uint32_t pathlength)
 	ProcessRectangle(&cdbcmpcach_property, &cdbcmpcach_rectangle);
 	ProcessText(&cdbcmpcach_text, &cdbcmpcach_textdata);
 
+	InitDxdatl();
+	InitCmpatl();
 	return errorcode;
 }
 
@@ -95,9 +97,6 @@ int parseCdbcmpcache(char* path, uint32_t pathlength)
 */
 void initCdbcmpcache(void)
 {
-	InitDxdatl();
-	InitCmpatl();
-
 	InitProperty(&cdbcmpcach_property);
 	InitTextdata(&cdbcmpcach_textdata);
 	InitLabel(&cdbcmpcach_label);
