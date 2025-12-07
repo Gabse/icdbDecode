@@ -70,15 +70,18 @@ int parseCdbcmpcache(char* path, uint32_t pathlength)
 	errorcode |= parseFile(path, pathlength, PATH_DXDATL, sizeof(PATH_DXDATL), ProcessKeyDxdatl);
 	errorcode |= parseFile(path, pathlength, PATH_CMPATL, sizeof(PATH_CMPATL), ProcessKeyCmpatl);
 
-	ProcessProperty(&cdbcmpcach_property);	// Must be done before arc, circle, line & rect
-	ProcessTextdata(&cdbcmpcach_textdata);		// Must be done before text and label
-	ProcessLabel(&cdbcmpcach_label, &cdbcmpcach_textdata);
-	ProcessArc(&cdbcmpcach_property, &cdbcmpcache_arc);
-	ProcessCircle(&cdbcmpcach_property, &cdbcmpcach_circle);
-	ProcessLine(&cdbcmpcach_property, &cdbcmpcach_line);
-	ProcessRectangle(&cdbcmpcach_property, &cdbcmpcach_rectangle);
-	ProcessText(&cdbcmpcach_text, &cdbcmpcach_textdata);
-
+	if(!errorcode)
+	{
+		ProcessProperty(&cdbcmpcach_property);	// Must be done before arc, circle, line & rect
+		ProcessTextdata(&cdbcmpcach_textdata);		// Must be done before text and label
+		ProcessLabel(&cdbcmpcach_label, &cdbcmpcach_textdata);
+		ProcessArc(&cdbcmpcach_property, &cdbcmpcache_arc);
+		ProcessCircle(&cdbcmpcach_property, &cdbcmpcach_circle);
+		ProcessLine(&cdbcmpcach_property, &cdbcmpcach_line);
+		ProcessRectangle(&cdbcmpcach_property, &cdbcmpcach_rectangle);
+		ProcessText(&cdbcmpcach_text, &cdbcmpcach_textdata);
+	}
+	
 	InitDxdatl();
 	InitCmpatl();
 	return errorcode;

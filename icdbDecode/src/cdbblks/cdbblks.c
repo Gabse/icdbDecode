@@ -79,20 +79,23 @@ int parseCdbblks(char* path, uint32_t pathlength)
 	int errorcode = 0;
 	errorcode |= parseFile(path, pathlength, PATH_DXDATL, sizeof(PATH_DXDATL), ProcessKeyDxdatl);
 	errorcode |= parseFile(path, pathlength, PATH_BLKATL, sizeof(PATH_BLKATL), ProcessKeyBlkatl);
-
-	ProcessProperty(&cdbblks_property);					// Must be done before arc, circle, line & rect
-	ProcessTextdata(&cdbblks_textdata);					// Must be done before text and label
-	ProcessJoint(&cdbblks_joint); 						// Must be done before segment
-	ProcessSegment(&cdbblks_segment); 					// Must be done before nets
-	ProcessLabel(&cdbblks_label, &cdbblks_textdata);	// Must be done before nets
-	ProcessSheet(&cdbblks_sheet);
-	ProcessArc(&cdbblks_property, &cdbblks_arc);
-	ProcessCircle(&cdbblks_property, &cdbblks_circle);
-	ProcessLine(&cdbblks_property, &cdbblks_line);
-	ProcessRectangle(&cdbblks_property, &cdbblks_rectangle);
-	ProcessText(&cdbblks_text, &cdbblks_textdata);
-	ProcessNet(&cdbblks_net);
-	ProcessBus(&cdbblks_bus);
+	
+	if(!errorcode)
+	{
+		ProcessProperty(&cdbblks_property);					// Must be done before arc, circle, line & rect
+		ProcessTextdata(&cdbblks_textdata);					// Must be done before text and label
+		ProcessJoint(&cdbblks_joint); 						// Must be done before segment
+		ProcessSegment(&cdbblks_segment); 					// Must be done before nets
+		ProcessLabel(&cdbblks_label, &cdbblks_textdata);	// Must be done before nets
+		ProcessSheet(&cdbblks_sheet);
+		ProcessArc(&cdbblks_property, &cdbblks_arc);
+		ProcessCircle(&cdbblks_property, &cdbblks_circle);
+		ProcessLine(&cdbblks_property, &cdbblks_line);
+		ProcessRectangle(&cdbblks_property, &cdbblks_rectangle);
+		ProcessText(&cdbblks_text, &cdbblks_textdata);
+		ProcessNet(&cdbblks_net);
+		ProcessBus(&cdbblks_bus);
+	}
 
 	InitDxdatl();
 	InitBlkatl();

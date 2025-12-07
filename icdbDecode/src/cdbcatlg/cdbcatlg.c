@@ -61,8 +61,11 @@ int parseCdbcatlg(char* path, uint32_t pathlength)
 
 	errorcode |= ParseGrpobj(&cdbcatlg_grpobj, path, pathlength, PATH_GRPOBJ, sizeof(PATH_GRPOBJ));
 
-	ProcessPage(&cdbcatlg_page);
-	ProcessGroup(&cdbcatlg_group);
+	if(!errorcode)
+	{
+		ProcessPage(&cdbcatlg_page);
+		ProcessGroup(&cdbcatlg_group);
+	}
 
 	InitCatlgatl();
 	InitGrpatl();
