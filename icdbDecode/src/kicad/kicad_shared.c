@@ -45,6 +45,12 @@
 */
 #define _CRT_SECURE_NO_DEPRECATE
 
+#if NewKiCad
+	#pragma message ("Building for KiCad 9.99")
+#else
+	#pragma message ("Building for KiCad 9.0")
+#endif
+
 /*
 ******************************************************************
 * Global Variables
@@ -69,7 +75,7 @@ float BaseLineThickness = UserBaseLineThickness;
 *
 * - description: 	Stores text data in KiCad
 *
-* - parameter: 		Pointer to KiCad file; Index of Property; 1 for filled shape (Rect, Circle, ..), 0 for not filled shape (Line, ...)
+* - parameter: 		Pointer to KiCad file; Index of Property
 *
 * - return value: 	-
 ******************************************************************
@@ -407,13 +413,13 @@ void KiCadLabel(FILE* KiCadFile, uid_union UID, label_struct label, string_struc
 * - return value: 	-
 ******************************************************************
 */
-void KiCadArc(FILE* KiCadFile, uid_union UID, uint32_t page)
+void KiCadArc(FILE* KiCadFile, element_struct arcs, uid_union UID, uint32_t page)
 {
-	if (cdbblks_arc.Length > 0)
+	if (arcs.Length > 0)
 	{
-		for (uint32_t i = 0; i < cdbblks_arc.Length; i++)
+		for (uint32_t i = 0; i < arcs.Length; i++)
 		{
-			arc_struct Arc = GetArc((&cdbblks_arc), i);
+			arc_struct Arc = GetArc((&arcs), i);
 			if (InsideGroup(&cdbcatlg_grpobj, Arc.UID, page))
 			{
 				fprintf(KiCadFile, "\t(arc\n");
@@ -455,13 +461,13 @@ void KiCadArc(FILE* KiCadFile, uid_union UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadCircle(FILE* KiCadFile, uid_union UID, uint32_t page)
+void KiCadCircle(FILE* KiCadFile, element_struct circles, uid_union UID, uint32_t page)
 {
-	if (cdbblks_circle.Length > 0)
+	if (circles.Length > 0)
 	{
-		for (uint32_t i = 0; i < cdbblks_circle.Length; i++)
+		for (uint32_t i = 0; i < circles.Length; i++)
 		{
-			circle_struct Circle = GetCircle(&cdbblks_circle, i);
+			circle_struct Circle = GetCircle(&circles, i);
 			if (InsideGroup(&cdbcatlg_grpobj, Circle.UID, page))
 			{
 				fprintf(KiCadFile, "\t(circle\n");
@@ -497,13 +503,13 @@ void KiCadCircle(FILE* KiCadFile, uid_union UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadRectangle(FILE* KiCadFile, uid_union UID, uint32_t page)
+void KiCadRectangle(FILE* KiCadFile, element_struct rectangles, uid_union UID, uint32_t page)
 {
-	if (cdbblks_rectangle.Length > 0)
+	if (rectangles.Length > 0)
 	{
-		for (uint32_t i = 0; i < cdbblks_rectangle.Length; i++)
+		for (uint32_t i = 0; i < rectangles.Length; i++)
 		{
-			rectangle_struct Rectangle = GetRectangle(&cdbblks_rectangle, i);
+			rectangle_struct Rectangle = GetRectangle(&rectangles, i);
 
 			if (InsideGroup(&cdbcatlg_grpobj, Rectangle.UID, page))
 			{
@@ -542,13 +548,13 @@ void KiCadRectangle(FILE* KiCadFile, uid_union UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadText(FILE* KiCadFile, uid_union UID, uint32_t page)
+void KiCadText(FILE* KiCadFile, element_struct texts, uid_union UID, uint32_t page)
 {
-	if (cdbblks_text.Length > 0)
+	if (texts.Length > 0)
 	{
-		for (uint32_t i = 0; i < cdbblks_text.Length; i++)
+		for (uint32_t i = 0; i < texts.Length; i++)
 		{
-			text_struct Text = GetText(&cdbblks_text, i);
+			text_struct Text = GetText(&texts, i);
 			if (InsideGroup(&cdbcatlg_grpobj, Text.UID, page))
 			{
 
@@ -579,13 +585,13 @@ void KiCadText(FILE* KiCadFile, uid_union UID, uint32_t page)
 * - return value: 	-
 ******************************************************************
 */
-void KiCadLine(FILE* KiCadFile, uid_union UID, uint32_t page)
+void KiCadLine(FILE* KiCadFile, element_struct lines, uid_union UID, uint32_t page)
 {
-	if (cdbblks_line.Length > 0)
+	if (lines.Length > 0)
 	{
-		for (uint32_t i = 0; i < cdbblks_line.Length; i++)
+		for (uint32_t i = 0; i < lines.Length; i++)
 		{
-			line_struct Line = GetLine(&cdbblks_line, i);
+			line_struct Line = GetLine(&lines, i);
 			if (InsideGroup(&cdbcatlg_grpobj, Line.UID, page))
 			{
 				fprintf(KiCadFile, "\t(polyline\n");

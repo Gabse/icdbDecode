@@ -89,13 +89,13 @@ int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
 			sprintf(TempDest2, "%d", i + 1);
 			uint32_t completePathLengthTemp = addStrings(&TempDest1, page.Name.Text, page.Name.Length, TempDest2, stringLen(TempDest2, 10), '_');
 			completePathLengthTemp = addStrings(&TempDest2, TempDest1, completePathLengthTemp, group.Name.Text, group.Name.Length, '_');
-			completePathLength = addStrings(&destination, TempDest2, completePathLengthTemp, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
+			completePathLength = addStrings(&destination, TempDest2, completePathLengthTemp, KiCadSchematicFileEnding, sizeof(KiCadSchematicFileEnding), '\0');
 			free(TempDest1);
 			free(TempDest2);
 		}
 		else // Schematic name only
 		{
-			completePathLength = addStrings(&destination, page.Name.Text, page.Name.Length, KiCadFileEnding, sizeof(KiCadFileEnding), '\0');
+			completePathLength = addStrings(&destination, page.Name.Text, page.Name.Length, KiCadSchematicFileEnding, sizeof(KiCadSchematicFileEnding), '\0');
 		}
 
 		// Open file
@@ -107,12 +107,10 @@ int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
 			// File Header
 			fprintf(KiCadFile, "(kicad_sch\n");
 #if NewKiCad
-#pragma message ("Building for KiCad 9.99")
 			fprintf(KiCadFile, "\t(version 20251012)\n");
 			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
 			fprintf(KiCadFile, "\t(generator_version \"9.99\")\n");
 #else
-#pragma message ("Building for KiCad 9.0")
 			fprintf(KiCadFile, "\t(version 20250114)\n");
 			fprintf(KiCadFile, "\t(generator \"eeschema\")\n");
 			fprintf(KiCadFile, "\t(generator_version \"9.0\")\n");
@@ -124,11 +122,11 @@ int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
 			myPrint("\n");
 
 			// Elements
-			KiCadArc(KiCadFile, page.UID, Sheet.Group);
-			KiCadCircle(KiCadFile, page.UID, Sheet.Group);
-			KiCadRectangle(KiCadFile, page.UID, Sheet.Group);
-			KiCadText(KiCadFile, page.UID, Sheet.Group);
-			KiCadLine(KiCadFile, page.UID, Sheet.Group);
+			KiCadArc(KiCadFile, cdbblks_arc, page.UID, Sheet.Group);
+			KiCadCircle(KiCadFile, cdbblks_circle, page.UID, Sheet.Group);
+			KiCadRectangle(KiCadFile, cdbblks_rectangle, page.UID, Sheet.Group);
+			KiCadText(KiCadFile, cdbblks_text, page.UID, Sheet.Group);
+			KiCadLine(KiCadFile, cdbblks_line, page.UID, Sheet.Group);
 			KiCadNets(KiCadFile, page.UID, Sheet.Group);
 			KiCadBusses(KiCadFile, page.UID, Sheet.Group);
 
@@ -142,7 +140,6 @@ int StoreAsKicadSchematic(char* path, uint32_t pathlength, page_struct page)
 			fprintf(KiCadFile, ")\n");
 			fclose(KiCadFile);
 			free(destination);
-
 		}
 		else
 		{

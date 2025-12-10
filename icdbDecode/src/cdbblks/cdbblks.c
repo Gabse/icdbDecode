@@ -114,7 +114,6 @@ int parseCdbblks(char* path, uint32_t pathlength)
 */
 void initCdbblks(void)
 {
-
 	InitProperty(&cdbblks_property);
 	InitTextdata(&cdbblks_textdata);
 	InitJoint(&cdbblks_joint);

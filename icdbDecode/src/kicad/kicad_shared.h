@@ -42,7 +42,7 @@
 #define UserFontScale 0.5  // Fonts in KiCad are rendered ~0.5 the size from DxD. Exact scaling differs between fonts.
 #define UserBaseLineThickness 0.1
 #define NewKiCad 0 // Create Kicad for 9.99 required for filling pattern
-#define KiCadFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
+#define KiCadSchematicFileEnding ".kicad_sch" // File ending for exported KiCad schematic file
 
 /*
 ******************************************************************
@@ -67,11 +67,10 @@ extern void KiCadTextData(FILE*, textdata_struct);
 extern void KiCadUID(FILE*, uid_union, uid_union);
 extern void KiCadPrintString(FILE*, string_struct);
 extern void KiCadLabel(FILE*, uid_union, label_struct, string_struct);
-extern void KiCadArc(FILE*, uid_union, uint32_t);
-extern void KiCadCircle(FILE*, uid_union, uint32_t);
-extern void KiCadRectangle(FILE*, uid_union, uint32_t);
-extern void KiCadText(FILE*, uid_union, uint32_t);
-extern void KiCadLine(FILE*, uid_union, uint32_t);
-
+extern void KiCadArc(FILE*, element_struct, uid_union, uint32_t);
+extern void KiCadCircle(FILE*, element_struct, uid_union, uint32_t);
+extern void KiCadRectangle(FILE*, element_struct, uid_union, uint32_t);
+extern void KiCadText(FILE*, element_struct, uid_union, uint32_t);
+extern void KiCadLine(FILE*, element_struct, uid_union, uint32_t);
 
 #endif //_KICAD_SHARED_H

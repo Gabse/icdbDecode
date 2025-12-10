@@ -66,18 +66,18 @@ key_struct* Dxdatl_CircleUID = NULL;
 key_struct* Dxdatl_Cmp2GUID = NULL;
 key_struct* Dxdatl_Cmp2Grps = NULL;
 key_struct* Dxdatl_Cmp2Label = NULL;
-key_struct* Dxdatl_CmpArc = NULL;
-key_struct* Dxdatl_CmpCircle = NULL;
+key_struct* Dxdatl_CmpArcs = NULL;
+key_struct* Dxdatl_CmpCircles = NULL;
 key_struct* Dxdatl_CmpComplexShapes = NULL;
 key_struct* Dxdatl_CmpDblScale = NULL;
 key_struct* Dxdatl_CmpGUID = NULL;
 key_struct* Dxdatl_CmpID = NULL;
-key_struct* Dxdatl_CmpLine = NULL;
+key_struct* Dxdatl_CmpLines = NULL;
 key_struct* Dxdatl_CmpOrient = NULL;
 key_struct* Dxdatl_CmpPos = NULL;
 key_struct* Dxdatl_CmpRects = NULL;
 key_struct* Dxdatl_CmpScale = NULL;
-key_struct* Dxdatl_CmpText = NULL;
+key_struct* Dxdatl_CmpTexts = NULL;
 key_struct* Dxdatl_Color = NULL;
 key_struct* Dxdatl_ColorExt = NULL;
 key_struct* Dxdatl_CompBBox = NULL;
@@ -342,13 +342,13 @@ void ProcessKeyDxdatl(FILE * sourceFile, char* Key, unsigned int KeyLen)
 	{
 		Dxdatl_Cmp2Label = ParseKey(sourceFile);
 	}
-	else if (strcmp(Key, "CmpArc") == 0)
+	else if (strcmp(Key, "CmpArcs") == 0)
 	{
-		Dxdatl_CmpArc = ParseKey(sourceFile);
+		Dxdatl_CmpArcs = ParseKey(sourceFile);
 	}
-	else if (strcmp(Key, "CmpCircle") == 0)
+	else if (strcmp(Key, "CmpCircles") == 0)
 	{
-		Dxdatl_CmpCircle = ParseKey(sourceFile);
+		Dxdatl_CmpCircles = ParseKey(sourceFile);
 	}
 	else if (strcmp(Key, "CmpComplexShapes") == 0)
 	{
@@ -366,9 +366,9 @@ void ProcessKeyDxdatl(FILE * sourceFile, char* Key, unsigned int KeyLen)
 	{
 		Dxdatl_CmpID = ParseKey(sourceFile);
 	}
-	else if (strcmp(Key, "CmpLine") == 0)
+	else if (strcmp(Key, "CmpLines") == 0)
 	{
-		Dxdatl_CmpLine = ParseKey(sourceFile);
+		Dxdatl_CmpLines = ParseKey(sourceFile);
 	}
 	else if (strcmp(Key, "CmpOrient") == 0)
 	{
@@ -386,9 +386,9 @@ void ProcessKeyDxdatl(FILE * sourceFile, char* Key, unsigned int KeyLen)
 	{
 		Dxdatl_CmpScale = ParseKey(sourceFile);
 	}
-	else if (strcmp(Key, "CmpText") == 0)
+	else if (strcmp(Key, "CmpTexts") == 0)
 	{
-		Dxdatl_CmpText = ParseKey(sourceFile);
+		Dxdatl_CmpTexts = ParseKey(sourceFile);
 	}
 	else if (strcmp(Key, "Color") == 0)
 	{
@@ -834,18 +834,18 @@ void InitDxdatl(void)
 	InitKey(&Dxdatl_Cmp2GUID);
 	InitKey(&Dxdatl_Cmp2Grps);
 	InitKey(&Dxdatl_Cmp2Label);
-	InitKey(&Dxdatl_CmpArc);
-	InitKey(&Dxdatl_CmpCircle);
+	InitKey(&Dxdatl_CmpArcs);
+	InitKey(&Dxdatl_CmpCircles);
 	InitKey(&Dxdatl_CmpComplexShapes);
 	InitKey(&Dxdatl_CmpDblScale);
 	InitKey(&Dxdatl_CmpGUID);
 	InitKey(&Dxdatl_CmpID);
-	InitKey(&Dxdatl_CmpLine);
+	InitKey(&Dxdatl_CmpLines);
 	InitKey(&Dxdatl_CmpOrient);
 	InitKey(&Dxdatl_CmpPos);
 	InitKey(&Dxdatl_CmpRects);
 	InitKey(&Dxdatl_CmpScale);
-	InitKey(&Dxdatl_CmpText);
+	InitKey(&Dxdatl_CmpTexts);
 	InitKey(&Dxdatl_Color);
 	InitKey(&Dxdatl_ColorExt);
 	InitKey(&Dxdatl_CompBBox);
