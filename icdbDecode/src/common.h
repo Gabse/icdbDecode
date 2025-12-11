@@ -189,7 +189,7 @@ extern void myPrint(const char*, ...);
 extern char swpnib(char);
 extern int parseFile(char*, uint32_t, char*, uint32_t, void(*CheckKey)(FILE*, char*,  unsigned int));
 extern void SkipBlock(FILE*, uint32_t);
-extern num_struct numProcess(int32_t, int32_t, int32_t);
+extern void numPrint(char*, int32_t, int32_t, int32_t);
 extern void InitString(int32_t, string_struct**);
 extern void InitRegular(int32_t, void**);
 extern key_struct* ParseKey(FILE*);

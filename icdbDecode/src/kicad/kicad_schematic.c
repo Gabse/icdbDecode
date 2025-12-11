@@ -219,10 +219,12 @@ void KiCadSheetProp(FILE* KiCadFile, sheet_struct Sheet)
 		break;
 	default: // Custom
 		fprintf(KiCadFile, "User\"");
-		num_struct X = numProcess(Sheet.Size.X, CoordinateScaleX, 0);
-		num_struct Y = numProcess(Sheet.Size.Y, CoordinateScaleY, CoordinateOffsetY);
-		fprintf(KiCadFile, " %d.%05d %d.%05d", X.Integ, X.Frac, Y.Integ, Y.Frac);
-		myPrint("%d.%05dx%d.%05d", X.Integ, X.Frac, Y.Integ, Y.Frac);
+		char X[13]; // 10 char + sign + point + zero termination
+		char Y[13]; // 10 char + sign + point + zero termination
+		numPrint(&X[0], Sheet.Size.Y, CoordinateScaleY, CoordinateOffsetY);
+		numPrint(&Y[0], Sheet.Size.X, CoordinateScaleX, 0);
+		fprintf(KiCadFile, " %s %s", X, Y);
+		myPrint("%s %s", X, Y);
 		break;
 	}
 
@@ -276,16 +278,20 @@ void KiCadNets(FILE* KiCadFile, uid_union UID, uint32_t page)
 						myPrint("Net %d:\n", i + 1);
 						segment_section_struct Segment = (Net.NetSegment)[j].Segment.Segment[k];
 
-						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
-						num_struct XEnd = numProcess(Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YEnd = numProcess(Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+						char XStart[13]; // 10 char + sign + point + zero termination
+						char YStart[13]; // 10 char + sign + point + zero termination
+						char XEnd[13]; // 10 char + sign + point + zero termination
+						char YEnd[13]; // 10 char + sign + point + zero termination
+						numPrint(&XStart[0], Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						numPrint(&YStart[0], Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+						numPrint(&XEnd[0], Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						numPrint(&YEnd[0], Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
 
-						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+						fprintf(KiCadFile, "\t\t\t(xy %s %s) (xy %s %s)\n", XStart, YStart, XEnd, YEnd);
 
 						myPrint("\tSegment %d:\n", j + 1);
-						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+						myPrint("\t\tX Start: %s, X End: %s\n", XStart, XEnd);
+						myPrint("\t\tY Start: %s, Y End: %s\n", YStart, YEnd);
 						fprintf(KiCadFile, "\t\t)\n");
 						KiCadProperty(KiCadFile, (Net.NetSegment)[j].Property, 0);
 
@@ -334,17 +340,21 @@ void KiCadBusses(FILE* KiCadFile, uid_union UID, uint32_t page)
 						fprintf(KiCadFile, "\t\t(pts\n");
 						myPrint("Bus %d:\n", i + 1);
 						segment_section_struct Segment = (Bus.BusSegment)[j].Segment.Segment[k];
+						
+						char XStart[13]; // 10 char + sign + point + zero termination
+						char YStart[13]; // 10 char + sign + point + zero termination
+						char XEnd[13]; // 10 char + sign + point + zero termination
+						char YEnd[13]; // 10 char + sign + point + zero termination
+						numPrint(&XStart[0], Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						numPrint(&YStart[0], Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
+						numPrint(&XEnd[0], Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
+						numPrint(&YEnd[0], Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
 
-						num_struct XStart = numProcess(Segment.StartJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YStart = numProcess(Segment.StartJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
-						num_struct XEnd = numProcess(Segment.EndJoint.Coord.X, CoordinateScaleX, CoordinateOffsetX);
-						num_struct YEnd = numProcess(Segment.EndJoint.Coord.Y, CoordinateScaleY, CoordinateOffsetY);
-
-						fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+						fprintf(KiCadFile, "\t\t\t(xy %s %s) (xy %s %s)\n", XStart, YStart, XEnd, YEnd);
 
 						myPrint("\tSegment %d:\n", j + 1);
-						myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-						myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+						myPrint("\t\tX Start: %s, X End: %s\n", XStart, XEnd);
+						myPrint("\t\tY Start: %s, Y End: %s\n", YStart, YEnd);
 						fprintf(KiCadFile, "\t\t)\n");
 						KiCadProperty(KiCadFile, (Bus.BusSegment)[j].Property, 0);
 

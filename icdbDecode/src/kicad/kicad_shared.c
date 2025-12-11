@@ -83,10 +83,13 @@ float BaseLineThickness = UserBaseLineThickness;
 void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 {
 	// Position + Rotation
-	num_struct X = numProcess(textdata.Position.X, CoordinateScaleX, CoordinateOffsetX);
-	num_struct Y = numProcess(textdata.Position.Y, CoordinateScaleY, CoordinateOffsetY);
-	myPrint("\tX: %d.%05d, Y: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-	fprintf(KiCadFile, "\t\t(at %d.%05d %d.%05d %d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac, textdata.Orientation * 90);
+	char X[13]; // 10 char + sign + point + zero termination
+	char Y[13]; // 10 char + sign + point + zero termination
+	numPrint(&X[0], textdata.Position.X, CoordinateScaleX, CoordinateOffsetX);
+	numPrint(&Y[0], textdata.Position.Y, CoordinateScaleY, CoordinateOffsetY);
+	myPrint("\tX: %s, Y: %s\n", X, Y);
+	fprintf(KiCadFile, "\t\t(at %s %s %d)\n", X, Y, textdata.Orientation * 90);
+	
 	myPrint("\tRotation: %d Degree\n", textdata.Orientation * 90);
 	
 	fprintf(KiCadFile, "\t\t(effects\n");
@@ -164,11 +167,12 @@ void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 		default:
 			break;
 	}
-	
+
 	// Text Size
-	num_struct Size = numProcess(textdata.Size * FontScale, 1, 0);
-	fprintf(KiCadFile, "\t\t\t\t(size %d.%05d %d.%05d)\n", Size.Integ, Size.Frac, Size.Integ, Size.Frac);
-	myPrint("\tSize: %d.%05d\n", Size.Integ, Size.Frac);
+	char TextSize[13]; // 10 char + sign + point + zero termination
+	numPrint(&TextSize[0], textdata.Size * FontScale, 1, 0);
+	fprintf(KiCadFile, "\t\t\t\t(size %s %s)\n", TextSize, TextSize);
+	myPrint("\tSize: %s\n", TextSize);
 	
 	// Text Color
 	if (textdata.LineColor.Key == colorkey_default)
@@ -423,21 +427,27 @@ void KiCadArc(FILE* KiCadFile, element_struct arcs, uid_union UID, uint32_t page
 			if (InsideGroup(&cdbcatlg_grpobj, Arc.UID, page))
 			{
 				fprintf(KiCadFile, "\t(arc\n");
-
-				num_struct XStart = numProcess(Arc.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YStart = numProcess(Arc.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XMid = numProcess(Arc.MidCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YMid = numProcess(Arc.MidCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XEnd = numProcess(Arc.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YEnd = numProcess(Arc.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-
-				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
-				fprintf(KiCadFile, "\t\t(mid %d.%05d %d.%05d)\n", XMid.Integ, XMid.Frac, YMid.Integ, YMid.Frac);
-				fprintf(KiCadFile, "\t\t(end %d.%05d %d.%05d)\n", XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
-
+				
+				char StartCoordX[13]; // 10 char + sign + point + zero termination
+				char StartCoordY[13]; // 10 char + sign + point + zero termination
+				char MidCoordX[13]; // 10 char + sign + point + zero termination
+				char MidCoordY[13]; // 10 char + sign + point + zero termination
+				char EndCoordX[13]; // 10 char + sign + point + zero termination
+				char EndCoordY[13]; // 10 char + sign + point + zero termination
+				numPrint(&StartCoordX[0], Arc.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				numPrint(&StartCoordY[0], Arc.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				numPrint(&MidCoordX[0], Arc.MidCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				numPrint(&MidCoordY[0], Arc.MidCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				numPrint(&EndCoordX[0], Arc.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				numPrint(&EndCoordY[0], Arc.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				
+				fprintf(KiCadFile, "\t\t(start %s %s)\n", StartCoordX, StartCoordY);
+				fprintf(KiCadFile, "\t\t(mid %s %s)\n", MidCoordX, MidCoordY);
+				fprintf(KiCadFile, "\t\t(end %s %s)\n", EndCoordX, EndCoordY);
+				
 				myPrint("Arc %d:\n", i + 1);
-				myPrint("\tX Start: %d.%05d, X Mid: %d.%05d X End: %d.%05d\n", XStart.Integ, XStart.Frac, XMid.Integ, XMid.Frac, XEnd.Integ, XEnd.Frac);
-				myPrint("\tY Start: %d.%05d, Y Mid: %d.%05d Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YMid.Integ, YMid.Frac, YEnd.Integ, YEnd.Frac);
+				myPrint("\tX Start: %s, X Mid: %s X End: %s\n", StartCoordX, MidCoordX, EndCoordX);
+				myPrint("\tY Start: %s, Y Mid: %s Y End: %s\n", StartCoordY, MidCoordY, EndCoordY);
 
 				KiCadProperty(KiCadFile, Arc.Property, 0);
 				fprintf(KiCadFile, "\t\t");
@@ -471,15 +481,18 @@ void KiCadCircle(FILE* KiCadFile, element_struct circles, uid_union UID, uint32_
 			if (InsideGroup(&cdbcatlg_grpobj, Circle.UID, page))
 			{
 				fprintf(KiCadFile, "\t(circle\n");
-				num_struct X = numProcess(Circle.CenterCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct Y = numProcess(Circle.CenterCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct R = numProcess(Circle.Radius, 1, 0);
-
-				fprintf(KiCadFile, "\t\t(center %d.%05d %d.%05d)\n", X.Integ, X.Frac, Y.Integ, Y.Frac);
-				fprintf(KiCadFile, "\t\t(radius %d.%05d)\n", R.Integ, R.Frac);
+				
+				char X[13]; // 10 char + sign + point + zero termination
+				char Y[13]; // 10 char + sign + point + zero termination
+				char R[13]; // 10 char + sign + point + zero termination
+				numPrint(&X[0], Circle.CenterCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				numPrint(&Y[0], Circle.CenterCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				numPrint(&R[0], Circle.Radius, 1, 0);
+				fprintf(KiCadFile, "\t\t(center %s %s)\n", X, Y);
+				fprintf(KiCadFile, "\t\t(radius %s)\n", R);
 
 				myPrint("Circle %d:\n", i + 1);
-				myPrint("\tX: %d.%05d, Y: %d.%05d, Radius: %d.%05d\n", X.Integ, X.Frac, Y.Integ, Y.Frac, R.Integ, R.Frac);
+				myPrint("\tX: %s, Y: %s, Radius: %s\n", X, Y, R);
 
 				KiCadProperty(KiCadFile, Circle.Property, 1);
 				fprintf(KiCadFile, "\t\t");
@@ -514,18 +527,22 @@ void KiCadRectangle(FILE* KiCadFile, element_struct rectangles, uid_union UID, u
 			if (InsideGroup(&cdbcatlg_grpobj, Rectangle.UID, page))
 			{
 				fprintf(KiCadFile, "\t(rectangle\n");
+				
+				char XStart[13]; // 10 char + sign + point + zero termination
+				char YStart[13]; // 10 char + sign + point + zero termination
+				char XEnd[13]; // 10 char + sign + point + zero termination
+				char YEnd[13]; // 10 char + sign + point + zero termination
+				numPrint(&XStart[0], Rectangle.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				numPrint(&YStart[0], Rectangle.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
+				numPrint(&XEnd[0], Rectangle.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
+				numPrint(&YEnd[0], Rectangle.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
 
-				num_struct XStart = numProcess(Rectangle.StartCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YStart = numProcess(Rectangle.StartCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-				num_struct XEnd = numProcess(Rectangle.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
-				num_struct YEnd = numProcess(Rectangle.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
-
-				fprintf(KiCadFile, "\t\t(start %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac);
-				fprintf(KiCadFile, "\t\t(end %d.%05d %d.%05d)\n", XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+				fprintf(KiCadFile, "\t\t(start %s %s)\n", XStart, YStart);
+				fprintf(KiCadFile, "\t\t(end %s %s)\n", XEnd, YEnd);
 
 				myPrint("Rectangle %d:\n", i + 1);
-				myPrint("\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-				myPrint("\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+				myPrint("\tX Start: %s, X End: %s\n", XStart, XEnd);
+				myPrint("\tY Start: %s, Y End: %s\n", YStart, YEnd);
 				KiCadProperty(KiCadFile, Rectangle.Property, 1);
 				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
@@ -599,16 +616,20 @@ void KiCadLine(FILE* KiCadFile, element_struct lines, uid_union UID, uint32_t pa
 				myPrint("Line %d:\n", i + 1);
 				for (unsigned int j = 0; j < Line.numSegment; j++)
 				{
-					num_struct XStart = numProcess(Line.Segment[j].Start.X, CoordinateScaleX, CoordinateOffsetX);
-					num_struct YStart = numProcess(Line.Segment[j].Start.Y, CoordinateScaleY, CoordinateOffsetY);
-					num_struct XEnd = numProcess(Line.Segment[j].End.X, CoordinateScaleX, CoordinateOffsetX);
-					num_struct YEnd = numProcess(Line.Segment[j].End.Y, CoordinateScaleY, CoordinateOffsetY);
+					char XStart[13]; // 10 char + sign + point + zero termination
+					char YStart[13]; // 10 char + sign + point + zero termination
+					char XEnd[13]; // 10 char + sign + point + zero termination
+					char YEnd[13]; // 10 char + sign + point + zero termination
+					numPrint(&XStart[0], Line.Segment[j].Start.X, CoordinateScaleX, CoordinateOffsetX);
+					numPrint(&YStart[0], Line.Segment[j].Start.Y, CoordinateScaleY, CoordinateOffsetY);
+					numPrint(&XEnd[0], Line.Segment[j].End.X, CoordinateScaleX, CoordinateOffsetX);
+					numPrint(&YEnd[0], Line.Segment[j].End.Y, CoordinateScaleY, CoordinateOffsetY);
 
-					fprintf(KiCadFile, "\t\t\t(xy %d.%05d %d.%05d) (xy %d.%05d %d.%05d)\n", XStart.Integ, XStart.Frac, YStart.Integ, YStart.Frac, XEnd.Integ, XEnd.Frac, YEnd.Integ, YEnd.Frac);
+					fprintf(KiCadFile, "\t\t\t(xy %s %s) (xy %s %s)\n", XStart, YStart, XEnd, YEnd);
 
 					myPrint("\tSegment %d:\n", j + 1);
-					myPrint("\t\tX Start: %d.%05d, X End: %d.%05d\n", XStart.Integ, XStart.Frac, XEnd.Integ, XEnd.Frac);
-					myPrint("\t\tY Start: %d.%05d, Y End: %d.%05d\n", YStart.Integ, YStart.Frac, YEnd.Integ, YEnd.Frac);
+					myPrint("\t\tX Start: %s, X End: %s\n", XStart, XEnd);
+					myPrint("\t\tY Start: %s, Y End: %s\n", YStart, YEnd);
 				}
 				fprintf(KiCadFile, "\t\t)\n");
 				KiCadProperty(KiCadFile, Line.Property, 0);

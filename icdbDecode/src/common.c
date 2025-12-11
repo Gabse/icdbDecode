@@ -201,22 +201,69 @@ void SkipBlock(FILE* sourceFile, uint32_t type)
 }
 /*
 ******************************************************************
-* - function name:	numProcess()
+* - function name:	numPrint()
 *
-* - description: 	Splits fixed-point number into integer and fractional part
+* - description: 	Prints signed fixed-point integer to a char array
 *
-* - parameter: 		Value to convert, scaling, offset
+* - parameter: 		address to store to, Value to convert, scaling, offset
 *
-* - return value: 	number as struct containing integer and fractional content
+* - return value: 	-
 ******************************************************************
 */
-num_struct numProcess(int32_t input, int32_t Ratio, int32_t Offset)
+void numPrint(char* address, int32_t input, int32_t Ratio, int32_t Offset)
 {
-	num_struct Output;
-	int32_t Temp = input * Ratio + Offset;
-	Output.Integ = Temp / 100e3;
-	Output.Frac = fabs(Temp - (Output.Integ * 100e3));
-	return Output;
+	// 10 char + sign + point + zero termination
+	num_struct Temp;
+	if(address == NULL)
+	{
+		return;
+	}
+
+	// Clear
+	for(uint8_t i = 0; i < 13; i++)
+	{
+		address[i] = '\0';
+	}
+
+	// Convert to int and fract part
+	int32_t TempNum = input * Ratio + Offset;
+	int32_t TempNumAbs = fabs(TempNum);
+	Temp.Integ = TempNumAbs / 100e3;
+	Temp.Frac = TempNumAbs - (Temp.Integ * 100e3);
+
+	// add sign
+	if(TempNum<0)
+	{
+		sprintf(address, "-%d.%05d", Temp.Integ, Temp.Frac);
+	}
+	else
+	{
+		sprintf(address, "%d.%05d", Temp.Integ, Temp.Frac);
+	}
+
+	// Delete following zeros
+	for(uint8_t i = 12; i > 1; i--)
+	{
+		if(address[i] == '0')
+		{
+			if(address[i-1] != '.')
+			{
+				address[i] = '\0';
+			}
+			else
+			{
+				break;
+			}
+		}
+		else if(address[i] == '\0')
+		{
+			// Do nothing
+		}
+		else
+		{
+			break;
+		}
+	}
 }
 
 /*
