@@ -26,7 +26,7 @@
 #include <stdint.h>		// Required for int32_t, uint32_t, ...
 #include <string.h>		// Required for strcmp
 #include "stringutil.h"	// Required for assemblePath
-#include <math.h>		// Required for fabs
+#include <math.h>		// Required for abs
 
 /*
 ******************************************************************
@@ -227,7 +227,7 @@ void numPrint(char* address, int32_t input, int32_t Ratio, int32_t Offset)
 
 	// Convert to int and fract part
 	int32_t TempNum = input * Ratio + Offset;
-	int32_t TempNumAbs = fabs(TempNum);
+	int32_t TempNumAbs = abs(TempNum);
 	Temp.Integ = TempNumAbs / 100e3;
 	Temp.Frac = TempNumAbs - (Temp.Integ * 100e3);
 
