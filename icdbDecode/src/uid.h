@@ -109,6 +109,10 @@ typedef enum uid_type_enum : uint8_t
 //	uid_type_					= 0x43,
 //	uid_type_					= 0x44,
 	uid_type_Group				= 0x45,
+//	uid_type_					= 0x46,
+//	uid_type_					= 0x47,
+//	uid_type_					= 0x48,
+//	uid_type_					= 0x49,
 } uid_type_enum;
 
 /*
@@ -119,10 +123,10 @@ typedef enum uid_type_enum : uint8_t
 typedef struct uid_split_struct
 {
 	uint32_t UID_Owner;
-	uint16_t UID_ID;
-	uint8_t UID_Padding;
+	uint16_t UID_ID_LSB;
+	uint8_t UID_ID_MSB; // There is no uint24_t.
 	uid_type_enum UID_Type;
-} uid_split_struct;
+}__attribute__((packed)) uid_split_struct;
 
 /*
 ******************************************************************
@@ -145,5 +149,6 @@ typedef union uid_union
 * Global Functions
 ******************************************************************
 */
+const char* printUidType(enum uid_type_enum);
 
 #endif //_UID_H
