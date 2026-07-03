@@ -142,6 +142,14 @@ typedef enum typecode_enum
 	typecode_GUID = 0x0D, // Unknown
 }typecode_enum;
 
+typedef enum visibility_type : uint8_t
+{
+	visibility_invissible	= 1,
+	visibility_name			= 3,
+	visibility_vissible		= 4,
+	visibility_default		= 255,
+}visibility_type;
+
 /*
 ******************************************************************
 * Structures
