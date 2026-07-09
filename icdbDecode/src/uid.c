@@ -44,57 +44,85 @@
 * Global Variables
 ******************************************************************
 */
-const char text_uid_type_Cnfg[] = "CnfgUID";
-const char text_uid_type_Path[] = "PathUID";
-const char text_uid_type_Blk[] = "BlkUID";
-const char text_uid_type_Cmp[] = "CmpUID";
-const char text_uid_type_BSym[] = "BSymUID";
-const char text_uid_type_ISym[] = "ISymUID";
-const char text_uid_type_Pin[] = "PinUID";
-const char text_uid_type_BPin[] = "BPinUID";
-const char text_uid_type_IPin[] = "IPinUID";
-const char text_uid_type_INet[] = "INetUID";
-const char text_uid_type_FNet[] = "FNetUID";
-const char text_uid_type_PNet[] = "PNetUID";
-const char text_uid_type_Xtr[] = "XtrUID";
-const char text_uid_type_Bus[] = "BusUID";
-const char text_uid_type_Design[] = "DesignUID";
-const char text_uid_type_Const[] = "ConstUID";
-const char text_uid_type_Layer[] = "LayerUID";
-const char text_uid_type_NetClass[] = "NetClassUID";
-const char text_uid_type_ClearRule[] = "ClearRuleUID";
-const char text_uid_type_ConstraintClass[] = "ConstraintClassUID";
-const char text_uid_type_ViaSpan[] = "ViaSpanUID";
-const char text_uid_type_GenClearClass[] = "GenClearClassUID";
-const char text_uid_type_PartTech[] = "PartTechUID";
-const char text_uid_type_C2CClear[] = "C2CClearUID";
-const char text_uid_type_Scheme[] = "SchemeUID";
-const char text_uid_type_SchemeNetClassRule[] = "SchemeNetClassRuleUID";
-const char text_uid_type_ViaAssign[] = "ViaAssignUID";
-const char text_uid_type_LayerRuleUID[] = "LayerRuleUIDUID";
-const char text_uid_type_SchemaClearRule[] = "SchemaClearRuleUID";
-const char text_uid_type_LayerClearRule[] = "LayerClearRuleUID";
-const char text_uid_type_GenObjType[] = "GenObjTypeUID";
-const char text_uid_type_GenCompObj[] = "GenCompObjUID";
-const char text_uid_type_DiffPair[] = "DiffPairUID";
-const char text_uid_type_ElectricalNet[] = "ElectricalNetUID";
-const char text_uid_type_PinPair[] = "PinPairUID";
-const char text_uid_type_PhysicalNet[] = "PhysicalNetUID";
-const char text_uid_type_FromTo[] = "FromToUID";
-const char text_uid_type_Component[] = "ComponentUID";
-const char text_uid_type_CesPin[] = "CesPinUID";
-const char text_uid_type_Part[] = "PartUID";
-const char text_uid_type_PartPin[] = "PartPinUID";
-const char text_uid_type_NetDxd[] = "NetDxdUID";
-const char text_uid_type_Line[] = "LineUID";
-const char text_uid_type_Circle[] = "CircleUID";
-const char text_uid_type_Arc[] = "ArcUID";
-const char text_uid_type_Rectangle[] = "RectangleUID";
-const char text_uid_type_Text[] = "TextUID";
-const char text_uid_type_Via[] = "ViaUID";
-const char text_uid_type_CESconfig[] = "CESconfigUID";
-const char text_uid_type_Group[] = "GroupUID";
-const char text_uid_type_Unknown[] = "unknown";
+const char* text_uid_type[] = {
+	[0x00] = "unknown",
+	[0x01] = "unknown",
+	[0x02] = "unknown",
+	[0x03] = "CnfgUID",
+	[0x04] = "PathUID",
+	[0x05] = "BlkUID",
+	[0x06] = "CmpUID",
+	[0x07] = "BSymUID",
+	[0x08] = "ISymUID",
+	[0x09] = "PinUID",
+	[0x0A] = "BPinUID",
+	[0x0B] = "IPinUID",
+	[0x0C] = "INetUID",
+	[0x0D] = "FNetUID",
+	[0x0E] = "PNetUID",
+	[0x0F] = "XtrUID",
+	[0x10] = "BusUID",
+	[0x11] = "unknown",
+	[0x12] = "unknown",
+	[0x13] = "unknown",
+	[0x14] = "unknown",
+	[0x15] = "DesignUID",
+	[0x16] = "ConstUID",
+	[0x17] = "LayerUID",
+	[0x18] = "NetClassUID",
+	[0x19] = "ClearRuleUID",
+	[0x1A] = "ConstraintClassUID",
+	[0x1B] = "ViaSpanUID",
+	[0x1C] = "GenClearClassUID",
+	[0x1D] = "PartTechUID",
+	[0x1E] = "unknown",
+	[0x1F] = "C2CClearUID",
+	[0x20] = "unknown",
+	[0x21] = "unknown",
+	[0x22] = "unknown",
+	[0x23] = "unknown",
+	[0x24] = "unknown",
+	[0x25] = "SchemeUID",
+	[0x26] = "SchemeNetClassRuleUID",
+	[0x27] = "ViaAssignUID",
+	[0x28] = "LayerRuleUIDUID",
+	[0x29] = "SchemaClearRuleUID",
+	[0x2A] = "LayerClearRuleUID",
+	[0x2B] = "GenObjTypeUID",
+	[0x2C] = "GenCompObjUID",
+	[0x2D] = "unknown",
+	[0x2E] = "DiffPairUID",
+	[0x2F] = "ElectricalNetUID",
+	[0x30] = "PinPairUID",
+	[0x31] = "PhysicalNetUID",
+	[0x32] = "FromToUID",
+	[0x33] = "ComponentUID",
+	[0x34] = "CesPinUID",
+	[0x35] = "PartUID",
+	[0x36] = "PartPinUID",
+	[0x37] = "NetDxdUID",
+	[0x38] = "LineUID",
+	[0x39] = "CircleUID",
+	[0x3A] = "ArcUID",
+	[0x3B] = "RectangleUID",
+	[0x3C] = "TextUID",
+	[0x3D] = "unknown",
+	[0x3E] = "ViaUID",
+	[0x3F] = "CESconfigUID",
+	[0x40] = "unknown",
+	[0x41] = "unknown",
+	[0x42] = "unknown",
+	[0x43] = "unknown",
+	[0x44] = "unknown",
+	[0x45] = "GroupUID",
+	[0x46] = "unknown",
+	[0x47] = "unknown",
+	[0x48] = "unknown",
+	[0x49] = "unknown",
+	
+	
+	"unknown", // Last element
+};
 
 /*
 ******************************************************************
@@ -114,211 +142,9 @@ const char text_uid_type_Unknown[] = "unknown";
 */
 const char* printUidType(enum uid_type_enum type)
 {
-    switch(type)
+	if(type >= UIDSize)
 	{
-		case uid_type_Cnfg:
-		{
-			return &text_uid_type_Cnfg[0];
-		}
-		case uid_type_Path:
-		{
-			return &text_uid_type_Path[0];
-		}
-		case uid_type_Blk:
-		{
-			return &text_uid_type_Blk[0];
-		}
-		case uid_type_Cmp:
-		{
-			return &text_uid_type_Cmp[0];
-		}
-		case uid_type_BSym:
-		{
-			return &text_uid_type_BSym[0];
-		}
-		case uid_type_ISym:
-		{
-			return &text_uid_type_ISym[0];
-		}
-	    case uid_type_Pin:
-	    {
-	    	return &text_uid_type_Pin[0];
-		}
-		case uid_type_BPin:
-		{
-			return &text_uid_type_BPin[0];
-		}
-		case uid_type_IPin:
-		{
-			return &text_uid_type_IPin[0];
-		}
-		case uid_type_INet:
-		{
-			return &text_uid_type_INet[0];
-		}
-		case uid_type_FNet:
-		{
-			return &text_uid_type_FNet[0];
-		}
-		case uid_type_PNet:
-		{
-			return &text_uid_type_PNet[0];
-		}
-		case uid_type_Xtr:
-		{
-			return &text_uid_type_Xtr[0];
-		}
-		case uid_type_Bus:
-		{
-			return &text_uid_type_Bus[0];
-		}
-		case uid_type_Design:
-		{
-			return &text_uid_type_Design[0];
-		}
-		case uid_type_Const:
-		{
-			return &text_uid_type_Const[0];
-		}
-		case uid_type_Layer:
-		{
-			return &text_uid_type_Layer[0];
-		}
-		case uid_type_NetClass:
-		{
-			return &text_uid_type_NetClass[0];
-		}
-		case uid_type_ClearRule:
-		{
-			return &text_uid_type_ClearRule[0];
-		}
-		case uid_type_ConstraintClass:
-		{
-			return &text_uid_type_ConstraintClass[0];
-		}
-		case uid_type_ViaSpan:
-		{
-			return &text_uid_type_ViaSpan[0];
-		}
-		case uid_type_GenClearClass:
-		{
-			return &text_uid_type_GenClearClass[0];
-		}
-		case uid_type_PartTech:
-		{
-			return &text_uid_type_PartTech[0];
-		}
-		case uid_type_C2CClear:
-		{
-			return &text_uid_type_C2CClear[0];
-		}
-		case uid_type_Scheme:
-		{
-			return &text_uid_type_Scheme[0];
-		}
-		case uid_type_SchemeNetClassRule:
-		{
-			return &text_uid_type_SchemeNetClassRule[0];
-		}
-		case uid_type_ViaAssign:
-		{
-			return &text_uid_type_ViaAssign[0];
-		}
-		case uid_type_LayerRuleUID:
-		{
-			return &text_uid_type_LayerRuleUID[0];
-		}
-		case uid_type_SchemaClearRule:
-		{
-			return &text_uid_type_SchemaClearRule[0];
-		}
-		case uid_type_LayerClearRule:
-		{
-			return &text_uid_type_LayerClearRule[0];
-		}
-		case uid_type_GenObjType:
-		{
-			return &text_uid_type_GenObjType[0];
-		}
-		case uid_type_GenCompObj:
-		{
-			return &text_uid_type_GenCompObj[0];
-		}
-		case uid_type_DiffPair:
-		{
-			return &text_uid_type_DiffPair[0];
-		}
-		case uid_type_ElectricalNet:
-		{
-			return &text_uid_type_ElectricalNet[0];
-		}
-		case uid_type_PinPair:
-		{
-			return &text_uid_type_PinPair[0];
-		}
-		case uid_type_PhysicalNet:
-		{
-			return &text_uid_type_PhysicalNet[0];
-		}
-		case uid_type_FromTo:
-		{
-			return &text_uid_type_FromTo[0];
-		}
-		case uid_type_Component:
-		{
-			return &text_uid_type_Component[0];
-		}
-		case uid_type_CesPin:
-		{
-			return &text_uid_type_CesPin[0];
-		}
-		case uid_type_Part:
-		{
-			return &text_uid_type_Part[0];
-		}
-		case uid_type_PartPin:
-		{
-			return &text_uid_type_PartPin[0];
-		}
-		case uid_type_NetDxd:
-		{
-			return &text_uid_type_NetDxd[0];
-		}
-		case uid_type_Line:
-		{
-			return &text_uid_type_Line[0];
-		}
-		case uid_type_Circle:
-		{
-			return &text_uid_type_Circle[0];
-		}
-		case uid_type_Arc:
-		{
-			return &text_uid_type_Arc[0];
-		}
-		case uid_type_Rectangle:
-		{
-			return &text_uid_type_Rectangle[0];
-		}
-		case uid_type_Text:
-		{
-			return &text_uid_type_Text[0];
-		}
-		case uid_type_Via:
-		{
-			return &text_uid_type_Via[0];
-		}
-		case uid_type_CESconfig:
-		{
-			return &text_uid_type_CESconfig[0];
-		}
-		case uid_type_Group:
-		{
-			return &text_uid_type_Group[0];
-		}
-		default:
-		{
-			return &text_uid_type_Unknown[0];
-		}
+		type = UIDSize;
 	}
+	return text_uid_type[type];
 }

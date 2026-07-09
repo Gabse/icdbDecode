@@ -113,6 +113,8 @@ typedef enum uid_type_enum : uint8_t
 //	uid_type_					= 0x47,
 //	uid_type_					= 0x48,
 //	uid_type_					= 0x49,
+
+	UIDSize,
 } uid_type_enum;
 
 /*
