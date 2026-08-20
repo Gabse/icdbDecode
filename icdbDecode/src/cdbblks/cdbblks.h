@@ -29,6 +29,12 @@
 * Global Variables
 ******************************************************************
 */
+extern element_struct cdbblks_bus;
+extern element_struct cdbblks_joint;
+extern element_struct cdbblks_net;
+extern element_struct cdbblks_segment;
+extern element_struct cdbblks_sheet;
+
 extern element_struct cdbblks_arc;
 extern element_struct cdbblks_circle;
 extern element_struct cdbblks_label;
@@ -37,11 +43,6 @@ extern element_struct cdbblks_property;
 extern element_struct cdbblks_rectangle;
 extern element_struct cdbblks_text;
 extern element_struct cdbblks_textdata;
-extern element_struct cdbblks_bus;
-extern element_struct cdbblks_joint;
-extern element_struct cdbblks_net;
-extern element_struct cdbblks_segment;
-extern element_struct cdbblks_sheet;
 
 /*
 ******************************************************************

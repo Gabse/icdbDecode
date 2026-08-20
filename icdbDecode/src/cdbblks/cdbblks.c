@@ -43,6 +43,12 @@
 * Global Variables
 ******************************************************************
 */
+element_struct cdbblks_bus = { 0, NULL };
+element_struct cdbblks_joint = { 0, NULL };
+element_struct cdbblks_net = { 0, NULL };
+element_struct cdbblks_segment = { 0, NULL };
+element_struct cdbblks_sheet = { 0, NULL };
+
 element_struct cdbblks_arc = { 0, NULL };
 element_struct cdbblks_circle = { 0, NULL };
 element_struct cdbblks_label = { 0, NULL };
@@ -51,11 +57,6 @@ element_struct cdbblks_property = { 0, NULL };
 element_struct cdbblks_rectangle = { 0, NULL };
 element_struct cdbblks_text = { 0, NULL };
 element_struct cdbblks_textdata = { 0, NULL };
-element_struct cdbblks_bus = { 0, NULL };
-element_struct cdbblks_joint = { 0, NULL };
-element_struct cdbblks_net = { 0, NULL };
-element_struct cdbblks_segment = { 0, NULL };
-element_struct cdbblks_sheet = { 0, NULL };
 
 /*
 ******************************************************************
@@ -114,17 +115,18 @@ int parseCdbblks(char* path, uint32_t pathlength)
 */
 void initCdbblks(void)
 {
-	InitProperty(&cdbblks_property);
-	InitTextdata(&cdbblks_textdata);
 	InitJoint(&cdbblks_joint);
 	InitSegment(&cdbblks_segment);
-	InitLabel(&cdbblks_label);
 	InitSheet(&cdbblks_sheet);
+	InitNet(&cdbblks_net);
+	InitBus(&cdbblks_bus);
+
+	InitLabel(&cdbblks_label);
+	InitProperty(&cdbblks_property);
+	InitTextdata(&cdbblks_textdata);
 	InitArc(&cdbblks_arc);
 	InitCircle(&cdbblks_circle);
 	InitLine(&cdbblks_line);
 	InitRectangle(&cdbblks_rectangle);
 	InitText(&cdbblks_text);
-	InitNet(&cdbblks_net);
-	InitBus(&cdbblks_bus);
 }

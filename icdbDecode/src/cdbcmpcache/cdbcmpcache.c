@@ -39,13 +39,13 @@
 ******************************************************************
 */
 element_struct cdbcmpcache_arc = { 0, NULL };
-element_struct cdbcmpcach_circle = { 0, NULL };
-element_struct cdbcmpcach_label = { 0, NULL };
-element_struct cdbcmpcach_line = { 0, NULL };
-element_struct cdbcmpcach_property = { 0, NULL };
-element_struct cdbcmpcach_rectangle = { 0, NULL };
-element_struct cdbcmpcach_text = { 0, NULL };
-element_struct cdbcmpcach_textdata = { 0, NULL };
+element_struct cdbcmpcache_circle = { 0, NULL };
+element_struct cdbcmpcache_label = { 0, NULL };
+element_struct cdbcmpcache_line = { 0, NULL };
+element_struct cdbcmpcache_property = { 0, NULL };
+element_struct cdbcmpcache_rectangle = { 0, NULL };
+element_struct cdbcmpcache_text = { 0, NULL };
+element_struct cdbcmpcache_textdata = { 0, NULL };
 
 /*
 ******************************************************************
@@ -72,16 +72,16 @@ int parseCdbcmpcache(char* path, uint32_t pathlength)
 
 	if(!errorcode)
 	{
-		ProcessProperty(&cdbcmpcach_property);	// Must be done before arc, circle, line & rect
-		ProcessTextdata(&cdbcmpcach_textdata);		// Must be done before text and label
-		ProcessLabel(&cdbcmpcach_label, &cdbcmpcach_textdata);
-		ProcessArc(&cdbcmpcach_property, &cdbcmpcache_arc);
-		ProcessCircle(&cdbcmpcach_property, &cdbcmpcach_circle);
-		ProcessLine(&cdbcmpcach_property, &cdbcmpcach_line);
-		ProcessRectangle(&cdbcmpcach_property, &cdbcmpcach_rectangle);
-		ProcessText(&cdbcmpcach_text, &cdbcmpcach_textdata);
+		ProcessProperty(&cdbcmpcache_property);	// Must be done before arc, circle, line & rect
+		ProcessTextdata(&cdbcmpcache_textdata);		// Must be done before text and label
+		ProcessLabel(&cdbcmpcache_label, &cdbcmpcache_textdata);
+		ProcessArc(&cdbcmpcache_property, &cdbcmpcache_arc);
+		ProcessCircle(&cdbcmpcache_property, &cdbcmpcache_circle);
+		ProcessLine(&cdbcmpcache_property, &cdbcmpcache_line);
+		ProcessRectangle(&cdbcmpcache_property, &cdbcmpcache_rectangle);
+		ProcessText(&cdbcmpcache_text, &cdbcmpcache_textdata);
 	}
-	
+
 	InitDxdatl();
 	InitCmpatl();
 	return errorcode;
@@ -100,12 +100,12 @@ int parseCdbcmpcache(char* path, uint32_t pathlength)
 */
 void initCdbcmpcache(void)
 {
-	InitProperty(&cdbcmpcach_property);
-	InitTextdata(&cdbcmpcach_textdata);
-	InitLabel(&cdbcmpcach_label);
+	InitProperty(&cdbcmpcache_property);
+	InitTextdata(&cdbcmpcache_textdata);
+	InitLabel(&cdbcmpcache_label);
 	InitArc(&cdbcmpcache_arc);
-	InitCircle(&cdbcmpcach_circle);
-	InitLine(&cdbcmpcach_line);
-	InitRectangle(&cdbcmpcach_rectangle);
-	InitText(&cdbcmpcach_text);
+	InitCircle(&cdbcmpcache_circle);
+	InitLine(&cdbcmpcache_line);
+	InitRectangle(&cdbcmpcache_rectangle);
+	InitText(&cdbcmpcache_text);
 }

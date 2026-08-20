@@ -26,6 +26,7 @@
 #include <time.h>		// Required for time_t
 #include <zlib.h>		// Required for decompression
 #include "common.h"		// Required for myfopen
+#include "log.h"		// Required for myprint
 #include "stringutil.h" // Required for createPath
 #include "list.h"		// Required for list
 

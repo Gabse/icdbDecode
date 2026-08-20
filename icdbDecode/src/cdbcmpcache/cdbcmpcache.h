@@ -30,13 +30,13 @@
 ******************************************************************
 */
 extern element_struct cdbcmpcache_arc;
-extern element_struct cdbcmpcach_circle;
-extern element_struct cdbcmpcach_label;
-extern element_struct cdbcmpcach_line;
-extern element_struct cdbcmpcach_property;
-extern element_struct cdbcmpcach_rectangle;
-extern element_struct cdbcmpcach_text;
-extern element_struct cdbcmpcach_textdata;
+extern element_struct cdbcmpcache_circle;
+extern element_struct cdbcmpcache_label;
+extern element_struct cdbcmpcache_line;
+extern element_struct cdbcmpcache_property;
+extern element_struct cdbcmpcache_rectangle;
+extern element_struct cdbcmpcache_text;
+extern element_struct cdbcmpcache_textdata;
 
 /*
 ******************************************************************
