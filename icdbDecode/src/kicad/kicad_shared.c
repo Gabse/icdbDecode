@@ -64,6 +64,9 @@ int DefaultTextOrigin	= UserDefaultTextOrigin;
 float FontScale			= UserFontScale;
 float BaseLineThickness = UserBaseLineThickness;
 
+static char kicad_tab_schematic[] = "\t\0";
+static char kicad_tab_library[] = "\t\t\t\0";
+char* kicad_tab =&kicad_tab_schematic[0];
 /*
 ******************************************************************
 * Global Functions
@@ -88,14 +91,14 @@ void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 	numPrint(&X[0], textdata.Position.X, CoordinateScaleX, CoordinateOffsetX);
 	numPrint(&Y[0], textdata.Position.Y, CoordinateScaleY, CoordinateOffsetY);
 	myPrint("\tX: %s, Y: %s\n", X, Y);
-	fprintf(KiCadFile, "\t\t(at %s %s %d)\n", X, Y, textdata.Orientation * 90);
+	fprintf(KiCadFile, "%s\t(at %s %s %d)\n", kicad_tab, X, Y, textdata.Orientation * 90);
 	
 	myPrint("\tRotation: %d Degree\n", textdata.Orientation * 90);
 	
-	fprintf(KiCadFile, "\t\t(effects\n");
+	fprintf(KiCadFile, "%s\t(effects\n", kicad_tab);
 	
 	// Font
-	fprintf(KiCadFile, "\t\t\t(font \n");
+	fprintf(KiCadFile, "%s\t\t(font \n", kicad_tab);
 	switch(textdata.Font.Font)
 	{
 		case font_Fixed:
@@ -105,62 +108,62 @@ void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 			break;
 		case font_RomanItalic:
 			myPrint("\tFont: Default\n");
-			fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+			fprintf(KiCadFile, "%s\t\t\t(italic yes)\n", kicad_tab);
 			myPrint("\tItalic\n");
 			break;
 		case font_RomanBold:
 			myPrint("\tFont: Default\n");
-			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			fprintf(KiCadFile, "%s\t\t\t(bold yes)\n", kicad_tab);
 			myPrint("\tBold\n");
 			break;
 		case font_RomanBoldItalic:
 			myPrint("\tFont: Default\n");
-			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
-			fprintf(KiCadFile, "\t\t\t\t(italic yes)\n");
+			fprintf(KiCadFile, "%s\t\t\t(bold yes)\n", kicad_tab);
+			fprintf(KiCadFile, "%s\t\t\t(italic yes)\n", kicad_tab);
 			myPrint("\tBold & Italic\n");
 			break;
 		case font_SansSerif:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "SansSerif");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "SansSerif", kicad_tab);
 			myPrint("\tFont: SansSerif\n");
 			break;
 		case font_Script:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "ScriptS");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "ScriptS", kicad_tab);
 			myPrint("\tFont: ScriptS\n");
 			break;
 		case font_SansSerifBold:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "SansSerif");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "SansSerif", kicad_tab);
 			myPrint("\tFont: SansSerif\n");
-			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			fprintf(KiCadFile, "%s\t\t\t(bold yes)\n", kicad_tab);
 			myPrint("\tBold\n");
 			break;
 		case font_ScriptBold:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "ScriptS");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "ScriptS", kicad_tab);
 			myPrint("\tFont: ScriptS\n");
-			fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+			fprintf(KiCadFile, "%s\t\t\t(bold yes)\n", kicad_tab);
 			myPrint("\tBold\n");
 			break;
 		case font_Gothic:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "GothicE");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "GothicE", kicad_tab);
 			myPrint("\tFont: GothicE\n");
 			break;
 		case font_OldEnglish:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "Old English Text MT");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "Old English Text MT", kicad_tab);
 			myPrint("\tFont: Old English Text MT\n");
 			break;
 		case font_Kanji:
 			myPrint("\tFont: Kanji => Not supported in KiCad!\n");
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "Kanji");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "Kanji", kicad_tab);
 			break;
 		case font_Plot:
 			myPrint("\tFont: Plot => Not supported in KiCad!\n");
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", "Plot");
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", "Plot", kicad_tab);
 			break;
 		case font_Custom:
-			fprintf(KiCadFile, "\t\t\t\t(face %s)\n", textdata.Font.CustomFont);
+			fprintf(KiCadFile, "%s\t\t\t(face %s)\n", textdata.Font.CustomFont, kicad_tab);
 			myPrint("\tFont: %s\n", textdata.Font.CustomFont);
 			if (textdata.Font.Bold == option_true)
 			{
-				fprintf(KiCadFile, "\t\t\t\t(bold yes)\n");
+				fprintf(KiCadFile, "%s\t\t\t(bold yes)\n", kicad_tab);
 				myPrint("\tBold\n");
 			}
 			break;
@@ -171,24 +174,24 @@ void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 	// Text Size
 	char TextSize[13]; // 10 char + sign + point + zero termination
 	numPrint(&TextSize[0], textdata.Size * FontScale, 1, 0);
-	fprintf(KiCadFile, "\t\t\t\t(size %s %s)\n", TextSize, TextSize);
+	fprintf(KiCadFile, "%s\t\t\t(size %s %s)\n", kicad_tab, TextSize, TextSize);
 	myPrint("\tSize: %s\n", TextSize);
 	
 	// Text Color
 	if (textdata.LineColor.Key == colorkey_default)
 	{ // Default Color
-		fprintf(KiCadFile, "\t\t\t\t(color 0 0 0 0)\n");
+		fprintf(KiCadFile, "%s\t\t\t(color 0 0 0 0)\n", kicad_tab);
 		myPrint("\tColor: Default\n");
 	}
 	else
 	{ // Custom Color
-		fprintf(KiCadFile, "\t\t\t\t(color %d %d %d 1)\n", textdata.LineColor.Red, textdata.LineColor.Green, textdata.LineColor.Blue);
+		fprintf(KiCadFile, "%s\t\t\t(color %d %d %d 1)\n", kicad_tab, textdata.LineColor.Red, textdata.LineColor.Green, textdata.LineColor.Blue);
 		myPrint("\tColor: R:%d G:%d B:%d\n", textdata.LineColor.Red, textdata.LineColor.Green, textdata.LineColor.Blue);
 	}
-	fprintf(KiCadFile, "\t\t\t)\n");
+	fprintf(KiCadFile, "%s\t\t)\n", kicad_tab);
 	
 	// Text Orientation
-	fprintf(KiCadFile, "\t\t\t(justify");
+	fprintf(KiCadFile, "%s\t\t(justify", kicad_tab);
 	
 	/*
 	Orientation codes:
@@ -245,7 +248,7 @@ void KiCadTextData(FILE* KiCadFile, textdata_struct textdata)
 		myPrint("Center\n");
 	}
 	fprintf(KiCadFile, ")\n");
-	fprintf(KiCadFile, "\t\t)\n");
+	fprintf(KiCadFile, "%s\t)\n", kicad_tab);
 }
 
 /*
@@ -391,15 +394,15 @@ void KiCadLabel(FILE* KiCadFile, uid_union UID, label_struct label, string_struc
 		{
 			if ((label.Sublable)[i].Visibility == visibility_vissible)
 			{
-				fprintf(KiCadFile, "\t(label \"");
+				fprintf(KiCadFile, "%s(label \"", kicad_tab);
 				myPrint("Label %d:\n", i + 1);
 				KiCadPrintString(KiCadFile, Name);
 
 				KiCadTextData(KiCadFile, (label.Sublable)[i].TextData);
-				fprintf(KiCadFile, "\t\t");
+				fprintf(KiCadFile, "%s\t", kicad_tab);
 				myPrint("\t");
 				KiCadUID(KiCadFile, UID, label.IndexDxDNet);
-				fprintf(KiCadFile, "\t)\n");
+				fprintf(KiCadFile, "%s)\n", kicad_tab);
 			}
 		}
 		myPrint("\n");
@@ -419,14 +422,22 @@ void KiCadLabel(FILE* KiCadFile, uid_union UID, label_struct label, string_struc
 */
 void KiCadArc(FILE* KiCadFile, element_struct arcs, uid_union UID, uint32_t page)
 {
+	if(page == 0)
+	{
+		kicad_tab = &kicad_tab_library[0];
+	}
+	else
+	{
+		kicad_tab = &kicad_tab_schematic[0];
+	}
 	if (arcs.Length > 0)
 	{
 		for (uint32_t i = 0; i < arcs.Length; i++)
 		{
 			arc_struct Arc = GetArc((&arcs), i);
-			if (InsideGroup(&cdbcatlg_grpobj, Arc.UID, page))
+			if ((page != 0 && InsideGroup(&cdbcatlg_grpobj, Arc.UID, page)) || (page == 0 && Arc.UID.UID_Splitt.UID_Owner == UID.UID_Splitt.UID_Owner))
 			{
-				fprintf(KiCadFile, "\t(arc\n");
+				fprintf(KiCadFile, "%s(arc\n", kicad_tab);
 				
 				char StartCoordX[13]; // 10 char + sign + point + zero termination
 				char StartCoordY[13]; // 10 char + sign + point + zero termination
@@ -441,19 +452,21 @@ void KiCadArc(FILE* KiCadFile, element_struct arcs, uid_union UID, uint32_t page
 				numPrint(&EndCoordX[0], Arc.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
 				numPrint(&EndCoordY[0], Arc.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
 				
-				fprintf(KiCadFile, "\t\t(start %s %s)\n", StartCoordX, StartCoordY);
-				fprintf(KiCadFile, "\t\t(mid %s %s)\n", MidCoordX, MidCoordY);
-				fprintf(KiCadFile, "\t\t(end %s %s)\n", EndCoordX, EndCoordY);
-				
+				fprintf(KiCadFile, "%s\t(start %s %s)\n", kicad_tab, StartCoordX, StartCoordY);
+				fprintf(KiCadFile, "%s\t(mid %s %s)\n", kicad_tab, MidCoordX, MidCoordY);
+				fprintf(KiCadFile, "%s\t(end %s %s)\n", kicad_tab, EndCoordX, EndCoordY);
 				myPrint("Arc %d:\n", i + 1);
 				myPrint("\tX Start: %s, X Mid: %s X End: %s\n", StartCoordX, MidCoordX, EndCoordX);
 				myPrint("\tY Start: %s, Y Mid: %s Y End: %s\n", StartCoordY, MidCoordY, EndCoordY);
 
 				KiCadProperty(KiCadFile, Arc.Property, 0);
-				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Arc.UID);
-				fprintf(KiCadFile, "\t)\n");
+				if(page != 0)
+				{
+					fprintf(KiCadFile, "%s\t", kicad_tab);
+					KiCadUID(KiCadFile, UID, Arc.UID);
+				}
+				fprintf(KiCadFile, "%s)\n", kicad_tab);
 			}
 		}
 		myPrint("\n");
@@ -473,14 +486,22 @@ void KiCadArc(FILE* KiCadFile, element_struct arcs, uid_union UID, uint32_t page
 */
 void KiCadCircle(FILE* KiCadFile, element_struct circles, uid_union UID, uint32_t page)
 {
+	if(page == 0)
+	{
+		kicad_tab = &kicad_tab_library[0];
+	}
+	else
+	{
+		kicad_tab = &kicad_tab_schematic[0];
+	}
 	if (circles.Length > 0)
 	{
 		for (uint32_t i = 0; i < circles.Length; i++)
 		{
 			circle_struct Circle = GetCircle(&circles, i);
-			if (InsideGroup(&cdbcatlg_grpobj, Circle.UID, page))
+			if ((page != 0 && InsideGroup(&cdbcatlg_grpobj, Circle.UID, page)) || (page == 0 && Circle.UID.UID_Splitt.UID_Owner == UID.UID_Splitt.UID_Owner))
 			{
-				fprintf(KiCadFile, "\t(circle\n");
+				fprintf(KiCadFile, "%s(circle\n", kicad_tab);
 				
 				char X[13]; // 10 char + sign + point + zero termination
 				char Y[13]; // 10 char + sign + point + zero termination
@@ -488,17 +509,20 @@ void KiCadCircle(FILE* KiCadFile, element_struct circles, uid_union UID, uint32_
 				numPrint(&X[0], Circle.CenterCoord.X, CoordinateScaleX, CoordinateOffsetX);
 				numPrint(&Y[0], Circle.CenterCoord.Y, CoordinateScaleY, CoordinateOffsetY);
 				numPrint(&R[0], Circle.Radius, 1, 0);
-				fprintf(KiCadFile, "\t\t(center %s %s)\n", X, Y);
-				fprintf(KiCadFile, "\t\t(radius %s)\n", R);
+				fprintf(KiCadFile, "%s\t(center %s %s)\n", kicad_tab, X, Y);
+				fprintf(KiCadFile, "%s\t(radius %s)\n", kicad_tab, R);
 
 				myPrint("Circle %d:\n", i + 1);
 				myPrint("\tX: %s, Y: %s, Radius: %s\n", X, Y, R);
 
 				KiCadProperty(KiCadFile, Circle.Property, 1);
-				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Circle.UID);
-				fprintf(KiCadFile, "\t)\n");
+				if(page != 0)
+				{
+					fprintf(KiCadFile, "%s\t", kicad_tab);
+					KiCadUID(KiCadFile, UID, Circle.UID);
+				}
+				fprintf(KiCadFile, "%s)\n", kicad_tab);
 			}
 		}
 		myPrint("\n");
@@ -518,15 +542,23 @@ void KiCadCircle(FILE* KiCadFile, element_struct circles, uid_union UID, uint32_
 */
 void KiCadRectangle(FILE* KiCadFile, element_struct rectangles, uid_union UID, uint32_t page)
 {
+	if(page == 0)
+	{
+		kicad_tab = &kicad_tab_library[0];
+	}
+	else
+	{
+		kicad_tab = &kicad_tab_schematic[0];
+	}
 	if (rectangles.Length > 0)
 	{
 		for (uint32_t i = 0; i < rectangles.Length; i++)
 		{
 			rectangle_struct Rectangle = GetRectangle(&rectangles, i);
 
-			if (InsideGroup(&cdbcatlg_grpobj, Rectangle.UID, page))
+			if ((page != 0 && InsideGroup(&cdbcatlg_grpobj, Rectangle.UID, page)) || (page == 0 && Rectangle.UID.UID_Splitt.UID_Owner == UID.UID_Splitt.UID_Owner))
 			{
-				fprintf(KiCadFile, "\t(rectangle\n");
+				fprintf(KiCadFile, "%s(rectangle\n", kicad_tab);
 				
 				char XStart[13]; // 10 char + sign + point + zero termination
 				char YStart[13]; // 10 char + sign + point + zero termination
@@ -537,17 +569,20 @@ void KiCadRectangle(FILE* KiCadFile, element_struct rectangles, uid_union UID, u
 				numPrint(&XEnd[0], Rectangle.EndCoord.X, CoordinateScaleX, CoordinateOffsetX);
 				numPrint(&YEnd[0], Rectangle.EndCoord.Y, CoordinateScaleY, CoordinateOffsetY);
 
-				fprintf(KiCadFile, "\t\t(start %s %s)\n", XStart, YStart);
-				fprintf(KiCadFile, "\t\t(end %s %s)\n", XEnd, YEnd);
+				fprintf(KiCadFile, "%s\t(start %s %s)\n", kicad_tab, XStart, YStart);
+				fprintf(KiCadFile, "%s\t(end %s %s)\n", kicad_tab, XEnd, YEnd);
 
 				myPrint("Rectangle %d:\n", i + 1);
 				myPrint("\tX Start: %s, X End: %s\n", XStart, XEnd);
 				myPrint("\tY Start: %s, Y End: %s\n", YStart, YEnd);
 				KiCadProperty(KiCadFile, Rectangle.Property, 1);
-				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Rectangle.UID);
-				fprintf(KiCadFile, "\t)\n");
+				if(page != 0)
+				{
+					fprintf(KiCadFile, "%s\t", kicad_tab);
+					KiCadUID(KiCadFile, UID, Rectangle.UID);
+				}
+				fprintf(KiCadFile, "%s)\n", kicad_tab);
 			}
 		}
 		myPrint("\n");
@@ -567,24 +602,35 @@ void KiCadRectangle(FILE* KiCadFile, element_struct rectangles, uid_union UID, u
 */
 void KiCadText(FILE* KiCadFile, element_struct texts, uid_union UID, uint32_t page)
 {
+	if(page == 0)
+	{
+		kicad_tab = &kicad_tab_library[0];
+	}
+	else
+	{
+		kicad_tab = &kicad_tab_schematic[0];
+	}
 	if (texts.Length > 0)
 	{
 		for (uint32_t i = 0; i < texts.Length; i++)
 		{
 			text_struct Text = GetText(&texts, i);
-			if (InsideGroup(&cdbcatlg_grpobj, Text.UID, page))
+			if ((page != 0 && InsideGroup(&cdbcatlg_grpobj, Text.UID, page)) || (page == 0 && Text.UID.UID_Splitt.UID_Owner == UID.UID_Splitt.UID_Owner))
 			{
 
-				fprintf(KiCadFile, "\t(text \"");
+				fprintf(KiCadFile, "%s(text \"", kicad_tab);
 				myPrint("Text %d:\n", i + 1);
 				KiCadPrintString(KiCadFile, Text.String);
 
-				fprintf(KiCadFile, "\t\t(exclude_from_sim no)\n");
+				fprintf(KiCadFile, "%s\t(exclude_from_sim no)\n", kicad_tab);
 				KiCadTextData(KiCadFile, Text.TextData);
-				fprintf(KiCadFile, "\t\t");
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Text.UID);
-				fprintf(KiCadFile, "\t)\n");
+				if(page != 0)
+				{
+					fprintf(KiCadFile, "%s\t", kicad_tab);
+					KiCadUID(KiCadFile, UID, Text.UID);
+				}
+				fprintf(KiCadFile, "%s)\n", kicad_tab);
 			}
 		}
 		myPrint("\n");
@@ -604,15 +650,23 @@ void KiCadText(FILE* KiCadFile, element_struct texts, uid_union UID, uint32_t pa
 */
 void KiCadLine(FILE* KiCadFile, element_struct lines, uid_union UID, uint32_t page)
 {
+	if(page == 0)
+	{
+		kicad_tab = &kicad_tab_library[0];
+	}
+	else
+	{
+		kicad_tab = &kicad_tab_schematic[0];
+	}
 	if (lines.Length > 0)
 	{
 		for (uint32_t i = 0; i < lines.Length; i++)
 		{
 			line_struct Line = GetLine(&lines, i);
-			if (InsideGroup(&cdbcatlg_grpobj, Line.UID, page))
+			if ((page != 0 && InsideGroup(&cdbcatlg_grpobj, Line.UID, page)) || (page == 0 && Line.UID.UID_Splitt.UID_Owner == UID.UID_Splitt.UID_Owner))
 			{
-				fprintf(KiCadFile, "\t(polyline\n");
-				fprintf(KiCadFile, "\t\t(pts\n");
+				fprintf(KiCadFile, "%s(polyline\n", kicad_tab);
+				fprintf(KiCadFile, "%s\t(pts\n", kicad_tab);
 				myPrint("Line %d:\n", i + 1);
 				for (unsigned int j = 0; j < Line.numSegment; j++)
 				{
@@ -625,18 +679,21 @@ void KiCadLine(FILE* KiCadFile, element_struct lines, uid_union UID, uint32_t pa
 					numPrint(&XEnd[0], Line.Segment[j].End.X, CoordinateScaleX, CoordinateOffsetX);
 					numPrint(&YEnd[0], Line.Segment[j].End.Y, CoordinateScaleY, CoordinateOffsetY);
 
-					fprintf(KiCadFile, "\t\t\t(xy %s %s) (xy %s %s)\n", XStart, YStart, XEnd, YEnd);
+					fprintf(KiCadFile, "%s\t\t(xy %s %s) (xy %s %s)\n", kicad_tab, XStart, YStart, XEnd, YEnd);
 
 					myPrint("\tSegment %d:\n", j + 1);
 					myPrint("\t\tX Start: %s, X End: %s\n", XStart, XEnd);
 					myPrint("\t\tY Start: %s, Y End: %s\n", YStart, YEnd);
 				}
-				fprintf(KiCadFile, "\t\t)\n");
-				KiCadProperty(KiCadFile, Line.Property, 0);
-				fprintf(KiCadFile, "\t\t");
+				fprintf(KiCadFile, "%s\t)\n", kicad_tab);
+				KiCadProperty(KiCadFile, Line.Property, 1);
 				myPrint("\t");
-				KiCadUID(KiCadFile, UID, Line.UID);
-				fprintf(KiCadFile, "\t)\n");
+				if(page != 0)
+				{
+					fprintf(KiCadFile, "%s\t", kicad_tab);
+					KiCadUID(KiCadFile, UID, Line.UID);
+				}
+				fprintf(KiCadFile, "%s)\n", kicad_tab);
 			}
 		}
 		myPrint("\n");
@@ -656,17 +713,17 @@ void KiCadLine(FILE* KiCadFile, element_struct lines, uid_union UID, uint32_t pa
 */
 void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 {
-	fprintf(KiCadFile, "\t\t(stroke\n");
+	fprintf(KiCadFile, "%s\t(stroke\n", kicad_tab);
 
 	// Linewidth
 	if (Property.Thickness == thikness_Auto)
 	{
-		fprintf(KiCadFile, "\t\t\t(width 0)\n");
+		fprintf(KiCadFile, "%s\t\t(width 0)\n", kicad_tab);
 		myPrint("\tLinewidth: Default\n");
 	}
 	else
 	{
-		fprintf(KiCadFile, "\t\t\t(width %f)\n", (float)Property.Thickness * BaseLineThickness);
+		fprintf(KiCadFile, "%s\t\t(width %f)\n", kicad_tab, (float)Property.Thickness * BaseLineThickness);
 		myPrint("\tLinewidth: %f\n", (float)Property.Thickness * BaseLineThickness);
 	}
 
@@ -675,30 +732,30 @@ void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 	{
 	case style_AutoSolid: // Solid (Automatic)
 		myPrint("\tLinestyle: Default\n");
-		fprintf(KiCadFile, "\t\t\t(type default)\n");
+		fprintf(KiCadFile, "%s\t\t(type default)\n", kicad_tab);
 		break;
 	case style_Solid: // Solid
 		myPrint("\tLinestyle: Solid\n");
-		fprintf(KiCadFile, "\t\t\t(type solid)\n");
+		fprintf(KiCadFile, "%s\t\t(type solid)\n", kicad_tab);
 		break;
 	case style_Dash: // Dash
 	case style_Mediumdash: // Medium dash
 	case style_Bigdash: // Big dash
 		myPrint("\tLinestyle: Dash\n");
-		fprintf(KiCadFile, "\t\t\t(type dash)\n");
+		fprintf(KiCadFile, "%s\t\t(type dash)\n", kicad_tab);
 		break;
 	case style_Center: // Center
 	case style_DashDot: // Dash-Dot
 		myPrint("\tLinestyle: Dash-Dot\n");
-		fprintf(KiCadFile, "\t\t\t(type dash_dot)\n");
+		fprintf(KiCadFile, "%s\t\t(type dash_dot)\n", kicad_tab);
 		break;
 	case style_Phantom: // Phantom
 		myPrint("\tLinestyle: Dash-Dot-Dot\n");
-		fprintf(KiCadFile, "\t\t\t(type dash_dot_dot)\n");
+		fprintf(KiCadFile, "%s\t\t(type dash_dot_dot)\n", kicad_tab);
 		break;
 	case style_Dot: // Dot
 		myPrint("\tLinestyle: Dot\n");
-		fprintf(KiCadFile, "\t\t\t(type dot)\n");
+		fprintf(KiCadFile, "%s\t\t(type dot)\n", kicad_tab);
 		break;
 	default:
 		break;
@@ -711,86 +768,86 @@ void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 	}
 	else
 	{ // Custom Color
-		fprintf(KiCadFile, "\t\t\t(color %d %d %d 1)\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
+		fprintf(KiCadFile, "%s\t\t(color %d %d %d 1)\n", kicad_tab, Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
 		myPrint("\tColor: R:%d G:%d B:%d\n", Property.LineColor.Red, Property.LineColor.Green, Property.LineColor.Blue);
 	}
-	fprintf(KiCadFile, "\t\t)\n");
+	fprintf(KiCadFile, "%s\t)\n", kicad_tab);
 
 	// Filling style
 	if (Filling)
 	{
 		int8_t opacity = -1;
 #if NewKiCad
-		fprintf(KiCadFile, "\t\t(fill\n");
+		fprintf(KiCadFile, "%s\t(fill\n", kicad_tab);
 		switch (Property.Fill)
 		{
 		case fill_AutoHollow: // Hollow (Automatic)
 		case fill_Hollow: // Hollow
-			fprintf(KiCadFile, "\t\t\t(type none)\n");
+			fprintf(KiCadFile, "%s\t\t(type none)\n", kicad_tab);
 			myPrint("\tFill : None\n");
 			break;
 
 		case fill_Solid: // Solid
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 100;
 			break;
 
 		case fill_Diagdn1: // Diagdn1
 		case fill_Diagdn2: // Diagdn2
-			fprintf(KiCadFile, "\t\t\t(type reverse_hatch)\n");
+			fprintf(KiCadFile, "%s\t\t(type reverse_hatch)\n", kicad_tab);
 			myPrint("\tFill: Reverse Hatch\n");
 			opacity = 100;
 			break;
 
 		case fill_Diagup1: // Diagup1
 		case fill_Diagup2: // Diagup2
-			fprintf(KiCadFile, "\t\t\t(type hatch)\n");
+			fprintf(KiCadFile, "%s\t\t(type hatch)\n", kicad_tab);
 			myPrint("\tFill: Hatch\n");
 			opacity = 100;
 			break;
 			
 		case fill_X1: // X1
 		case fill_X2: // X2
-			fprintf(KiCadFile, "\t\t\t(type cross_hatch)\n");
+			fprintf(KiCadFile, "%s\t\t(type cross_hatch)\n", kicad_tab);
 			myPrint("\tFill: Cross Hatch\n");
 			opacity = 100;
 			break;
 
 		case fill_Horiz: // Horiz
 		case fill_Vert: // Vert
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 8;
 			break;
 
 		case fill_Grid1: // Grid1
 		case fill_Grid2: // Grid2
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 16;
 			break;
 
 		case fill_Grey04: // Grey04
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 4;
 			break;
 
 		case fill_Grey08: // Grey08
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 8;
 			break;
 
 		case fill_Grey50: // Grey50
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 50;
 			break;
 
 		case fill_Grey92: // Grey92
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			myPrint("\tFill: Solid\n");
 			opacity = 92;
 			break;
@@ -799,7 +856,7 @@ void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 		}
 #else
 		// Old KiCad has no fill pattern. Translate into fill opacity
-		fprintf(KiCadFile, "\t\t(fill\n");
+		fprintf(KiCadFile, "%s\t(fill\n", kicad_tab);
 		switch (Property.Fill)
 		{
 		case fill_AutoHollow: // Hollow (Automatic)
@@ -838,25 +895,25 @@ void KiCadProperty(FILE* KiCadFile, property_struct Property, uint8_t Filling)
 #endif
 		if (opacity == -1)
 		{
-			fprintf(KiCadFile, "\t\t\t(type none)\n");
+			fprintf(KiCadFile, "%s\t\t(type none)\n", kicad_tab);
 			myPrint("\tFill: None\n");
 		}
 		else
 		{
-			fprintf(KiCadFile, "\t\t\t(type color)\n");
+			fprintf(KiCadFile, "%s\t\t(type color)\n", kicad_tab);
 			if (Property.FillColor.Key == colorkey_default)
 			{ // Default Color
 				myPrint("\tFill: %d%c\n", opacity, 0x25);
 				myPrint("\tColor: Default\n");
-				fprintf(KiCadFile, "\t\t\t(color 0 0 0 %.2f)\n", ((float)opacity / 100.0));
+				fprintf(KiCadFile, "%s\t\t(color 0 0 0 %.2f)\n", kicad_tab, ((float)opacity / 100.0));
 			}
 			else
 			{ // Custom Color
-				fprintf(KiCadFile, "\t\t\t(color %d %d %d %.2f)\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue, ((float)opacity / 100.0));
+				fprintf(KiCadFile, "%s\t\t(color %d %d %d %.2f)\n", kicad_tab, Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue, ((float)opacity / 100.0));
 				myPrint("\tFill: %d%c\n", opacity, 0x25);
 				myPrint("\tColor: R:%d G:%d B:%d\n", Property.FillColor.Red, Property.FillColor.Green, Property.FillColor.Blue);
 			}
 		}
-		fprintf(KiCadFile, "\t\t)\n");
+		fprintf(KiCadFile, "%s\t)\n", kicad_tab);
 	}
 }
